@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f7fe;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 50px;
+        }
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+        .block {
+            background: linear-gradient(135deg, #ffffff 0%, #f5f7fa 100%);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        .block:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        }
+        .block h2 {
+            margin: 20px 0 10px;
+            color: #2c3e50;
+            font-size: 1.5em;
+        }
+        .block-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+        #manageRooms .block-icon { color: #3498db; }
+        #manageProducts .block-icon { color: #2ecc71; }
+        #saleHistory .block-icon { color: #e74c3c; }
+
+
+        a{
+            text-decoration: none;
+        }
+    </style>
+    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome, Admin</h1>
+        <div class="dashboard">
+           <a href="./ManageRooms.html">
+            <div class="block" id="manageRooms">
+                <div class="block-icon"><i class="fas fa-door-open"></i></div>
+                <h2>Manage Rooms</h2>
+            </div>
+           </a>
+            
+           <a href="./ManageProducts.html">
+            <div class="block" id="manageProducts">
+                <div class="block-icon"><i class="fas fa-box-open"></i></div>
+                <h2>Manage Products</h2>
+            </div>
+           </a>
+
+
+            <a href="./sales-history.html">
+                <div class="block" id="saleHistory">
+                    <div class="block-icon"><i class="fas fa-chart-line"></i></div>
+                    <h2>Sale History</h2>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    
+</body>
+</html>

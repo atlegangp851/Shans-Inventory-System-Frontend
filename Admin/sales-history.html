@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Dashboard</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #f5f5f5;
+            --text-color: #333;
+            --border-color: #ddd;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--secondary-color);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: var(--primary-color);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .view-toggle, .search-bar {
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+        }
+
+        .view-toggle {
+            background-color: var(--primary-color);
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .view-toggle:hover {
+            background-color: #357ab8;
+        }
+
+        .search-bar {
+            width: 60%;
+            transition: width 0.3s ease;
+        }
+
+        .search-bar:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            width: 65%;
+        }
+
+        .month-section {
+            margin-bottom: 40px;
+        }
+
+        .month-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+            margin-bottom: 10px;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: var(--secondary-color);
+        }
+
+        /* Footer Styling for Grand Total */
+        tfoot td {
+            padding: 12px;
+            border-top: 2px solid var(--border-color);
+            font-weight: bold;
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .card-view {
+            display: none;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 5px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h3 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .card p {
+            margin-bottom: 5px;
+            font-size: 16px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            table, .month-header {
+                display: none;
+            }
+
+            .card-view {
+                display: grid;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            .search-bar {
+                width: 100%;
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" style="text-decoration: none; color: #007BFF; font-size: 16px; margin-right: 20px;">&larr; Back to Home</a>
+        <h1>Sales Dashboard</h1>
+        <div class="controls">
+            <button class="view-toggle">Toggle View</button>
+            <input type="text" class="search-bar" placeholder="Search sales...">
+        </div>
+        <div id="tables-container">
+            <!-- Monthly Tables Will Be Dynamically Added Here -->
+        </div>
+        <div class="card-view" id="card-view">
+            <!-- Cards Will Be Dynamically Added Here -->
+        </div>
+    </div>
+
+    <script>
+        const tablesContainer = document.getElementById('tables-container');
+        const cardView = document.getElementById('card-view');
+        const viewToggle = document.querySelector('.view-toggle');
+        const searchBar = document.querySelector('.search-bar');
+
+        let allSalesData = []; // We'll store fetched sales data here
+        let groupedSalesData = {}; // To store data grouped by month
+
+        // Fetch sales data from the API
+        async function fetchSalesData() {
+            try {
+                const response = await fetch('http://localhost:3000/api/sales'); 
+                // Adjust the URL if your server runs elsewhere
+                if (!response.ok) {
+                    throw new Error('Network response was not ok.');
+                }
+                const data = await response.json();
+                allSalesData = data;
+                groupDataByMonth(allSalesData);
+                renderTables(groupedSalesData);
+                renderCards(allSalesData);
+            } catch (error) {
+                console.error('Error fetching sales data:', error);
+                tablesContainer.innerHTML = '<p style="color: red;">Failed to load sales data. Please try again later.</p>';
+            }
+        }
+
+        // Function to group data by month
+        function groupDataByMonth(data) {
+            groupedSalesData = {}; // Reset the grouped data
+            data.forEach(item => {
+                const date = new Date(item.date);
+                const monthYear = date.toLocaleString('default', { month: 'long', year: 'numeric' });
+                if (!groupedSalesData[monthYear]) {
+                    groupedSalesData[monthYear] = [];
+                }
+                groupedSalesData[monthYear].push(item);
+            });
+        }
+
+        // Function to render tables grouped by month
+        function renderTables(groupedData) {
+            tablesContainer.innerHTML = ''; // Clear previous tables
+
+            if (Object.keys(groupedData).length === 0) {
+                tablesContainer.innerHTML = '<p style="text-align: center;">No sales data found for your search.</p>';
+                return;
+            }
+
+            for (const [monthYear, sales] of Object.entries(groupedData)) {
+                // Create a section for each month
+                const monthSection = document.createElement('div');
+                monthSection.className = 'month-section';
+
+                // Month Header
+                const monthHeader = document.createElement('div');
+                monthHeader.className = 'month-header';
+                monthHeader.textContent = monthYear;
+                monthSection.appendChild(monthHeader);
+
+                // Create table
+                const table = document.createElement('table');
+
+                // Table Head
+                const thead = document.createElement('thead');
+                thead.innerHTML = `
+                    <tr>
+                        <th>Reference Number</th>
+                        <th>Date</th>
+                        <th>Client Name</th>
+                        <th>Billing Address</th>
+                        <th>Billing Email</th>
+                        <th>Billing Phone</th>
+                        <th>Item Purchase</th>
+                        <th>Quantity</th>
+                        <th>Tax per Unit (R)</th>
+                        <th>Unit Price Before Tax (R)</th>
+                        <th>Payment Method</th>
+                        <th>Total Paid (R)</th>
+                    </tr>
+                `;
+                table.appendChild(thead);
+
+                // Calculate number of columns for dynamic colspan
+                const numColumns = thead.querySelectorAll('th').length;
+
+                // Table Body
+                const tbody = document.createElement('tbody');
+                let grandTotal = 0; // Initialize grand total for the month
+                let grandTax = 0;    // Initialize grand tax for the month
+
+                sales.forEach(item => {
+                    // Ensure tax_per_product is a number; set to 0 if missing or invalid
+                    const taxPerProduct = parseFloat(item.tax_per_product);
+                    const validTax = isNaN(taxPerProduct) ? 0 : taxPerProduct;
+
+                    // Ensure quantity is a number; set to 1 if missing or invalid to prevent division by zero
+                    const quantity = parseInt(item.quantity);
+                    const validQuantity = isNaN(quantity) || quantity === 0 ? 1 : quantity;
+
+                    // Calculate Unit Price Before Tax
+                    const unitPriceBeforeTax = parseFloat(item.total_price) / validQuantity - validTax;
+                    const formattedUnitPriceBeforeTax = isFinite(unitPriceBeforeTax) ? `R${unitPriceBeforeTax.toFixed(2)}` : 'N/A';
+
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${sanitizeHTML(item.reference_number)}</td>
+                        <td>${sanitizeHTML(formatDate(item.date))}</td>
+                        <td>${sanitizeHTML(item.billing_name)}</td>
+                        <td>${sanitizeHTML(item.billing_address)}</td>
+                        <td>${sanitizeHTML(item.billing_email)}</td>
+                        <td>${sanitizeHTML(item.billing_phone || 'N/A')}</td>
+                        <td>${sanitizeHTML(item.item_name)}</td>
+                        <td>${sanitizeHTML(item.quantity)}</td>
+                        <td>R${validTax.toFixed(2)}</td>
+                        <td>${sanitizeHTML(formattedUnitPriceBeforeTax)}</td>
+                        <td>${sanitizeHTML(item.payment_method)}</td>
+                        <td>R${parseFloat(item.total_price).toFixed(2)}</td>
+                    `;
+                    tbody.appendChild(row);
+                    grandTotal += parseFloat(item.total_price);
+                    grandTax += validTax * validQuantity;
+                });
+
+                table.appendChild(tbody);
+
+                // Table Footer for Grand Total and Total Tax
+                const tfoot = document.createElement('tfoot');
+                tfoot.innerHTML = `
+                    <tr>
+                        <td colspan="${numColumns - 2}" style="text-align: right;">Total Tax for ${monthYear}:</td>
+                        <td colspan="2">R${grandTax.toFixed(2)}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="${numColumns - 2}" style="text-align: right;">Grand Total for ${monthYear}:</td>
+                        <td colspan="2">R${grandTotal.toFixed(2)}</td>
+                    </tr>
+                `;
+                table.appendChild(tfoot);
+
+                monthSection.appendChild(table);
+                tablesContainer.appendChild(monthSection);
+            }
+        }
+
+        // Function to render cards for mobile view
+        function renderCards(data) {
+            cardView.innerHTML = '';
+            const groupedByMonth = {};
+
+            data.forEach(item => {
+                const date = new Date(item.date);
+                const monthYear = date.toLocaleString('default', { month: 'long', year: 'numeric' });
+                if (!groupedByMonth[monthYear]) {
+                    groupedByMonth[monthYear] = [];
+                }
+                groupedByMonth[monthYear].push(item);
+            });
+
+            for (const [monthYear, sales] of Object.entries(groupedByMonth)) {
+                // Month Header for Cards
+                const monthHeader = document.createElement('div');
+                monthHeader.className = 'month-header';
+                monthHeader.textContent = monthYear;
+                cardView.appendChild(monthHeader);
+
+                sales.forEach(item => {
+                    // Ensure tax_per_product is a number; set to 0 if missing or invalid
+                    const taxPerProduct = parseFloat(item.tax_per_product);
+                    const validTax = isNaN(taxPerProduct) ? 0 : taxPerProduct;
+
+                    // Ensure quantity is a number; set to 1 if missing or invalid to prevent division by zero
+                    const quantity = parseInt(item.quantity);
+                    const validQuantity = isNaN(quantity) || quantity === 0 ? 1 : quantity;
+
+                    // Calculate Unit Price Before Tax
+                    const unitPriceBeforeTax = parseFloat(item.total_price) / validQuantity - validTax;
+                    const formattedUnitPriceBeforeTax = isFinite(unitPriceBeforeTax) ? `R${unitPriceBeforeTax.toFixed(2)}` : 'N/A';
+
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    const totalTax = validTax * validQuantity;
+                    card.innerHTML = `
+                        <h3>${sanitizeHTML(formatDate(item.date))}</h3>
+                        <p><strong>Reference Number:</strong> ${sanitizeHTML(item.reference_number)}</p>
+                        <p><strong>Client Name:</strong> ${sanitizeHTML(item.billing_name)}</p>
+                        <p><strong>Billing Address:</strong> ${sanitizeHTML(item.billing_address)}</p>
+                        <p><strong>Billing Email:</strong> ${sanitizeHTML(item.billing_email)}</p>
+                        <p><strong>Billing Phone:</strong> ${sanitizeHTML(item.billing_phone || 'N/A')}</p>
+                        <p><strong>Item:</strong> ${sanitizeHTML(item.item_name)}</p>
+                        <p><strong>Quantity:</strong> ${sanitizeHTML(item.quantity)}</p>
+                        <p><strong>Tax per Unit:</strong> R${validTax.toFixed(2)}</p>
+                        <p><strong>Unit Price Before Tax:</strong> ${sanitizeHTML(formattedUnitPriceBeforeTax)}</p>
+                        <p><strong>Total Tax:</strong> R${totalTax.toFixed(2)}</p>
+                        <p><strong>Payment Method:</strong> ${sanitizeHTML(item.payment_method)}</p>
+                        <p><strong>Total Paid:</strong> R${parseFloat(item.total_price).toFixed(2)}</p>
+                    `;
+                    cardView.appendChild(card);
+                });
+
+                // Grand Total Card (Optional)
+                const grandTotal = sales.reduce((total, item) => total + parseFloat(item.total_price), 0);
+                const grandTax = sales.reduce((total, item) => {
+                    const tax = parseFloat(item.tax_per_product);
+                    const quantity = parseInt(item.quantity);
+                    const validTax = isNaN(tax) ? 0 : tax;
+                    const validQuantity = isNaN(quantity) || quantity === 0 ? 1 : quantity;
+                    return total + (validTax * validQuantity);
+                }, 0);
+                const totalCard = document.createElement('div');
+                totalCard.className = 'card';
+                totalCard.innerHTML = `
+                    <h3>Grand Totals for ${monthYear}</h3>
+                    <p><strong>Total Tax:</strong> R${grandTax.toFixed(2)}</p>
+                    <p><strong>Total Sales:</strong> R${grandTotal.toFixed(2)}</p>
+                `;
+                cardView.appendChild(totalCard);
+            }
+        }
+
+        // Toggle between table and card view
+        function toggleView() {
+            const tables = document.getElementById('tables-container');
+            if (tables.style.display === 'none') {
+                tables.style.display = 'block';
+                cardView.style.display = 'none';
+            } else {
+                tables.style.display = 'none';
+                cardView.style.display = 'grid';
+            }
+        }
+
+        // Filter data based on search query and re-render views
+        function filterAndRender(query) {
+            const filteredData = allSalesData.filter(item => 
+                // Flatten all sale properties and sale items for searching
+                (
+                    item.reference_number.toLowerCase().includes(query.toLowerCase()) ||
+                    item.date.toLowerCase().includes(query.toLowerCase()) ||
+                    item.billing_name.toLowerCase().includes(query.toLowerCase()) ||
+                    item.billing_address.toLowerCase().includes(query.toLowerCase()) ||
+                    item.billing_email.toLowerCase().includes(query.toLowerCase()) ||
+                    (item.billing_phone && item.billing_phone.toLowerCase().includes(query.toLowerCase())) ||
+                    item.item_name.toLowerCase().includes(query.toLowerCase()) ||
+                    item.quantity.toString().includes(query) ||
+                    item.tax_per_product.toString().includes(query) ||
+                    item.payment_method.toLowerCase().includes(query.toLowerCase()) ||
+                    item.total_price.toString().includes(query)
+                )
+            );
+            groupDataByMonth(filteredData);
+            renderTables(groupedSalesData);
+            renderCards(filteredData);
+        }
+
+        // Sanitize HTML to prevent XSS attacks
+        function sanitizeHTML(str) {
+            const temp = document.createElement('div');
+            temp.textContent = str;
+            return temp.innerHTML;
+        }
+
+        // Format date to "12 December 2024"
+        function formatDate(dateString) {
+            const options = { day: 'numeric', month: 'long', year: 'numeric' };
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', options);
+        }
+
+        // Event listener for toggle view button
+        viewToggle.addEventListener('click', toggleView);
+
+        // Event listener for search bar input with debounce for performance
+        function debounce(func, delay) {
+            let debounceTimer;
+            return function() {
+                const context = this;
+                const args = arguments;
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => func.apply(context, args), delay);
+            }
+        }
+
+        searchBar.addEventListener('input', debounce((e) => {
+            const query = e.target.value.trim();
+            filterAndRender(query);
+        }, 300)); // Adjust the delay as needed
+
+        // Fetch and render data on page load
+        document.addEventListener('DOMContentLoaded', fetchSalesData);
+    </script>
+
+</body>
+</html>

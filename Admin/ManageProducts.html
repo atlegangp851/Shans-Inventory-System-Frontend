@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shans Inventory System</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Add within the <head> section -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+
+    <style>
+        /* frontend/styles.css */
+
+        /* Existing styles... */
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .add-product-block {
+            width: 50px;
+            height: 50px;
+            background-color: #007bff;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 30px;
+            margin-bottom: 20px;
+        }
+
+        .products-section {
+            overflow-x: auto;
+        }
+
+        /* Search Bar */
+        .search-bar {
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+        }
+
+        .search-bar input[type="text"] {
+            width: 100%;
+            max-width: 300px;
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .search-bar input[type="text"]:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+
+        #productsTable {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        #productsTable th, #productsTable td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+
+        #productsTable th {
+            background-color: #f2f2f2;
+        }
+
+        .actions-button {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .edit-button,
+        .delete-button {
+            margin: 0 5px;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .edit-button {
+            background-color: #ffc107;
+            color: white;
+        }
+
+        .edit-button:hover {
+            background-color: #e0a800;
+        }
+
+        .delete-button {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .delete-button:hover {
+            background-color: #c82333;
+        }
+
+        /* Status Message */
+        .status-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            border-radius: 5px;
+            color: white;
+            font-weight: bold;
+            display: none;
+            z-index: 1001;
+        }
+
+        .status-message.success {
+            background-color: #28a745;
+        }
+
+        .status-message.error {
+            background-color: #dc3545;
+        }
+
+        /* Popup Overlay (Add and Edit) */
+        .popup-overlay {
+            display: none; /* Hidden by default */
+            position: fixed;
+            z-index: 1000;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); /* Black w/ opacity */
+            justify-content: center;
+            align-items: center;
+        }
+
+        .popup-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .close-popup {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        /* Form Group */
+        .form-group {
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="number"],
+        .form-group select,
+        .form-group textarea {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .color-picker {
+            display: flex;
+            align-items: center;
+        }
+
+        .color-picker input[type="text"] {
+            margin-left: 10px;
+            width: 100px;
+        }
+
+        /* Button Styles */
+        button[type="submit"] {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #218838;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .popup-content {
+                width: 95%;
+            }
+
+            .products-section {
+                padding: 10px;
+            }
+
+            #productsTable th,
+            #productsTable td {
+                padding: 6px;
+                font-size: 14px;
+            }
+
+            .form-group {
+                flex-direction: column;
+            }
+
+            .color-picker {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .color-picker input[type="text"] {
+                margin-left: 0;
+                margin-top: 5px;
+            }
+
+            .search-bar input[type="text"] {
+                max-width: 100%;
+            }
+        }
+
+        /* Accessibility: Visually Hidden */
+        .visually-hidden { 
+            position: absolute !important; 
+            height: 1px; 
+            width: 1px; 
+            overflow: hidden;
+            clip: rect(1px, 1px, 1px, 1px); 
+            white-space: nowrap; 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div style="margin-bottom: 2%;">
+            <a href="index.html" style="text-decoration: none; color: #007BFF; font-size: 16px; margin-right: 20px;">&larr; Back to Home</a>
+        </div>
+        <!-- Add Product Block -->
+        <div id="addProductBlock" class="add-product-block" aria-label="Add new product" title="Add New Product">
+            <span class="plus-icon">+</span>
+        </div>
+
+      <!-- Filter Menu -->
+<div id="filterMenu" class="filter-menu" aria-label="Filter Products">
+    <div class="filter-group">
+        <label for="filterCarBrand">Car Brand</label>
+        <select id="filterCarBrand">
+            <option value="">All Brands</option>
+            <!-- Dynamic options will be populated here -->
+        </select>
+    </div>
+    <div class="filter-group">
+        <label for="filterProductCategory">Product Category</label>
+        <select id="filterProductCategory">
+            <option value="">All Categories</option>
+            <!-- Dynamic options will be populated here -->
+        </select>
+    </div>
+    <!-- New Filter Groups -->
+    <div class="filter-group">
+        <label for="filterCarModel">Car Model</label>
+        <select id="filterCarModel">
+            <option value="">All Models</option>
+            <!-- Dynamic options will be populated here -->
+        </select>
+    </div>
+    <div class="filter-group">
+        <label for="filterRoom">Room</label>
+        <select id="filterRoom">
+            <option value="">All Rooms</option>
+            <!-- Dynamic options will be populated here -->
+        </select>
+    </div>
+    <div class="filter-group">
+        <label for="filterColourTape">Colour Tape</label>
+        <select id="filterColourTape">
+            <option value="">All Colours</option>
+            <!-- Dynamic options will be populated here -->
+        </select>
+    </div>
+</div>
+
+
+        <!-- Add Product Modal -->
+        <div id="popupOverlay" class="popup-overlay" aria-hidden="true" role="dialog" aria-labelledby="addProductModalTitle">
+            <div class="popup-content">
+                <button id="closePopup" class="close-popup" aria-label="Close popup">&times;</button>
+                <h2 id="addProductModalTitle">Add Product to Room</h2>
+                <form id="addProductForm">
+                    <div class="form-group">
+                        <label for="itemCode">Item Code</label>
+                        <input type="text" id="itemCode" name="itemCode" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="room">Room</label>
+                        <select id="room" name="room" required>
+                            <option value="">Select a room</option>
+                            <!-- Options will be populated dynamically -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="itemName">Item Name</label>
+                        <input type="text" id="itemName" name="itemName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="carBrand">Car Brand</label>
+                        <input type="text" id="carBrand" name="carBrand">
+                    </div>
+                    <div class="form-group">
+                        <label for="carModel">Car Model</label>
+                        <input type="text" id="carModel" name="carModel">
+                    </div>
+                    <div class="form-group">
+                        <label for="productCategory">Product Category</label>
+                        <select id="productCategory" name="productCategory" required>
+                            <option value="">Select a category</option>
+                            <option value="lips">Lips</option>
+                            <option value="boot_spoilers">Boot spoilers</option>
+                            <option value="roof_spoilers">Roof spoilers</option>
+                            <option value="diffusers">Diffusers</option>
+                            <option value="sills_extensions">Sills extensions</option>
+                            <option value="eyelids">Eyelids</option>
+                            <option value="mirrors_covers">Mirrors covers</option>
+                            <option value="grills">Grills</option>
+                            <option value="canards">Canards</option>
+                            <option value="bumper_spats">Bumper spats</option>
+                            <option value="arches">Arches</option>
+                            <option value="step_bars">Step bars</option>
+                            <option value="bonnet_scoops">Bonnet scoops</option>
+                            <option value="headlight_trims">Headlight trims</option>
+                            <option value="tail_light_trims">Tail light trims</option>
+                            <option value="main_grills">Main grills</option>
+                            <option value="electronics">Electronics - radios, lights, cameras</option>
+                            <option value="mats">Mats</option>
+                            <option value="boot_mats">Boot mats</option>
+                            <option value="nudge_bars">Nudge bars</option>
+                            <option value="roll_bars">Roll bars</option>
+                            <option value="fog_grills">Fog grills</option>
+                            <option value="vinyl">Vinyl</option>
+                            <!-- Add more categories as needed -->
+                        </select>
+                        
+                    </div>
+                    <div class="form-group">
+                        <label for="availableStock">Available Stock</label>
+                        <input type="number" id="availableStock" name="availableStock" required min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="location">Location</label>
+                        <input type="text" id="location" name="location">
+                    </div>
+                    <div class="form-group color-picker">
+                        <label for="colourTape">Colour Tape</label>
+                        <input type="color" id="colourTape" name="colourTape" value="#000000">
+                        <input type="text" id="colourTapeText" name="colourTapeText" value="#000000" pattern="^#[0-9A-Fa-f]{6}$" title="Enter a valid hex color code">
+                    </div>
+                    <div class="form-group">
+                        <label for="unitRetailPrice">Unit Retail Price (ZAR)</label>
+                        <input type="number" step="0.01" id="unitRetailPrice" name="unitRetailPrice" required min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="wholesalePrice">Wholesale Price (ZAR)</label>
+                        <input type="number" step="0.01" id="wholesalePrice" name="wholesalePrice" required min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="unitCost">Unit Cost (ZAR)</label>
+                        <input type="number" step="0.01" id="unitCost" name="unitCost" required min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="supplierCode">Supplier Code</label>
+                        <input type="text" id="supplierCode" name="supplierCode">
+                    </div>
+                    <div class="form-group">
+                        <label for="additionalComments">Additional Comments</label>
+                        <textarea id="additionalComments" name="additionalComments"></textarea>
+                    </div>
+                    <button type="submit">Add Product</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Edit Product Modal -->
+        <div id="editProductOverlay" class="popup-overlay" aria-hidden="true" role="dialog" aria-labelledby="editProductModalTitle">
+            <div class="popup-content">
+                <button id="closeEditPopup" class="close-popup" aria-label="Close popup">&times;</button>
+                <h2 id="editProductModalTitle">Edit Product</h2>
+                <form id="editProductForm">
+                    <input type="hidden" id="editItemCode" name="editItemCode">
+
+                    <div class="form-group">
+                        <label for="editRoom">Room</label>
+                        <select id="editRoom" name="editRoom" required>
+                            <option value="">Select a room</option>
+                            <!-- Options will be populated dynamically -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="editItemName">Item Name</label>
+                        <input type="text" id="editItemName" name="editItemName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editCarBrand">Car Brand</label>
+                        <input type="text" id="editCarBrand" name="editCarBrand">
+                    </div>
+                    <div class="form-group">
+                        <label for="editCarModel">Car Model</label>
+                        <input type="text" id="editCarModel" name="editCarModel">
+                    </div>
+                    <div class="form-group">
+                        <label for="editProductCategory">Product Category</label>
+                        <select id="editProductCategory" name="editProductCategory" required>
+                            <option value="">Select a category</option>
+                            <option value="lips">Lips</option>
+                            <option value="boot_spoilers">Boot spoilers</option>
+                            <option value="roof_spoilers">Roof spoilers</option>
+                            <option value="diffusers">Diffusers</option>
+                            <option value="sills_extensions">Sills extensions</option>
+                            <option value="eyelids">Eyelids</option>
+                            <option value="mirrors_covers">Mirrors covers</option>
+                            <option value="grills">Grills</option>
+                            <option value="canards">Canards</option>
+                            <option value="bumper_spats">Bumper spats</option>
+                            <option value="arches">Arches</option>
+                            <option value="step_bars">Step bars</option>
+                            <option value="bonnet_scoops">Bonnet scoops</option>
+                            <option value="headlight_trims">Headlight trims</option>
+                            <option value="tail_light_trims">Tail light trims</option>
+                            <option value="main_grills">Main grills</option>
+                            <option value="electronics">Electronics - radios, lights, cameras</option>
+                            <option value="mats">Mats</option>
+                            <option value="boot_mats">Boot mats</option>
+                            <option value="nudge_bars">Nudge bars</option>
+                            <option value="roll_bars">Roll bars</option>
+                            <option value="fog_grills">Fog grills</option>
+                            <option value="vinyl">Vinyl</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="editAvailableStock">Available Stock</label>
+                        <input type="number" id="editAvailableStock" name="editAvailableStock" required min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="editLocation">Location</label>
+                        <input type="text" id="editLocation" name="editLocation">
+                    </div>
+                    <div class="form-group color-picker">
+                        <label for="editColourTape">Colour Tape</label>
+                        <input type="color" id="editColourTape" name="editColourTape" value="#000000">
+                        <input type="text" id="editColourTapeText" name="editColourTapeText" value="#000000" pattern="^#[0-9A-Fa-f]{6}$" title="Enter a valid hex color code">
+                    </div>
+                    <div class="form-group">
+                        <label for="editUnitRetailPrice">Unit Retail Price (ZAR)</label>
+                        <input type="number" step="0.01" id="editUnitRetailPrice" name="editUnitRetailPrice" required min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="editWholesalePrice">Wholesale Price (ZAR)</label>
+                        <input type="number" step="0.01" id="editWholesalePrice" name="editWholesalePrice" required min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="editUnitCost">Unit Cost (ZAR)</label>
+                        <input type="number" step="0.01" id="editUnitCost" name="editUnitCost" required min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="editSupplierCode">Supplier Code</label>
+                        <input type="text" id="editSupplierCode" name="editSupplierCode">
+                    </div>
+                    <div class="form-group">
+                        <label for="editAdditionalComments">Additional Comments</label>
+                        <textarea id="editAdditionalComments" name="editAdditionalComments"></textarea>
+                    </div>
+                    <button type="submit">Update Product</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Products Listing Section -->
+        <div class="products-section">
+            <h2>Products List</h2>
+
+            <!-- Search Bar -->
+            <div class="search-bar">
+                <label for="searchInput" class="visually-hidden">Search Products</label>
+                <input type="text" id="searchInput" placeholder="Search products by name..." aria-label="Search Products">
+            </div>
+
+            <table id="productsTable">
+                <thead>
+                    <tr>
+                        <th>Item Code</th>
+                        <th>Room</th>
+                        <th>Item Name</th>
+                        <th>Car Brand</th>
+                        <th>Car Model</th>
+                        <th>Category</th>
+                        <th>Available Stock</th>
+                        <th>Colour Tape</th>
+                        <th>Location</th>
+                        <th>Unit Retail Price (ZAR)</th>
+                        <th>Wholesale Price (ZAR)</th>
+                        <th>Unit Cost (ZAR)</th>
+                        <th>Profit (ZAR)</th>
+                        <th>Supplier Code</th>
+                        <th>Additional Comments</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Products will be populated dynamically -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Status Message -->
+        <div id="statusMessage" class="status-message"></div>
+
+        <script src="script.js"></script>
+
+
+        <style>
+            /* frontend/styles.css */
+
+/* Existing styles... */
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.add-product-block {
+    width: 50px;
+    height: 50px;
+    background-color: #007bff;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    font-size: 30px;
+    margin-bottom: 20px;
+}
+
+.products-section {
+    overflow-x: auto;
+}
+
+/* Search Bar */
+.search-bar {
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.search-bar input[type="text"] {
+    width: 100%;
+    max-width: 300px;
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.search-bar input[type="text"]:focus {
+    border-color: #007bff;
+    outline: none;
+}
+
+#productsTable {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#productsTable th, #productsTable td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+}
+
+#productsTable th {
+    background-color: #f2f2f2;
+}
+
+.actions-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.edit-button,
+.delete-button {
+    margin: 0 5px;
+    padding: 5px 10px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.edit-button {
+    background-color: #ffc107;
+    color: white;
+}
+
+.edit-button:hover {
+    background-color: #e0a800;
+}
+
+.delete-button {
+    background-color: #dc3545;
+    color: white;
+}
+
+.delete-button:hover {
+    background-color: #c82333;
+}
+
+/* Status Message */
+.status-message {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 10px 20px;
+    border-radius: 5px;
+    color: white;
+    font-weight: bold;
+    display: none;
+    z-index: 1001;
+}
+
+.status-message.success {
+    background-color: #28a745;
+}
+
+.status-message.error {
+    background-color: #dc3545;
+}
+
+/* Popup Overlay (Add and Edit) */
+.popup-overlay {
+    display: none; /* Hidden by default */
+    position: fixed;
+    z-index: 1000;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Black w/ opacity */
+    justify-content: center;
+    align-items: center;
+}
+
+.popup-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+}
+
+.close-popup {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 24px;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+/* Form Group */
+.form-group {
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group select,
+.form-group textarea {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 60px;
+}
+
+.color-picker {
+    display: flex;
+    align-items: center;
+}
+
+.color-picker input[type="text"] {
+    margin-left: 10px;
+    width: 100px;
+}
+
+/* Button Styles */
+button[type="submit"] {
+    background-color: #28a745;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+button[type="submit"]:hover {
+    background-color: #218838;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .popup-content {
+        width: 95%;
+    }
+
+    .products-section {
+        padding: 10px;
+    }
+
+    #productsTable th,
+    #productsTable td {
+        padding: 6px;
+        font-size: 14px;
+    }
+
+    .form-group {
+        flex-direction: column;
+    }
+
+    .color-picker {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .color-picker input[type="text"] {
+        margin-left: 0;
+        margin-top: 5px;
+    }
+
+    .search-bar input[type="text"] {
+        max-width: 100%;
+    }
+}
+
+/* Accessibility: Visually Hidden */
+.visually-hidden { 
+    position: absolute !important; 
+    height: 1px; 
+    width: 1px; 
+    overflow: hidden;
+    clip: rect(1px, 1px, 1px, 1px); 
+    white-space: nowrap; 
+}
+
+        </style>
+    </div>
+</body>
+</html>
