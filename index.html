@@ -405,7 +405,7 @@
 
     async function fetchSalesData() {
         try {
-            const response = await fetch(`${API_BASE_URL}/sales`);
+            const response = await fetch(`${API_BASE_URL}/products`);
             if (!response.ok) throw new Error('Failed to fetch sales data');
             const sales = await response.json();
             console.log('Sales Data:', sales);
