@@ -644,7 +644,7 @@
 
                 console.log('Sending receipt data to backend:', receiptData);
 
-                const response = await fetch('https://shans-inventory-system-backend.onrender.com/api/generate-pdf', { // Ensure this endpoint exists on your backend
+                const response = await fetch('https://shans-backend.onrender.com/api/generate-pdf', { // Ensure this endpoint exists on your backend
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
