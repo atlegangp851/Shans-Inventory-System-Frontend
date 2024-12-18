@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Receipt and Quotation Generator</title>
     <style>
-        /* [Your existing CSS styles remain unchanged] */
+        /* Existing CSS styles */
         body {
             font-family: Arial, sans-serif;
             line-height: 1.6;
@@ -165,9 +165,45 @@
             background-color: #e60000;
         }
 
+        /* Loading Screen Styles */
+        #loadingScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .loader-large {
+            border: 8px solid #f3f3f3; /* Light grey */
+            border-top: 8px solid #3498db; /* Blue */
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        #loadingMessage {
+            font-size: 18px;
+            color: #333;
+        }
+
     </style>
 </head>
 <body>
+    <!-- Loading Screen -->
+    <div id="loadingScreen">
+        <div class="loader-large"></div>
+        <div id="loadingMessage">Starting up the server, please wait...</div>
+    </div>
+
     <div class="container">
         <h1>Receipt and Quotation Generator</h1>
         
@@ -263,7 +299,7 @@
             <p>Tax (15%): R<span id="taxAmount">0.00</span></p>
             <p>Total Amount: R<span id="totalAmount">0.00</span></p>
 
-            <!-- Comments Section -->
+            <!-- Payment Method Section -->
             <div class="section" style="border:none; padding:0;">
                 <label for="paymentMethod">Payment Method:</label>
                 <select id="paymentMethod">
@@ -272,7 +308,7 @@
                 </select>
             </div>
 
-            <!-- Added Comments Box -->
+            <!-- Additional Comments Section -->
             <div class="section" style="border:none; padding:0;">
                 <label for="comments">Additional Comments:</label>
                 <textarea id="comments" placeholder="Enter any additional comments here..."></textarea>
@@ -310,6 +346,10 @@
     const selectedProductsTable = document.getElementById('selectedProductsTable');
     const companySelect = document.getElementById('companySelect');
     const commentsTextarea = document.getElementById('comments'); // Added Comments Element
+
+    // Loading Screen Elements
+    const loadingScreen = document.getElementById('loadingScreen');
+    const loadingMessage = document.getElementById('loadingMessage');
 
     // Company Information
     const companies = {
@@ -360,6 +400,19 @@
         } catch (error) {
             console.error('Error fetching products:', error);
             alert('Failed to load products. Please try again later.');
+        }
+    }
+
+    async function fetchSalesData() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/sales`);
+            if (!response.ok) throw new Error('Failed to fetch sales data');
+            const sales = await response.json();
+            console.log('Sales Data:', sales);
+            // You can process or display the sales data as needed
+        } catch (error) {
+            console.error('Error fetching sales data:', error);
+            alert('Failed to load sales data. Please try again later.');
         }
     }
 
@@ -845,16 +898,36 @@
     });
 
     window.onload = async function() {
-        await fetchAllProducts();
-        updateSelectedProductsTable();
+        // Show loading screen
+        loadingScreen.style.display = 'flex';
+        loadingMessage.textContent = 'Connecting to server, please wait...';
 
-        // Optionally, load previously selected company
-        const selectedCompanyCookie = getCookie('selectedCompany');
-        if (selectedCompanyCookie) {
-            const selectedCompany = JSON.parse(selectedCompanyCookie);
-            companySelect.value = selectedCompany.key;
+        try {
+            // Fetch sales data
+            await fetchSalesData();
+
+            // Fetch all products
+            await fetchAllProducts();
+
+            // Update selected products table
+            updateSelectedProductsTable();
+
+            // Optionally, load previously selected company
+            const selectedCompanyCookie = getCookie('selectedCompany');
+            if (selectedCompanyCookie) {
+                const selectedCompany = JSON.parse(selectedCompanyCookie);
+                companySelect.value = selectedCompany.key;
+            }
+
+        } catch (error) {
+            console.error('Error during initialization:', error);
+            alert('An error occurred during initialization. Please try again later.');
+        } finally {
+            // Hide loading screen after all data is loaded or upon error
+            loadingScreen.style.display = 'none';
         }
     };
 </script>
 
 </body>
+</html>
