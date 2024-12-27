@@ -179,7 +179,52 @@
         <div class="card-view" id="card-view">
             <!-- Cards Will Be Dynamically Added Here -->
         </div>
+
+        <button class="view-toggle" id="save-to-excel">Save to Excel</button>
+
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script>
+    document.getElementById('save-to-excel').addEventListener('click', saveToExcel);
+
+    function saveToExcel() {
+        if (allSalesData.length === 0) {
+            alert('No data available to save!');
+            return;
+        }
+
+        // Prepare data for Excel
+        const sheetData = allSalesData.map((item) => ({
+            "Reference Number": item.reference_number,
+            "Date": formatDate(item.date),
+            "Client Name": item.billing_name,
+            "Billing Address": item.billing_address,
+            "Billing Email": item.billing_email,
+            "Billing Phone": item.billing_phone || 'N/A',
+            "Item Purchased": item.item_name,
+            "Quantity": item.quantity,
+            "Tax per Unit (R)": parseFloat(item.tax_per_product || 0).toFixed(2),
+            "Unit Price Before Tax (R)": (
+                parseFloat(item.total_price) / (parseInt(item.quantity) || 1) - 
+                parseFloat(item.tax_per_product || 0)
+            ).toFixed(2),
+            "Payment Method": item.payment_method,
+            "Total Paid (R)": parseFloat(item.total_price).toFixed(2),
+        }));
+
+        // Convert data to worksheet
+        const worksheet = XLSX.utils.json_to_sheet(sheetData);
+        
+        // Create a workbook and add the worksheet
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Sales Data');
+
+        // Save the workbook as an Excel file
+        XLSX.writeFile(workbook, `Sales_Data_${new Date().toISOString().split('T')[0]}.xlsx`);
+    }
+</script>
+
 
     <script>
         const tablesContainer = document.getElementById('tables-container');
@@ -193,7 +238,7 @@
         // Fetch sales data from the API
         async function fetchSalesData() {
             try {
-                const response = await fetch('https://shans-backend.onrender.com/api/sales'); 
+                const response = await fetch('http://localhost:3000/api/sales'); 
                 // Adjust the URL if your server runs elsewhere
                 if (!response.ok) {
                     throw new Error('Network response was not ok.');

@@ -6,8 +6,8 @@
     <title>Shans Inventory System</title>
     <link rel="stylesheet" href="styles.css">
     <!-- Add within the <head> section -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
-<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 
     <style>
         /* frontend/styles.css */
@@ -270,46 +270,45 @@
             <span class="plus-icon">+</span>
         </div>
 
-      <!-- Filter Menu -->
-<div id="filterMenu" class="filter-menu" aria-label="Filter Products">
-    <div class="filter-group">
-        <label for="filterCarBrand">Car Brand</label>
-        <select id="filterCarBrand">
-            <option value="">All Brands</option>
-            <!-- Dynamic options will be populated here -->
-        </select>
-    </div>
-    <div class="filter-group">
-        <label for="filterProductCategory">Product Category</label>
-        <select id="filterProductCategory">
-            <option value="">All Categories</option>
-            <!-- Dynamic options will be populated here -->
-        </select>
-    </div>
-    <!-- New Filter Groups -->
-    <div class="filter-group">
-        <label for="filterCarModel">Car Model</label>
-        <select id="filterCarModel">
-            <option value="">All Models</option>
-            <!-- Dynamic options will be populated here -->
-        </select>
-    </div>
-    <div class="filter-group">
-        <label for="filterRoom">Room</label>
-        <select id="filterRoom">
-            <option value="">All Rooms</option>
-            <!-- Dynamic options will be populated here -->
-        </select>
-    </div>
-    <div class="filter-group">
-        <label for="filterColourTape">Colour Tape</label>
-        <select id="filterColourTape">
-            <option value="">All Colours</option>
-            <!-- Dynamic options will be populated here -->
-        </select>
-    </div>
-</div>
-
+        <!-- Filter Menu -->
+        <div id="filterMenu" class="filter-menu" aria-label="Filter Products">
+            <div class="filter-group">
+                <label for="filterCarBrand">Car Brand</label>
+                <select id="filterCarBrand">
+                    <option value="">All Brands</option>
+                    <!-- Dynamic options will be populated here -->
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="filterProductCategory">Product Category</label>
+                <select id="filterProductCategory">
+                    <option value="">All Categories</option>
+                    <!-- Dynamic options will be populated here -->
+                </select>
+            </div>
+            <!-- New Filter Groups -->
+            <div class="filter-group">
+                <label for="filterCarModel">Car Model</label>
+                <select id="filterCarModel">
+                    <option value="">All Models</option>
+                    <!-- Dynamic options will be populated here -->
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="filterRoom">Room</label>
+                <select id="filterRoom">
+                    <option value="">All Rooms</option>
+                    <!-- Dynamic options will be populated here -->
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="filterColourTape">Colour Tape</label>
+                <select id="filterColourTape">
+                    <option value="">All Colours</option>
+                    <!-- Dynamic options will be populated here -->
+                </select>
+            </div>
+        </div>
 
         <!-- Add Product Modal -->
         <div id="popupOverlay" class="popup-overlay" aria-hidden="true" role="dialog" aria-labelledby="addProductModalTitle">
@@ -369,7 +368,6 @@
                             <option value="vinyl">Vinyl</option>
                             <!-- Add more categories as needed -->
                         </select>
-                        
                     </div>
                     <div class="form-group">
                         <label for="availableStock">Available Stock</label>
@@ -543,259 +541,966 @@
         <!-- Status Message -->
         <div id="statusMessage" class="status-message"></div>
 
-        <script src="script.js"></script>
+        <!-- Cards Container (Mobile) -->
+        <div id="productsCards" class="products-cards">
+            <!-- Cards will be dynamically inserted here -->
+        </div>
 
+        <!-- Additional CSS for table/cards toggle -->
+        <style>
+            /* By default, show the table and hide cards */
+            #productsTable {
+                display: table;
+            }
 
+            .products-cards {
+                display: none; /* Hidden by default on desktop */
+            }
+
+            /* When below 768px, hide the table and show the cards */
+            @media (max-width: 768px) {
+                #productsTable {
+                    display: none;
+                }
+                .products-cards {
+                    display: block;
+                }
+                
+                /* Basic card layout styling */
+                .product-card {
+                    border: 1px solid #ddd;
+                    border-radius: 6px;
+                    padding: 16px;
+                    margin-bottom: 16px;
+                    background-color: #fff;
+                }
+                .product-card .card-header {
+                    font-weight: bold;
+                    margin-bottom: 8px;
+                }
+                
+                .product-card .card-body {
+                    font-size: 14px;
+                    line-height: 1.4;
+                }
+                
+                .product-card .card-actions {
+                    margin-top: 12px;
+                    display: flex;
+                    gap: 8px;
+                }
+                .product-card .edit-button,
+                .product-card .delete-button {
+                    padding: 6px 12px;
+                    font-size: 14px;
+                    border-radius: 4px;
+                    border: none;
+                    cursor: pointer;
+                }
+                .product-card .edit-button {
+                    background-color: #ffc107;
+                    color: #fff;
+                }
+                .product-card .delete-button {
+                    background-color: #dc3545;
+                    color: #fff;
+                }
+            }
+        </style>
+
+        <!-- Render Cards JS -->
+        <script>
+            /**
+             * Capitalize words helper (used in both table & cards)
+             */
+            function capitalizeWords(str) {
+                return str.replace(/\b\w/g, char => char.toUpperCase());
+            }
+
+            /**
+             * Render the products as cards in the mobile view
+             * @param {Array} products - Array of product objects to display
+             */
+            function renderProductsCards(products) {
+                const productsCardsContainer = document.getElementById('productsCards');
+                // Clear existing cards
+                productsCardsContainer.innerHTML = '';
+
+                // Create cards for each product
+                products.forEach(product => {
+                    // Create card wrapper
+                    const card = document.createElement('div');
+                    card.classList.add('product-card');
+
+                    // Card header (e.g., item name)
+                    const cardHeader = document.createElement('div');
+                    cardHeader.classList.add('card-header');
+                    cardHeader.textContent = product.item_name || 'No Name';
+                    card.appendChild(cardHeader);
+
+                    // Card body (details)
+                    const cardBody = document.createElement('div');
+                    cardBody.classList.add('card-body');
+
+                    // Build the textual info
+                    cardBody.innerHTML = `
+                        <p><strong>Item Code:</strong> ${product.item_code}</p>
+                        <p><strong>Room:</strong> ${product.room_name}</p>
+                        <p><strong>Car Brand:</strong> ${product.car_brand}</p>
+                        <p><strong>Car Model:</strong> ${product.car_model}</p>
+                        <p><strong>Category:</strong> ${capitalizeWords(product.product_category.replace(/_/g, ' '))}</p>
+                        <p><strong>Available Stock:</strong> ${product.available_stock}</p>
+                        <p><strong>Colour Tape:</strong> 
+                            <span style="display:inline-block;width:20px;height:20px;background-color:${product.colour_tape};border-radius:50%;"></span>
+                        </p>
+                        <p><strong>Location:</strong> ${product.location}</p>
+                        <p><strong>Unit Retail Price:</strong> R${parseFloat(product.unit_retail_price).toFixed(2)}</p>
+                        <p><strong>Wholesale Price:</strong> R${parseFloat(product.wholesale_price).toFixed(2)}</p>
+                        <p><strong>Unit Cost:</strong> R${parseFloat(product.unit_cost).toFixed(2)}</p>
+                        <p><strong>Profit:</strong> R${parseFloat(product.profit).toFixed(2)}</p>
+                        <p><strong>Supplier Code:</strong> ${product.supplier_code}</p>
+                        <p><strong>Comments:</strong> ${product.additional_comments || ''}</p>
+                    `;
+                    card.appendChild(cardBody);
+
+                    // Card actions (Edit/Delete buttons)
+                    const cardActions = document.createElement('div');
+                    cardActions.classList.add('card-actions');
+                    
+                    // Edit button
+                    const editButton = document.createElement('button');
+                    editButton.classList.add('edit-button');
+                    editButton.setAttribute('data-item-code', product.item_code);
+                    editButton.textContent = 'Edit';
+                    cardActions.appendChild(editButton);
+
+                    // Delete button
+                    const deleteButton = document.createElement('button');
+                    deleteButton.classList.add('delete-button');
+                    deleteButton.setAttribute('data-item-code', product.item_code);
+                    deleteButton.textContent = 'Delete';
+                    cardActions.appendChild(deleteButton);
+
+                    card.appendChild(cardActions);
+
+                    // Append to container
+                    productsCardsContainer.appendChild(card);
+                });
+            }
+        </script>
+
+        <script>
+            // frontend/script.js
+            document.addEventListener('DOMContentLoaded', function() {
+                // Define the base URL for the API
+                const API_URL = 'http://localhost:3000/api';
+
+                // **Element References**
+                // Add Product Modal Elements
+                const addProductBlock = document.getElementById('addProductBlock');
+                const popupOverlay = document.getElementById('popupOverlay');
+                const closePopup = document.getElementById('closePopup');
+                const addProductForm = document.getElementById('addProductForm');
+                const colourTape = document.getElementById('colourTape');
+                const colourTapeText = document.getElementById('colourTapeText');
+
+                // Edit Product Modal Elements
+                const editProductOverlay = document.getElementById('editProductOverlay');
+                const closeEditPopup = document.getElementById('closeEditPopup');
+                const editProductForm = document.getElementById('editProductForm');
+                const editColourTape = document.getElementById('editColourTape');
+                const editColourTapeText = document.getElementById('editColourTapeText');
+
+                // Products Table and Status Message
+                const productsTableBody = document.querySelector('#productsTable tbody');
+                const statusMessage = document.getElementById('statusMessage');
+                const searchInput = document.getElementById('searchInput');
+
+                // Cards container
+                const productsCardsContainer = document.getElementById('productsCards');
+
+                // Filter Menu Elements
+                const filterCarBrand = document.getElementById('filterCarBrand');
+                const filterProductCategory = document.getElementById('filterProductCategory');
+                const filterCarModel = document.getElementById('filterCarModel'); 
+                const filterRoom = document.getElementById('filterRoom');
+                const filterColourTape = document.getElementById('filterColourTape');
+
+                // **Data Storage**
+                let allProducts = []; // To store all fetched products
+
+                // **Helper Functions**
+                /**
+                 * Function to determine appropriate text color based on background color for readability
+                 * @param {string} hexcolor - The background color in hex format (e.g., "#FFFFFF")
+                 * @returns {string} - Returns 'black' or 'white' based on the background color
+                 */
+                function getContrastYIQ(hexcolor) {
+                    hexcolor = hexcolor.replace("#", "");
+                    if (hexcolor.length === 3) {
+                        hexcolor = hexcolor.split('').map(char => char + char).join('');
+                    }
+                    const r = parseInt(hexcolor.substr(0,2),16);
+                    const g = parseInt(hexcolor.substr(2,2),16);
+                    const b = parseInt(hexcolor.substr(4,2),16);
+                    const yiq = ((r*299)+(g*587)+(b*114))/1000;
+                    return (yiq >= 128) ? 'black' : 'white';
+                }
+
+                /**
+                 * Function to open the Add Product modal
+                 */
+                function openAddModal() {
+                    popupOverlay.style.display = 'flex';
+                    popupOverlay.setAttribute('aria-hidden', 'false');
+                }
+
+                /**
+                 * Function to close the Add Product modal
+                 */
+                function closeAddModal() {
+                    popupOverlay.style.display = 'none';
+                    popupOverlay.setAttribute('aria-hidden', 'true');
+                    addProductForm.reset();
+                    colourTape.value = '#000000';
+                    colourTapeText.value = '#000000';
+                }
+
+                /**
+                 * Function to open the Edit Product modal
+                 * @param {Object} product - The product data to edit
+                 */
+                function openEditModal(product) {
+                    editProductOverlay.style.display = 'flex';
+                    editProductOverlay.setAttribute('aria-hidden', 'false');
+
+                    // Prefill the form with product data
+                    document.getElementById('editItemCode').value = product.item_code;
+                    document.getElementById('editRoom').value = product.room_id;
+                    document.getElementById('editItemName').value = product.item_name;
+                    document.getElementById('editCarBrand').value = product.car_brand;
+                    document.getElementById('editCarModel').value = product.car_model;
+                    document.getElementById('editProductCategory').value = product.product_category;
+                    document.getElementById('editAvailableStock').value = product.available_stock;
+                    document.getElementById('editLocation').value = product.location;
+                    document.getElementById('editUnitRetailPrice').value = product.unit_retail_price;
+                    document.getElementById('editWholesalePrice').value = product.wholesale_price;
+                    document.getElementById('editUnitCost').value = product.unit_cost;
+                    document.getElementById('editSupplierCode').value = product.supplier_code;
+                    document.getElementById('editAdditionalComments').value = product.additional_comments || '';
+
+                    editColourTape.value = product.colour_tape;
+                    editColourTapeText.value = product.colour_tape;
+                }
+
+                /**
+                 * Function to close the Edit Product modal
+                 */
+                function closeEditModal() {
+                    editProductOverlay.style.display = 'none';
+                    editProductOverlay.setAttribute('aria-hidden', 'true');
+                    editProductForm.reset();
+                    editColourTape.value = '#000000';
+                    editColourTapeText.value = '#000000';
+                }
+
+                /**
+                 * Fetch all rooms from the backend and populate the room dropdowns
+                 */
+                async function fetchRooms() {
+                    try {
+                        const response = await fetch(`${API_URL}/rooms`);
+                        if (!response.ok) {
+                            throw new Error('Failed to fetch rooms');
+                        }
+                        const rooms = await response.json();
+
+                        const roomSelect = document.getElementById('room');
+                        const editRoomSelect = document.getElementById('editRoom');
+
+                        // Clear existing options except the first
+                        roomSelect.innerHTML = '<option value="">Select a room</option>';
+                        editRoomSelect.innerHTML = '<option value="">Select a room</option>';
+
+                        rooms.forEach(room => {
+                            const option = document.createElement('option');
+                            option.value = room.id;
+                            option.textContent = room.name;
+                            roomSelect.appendChild(option.cloneNode(true));
+                            editRoomSelect.appendChild(option.cloneNode(true));
+                        });
+                    } catch (error) {
+                        console.error('Error fetching rooms:', error);
+                        showStatusMessage('Failed to load rooms. Please try again later.', 'error');
+                    }
+                }
+
+                /**
+                 * Fetch all products from the backend and populate the products table
+                 */
+                async function fetchProducts() {
+                    try {
+                        const response = await fetch(`${API_URL}/products`);
+                        if (!response.ok) {
+                            throw new Error('Failed to fetch products');
+                        }
+                        const products = await response.json();
+                        allProducts = products; // Store all products
+
+                        renderProductsTable(allProducts);
+                        populateFilters(); // Populate filter options after fetching products
+                    } catch (error) {
+                        console.error('Error fetching products:', error);
+                        showStatusMessage('Failed to load products. Please try again later.', 'error');
+                    }
+                }
+
+                /**
+                 * Render the products table based on the provided products array
+                 * @param {Array} products - Array of product objects to display
+                 */
+                function renderProductsTable(products) {
+                    // Clear existing table rows
+                    productsTableBody.innerHTML = '';
+
+                    // Populate table with products
+                    for (const product of products) {
+                        const row = document.createElement('tr');
+
+                        row.innerHTML = `
+                            <td>${product.item_code}</td>
+                            <td>${product.room_name}</td>
+                            <td>${product.item_name}</td>
+                            <td>${product.car_brand}</td>
+                            <td>${product.car_model}</td>
+                            <td>${capitalizeWords(product.product_category.replace(/_/g, ' '))}</td>
+                            <td>${product.available_stock}</td>
+                            <td>
+                                <span style="display:inline-block;width:20px;height:20px;background-color:${product.colour_tape};border-radius:50%;">
+                                </span>
+                            </td>
+                            <td>${product.location}</td>
+                            <td>${parseFloat(product.unit_retail_price).toFixed(2)}</td>
+                            <td>${parseFloat(product.wholesale_price).toFixed(2)}</td>
+                            <td>${parseFloat(product.unit_cost).toFixed(2)}</td>
+                            <td>${parseFloat(product.profit).toFixed(2)}</td>
+                            <td>${product.supplier_code}</td>
+                            <td>${product.additional_comments || ''}</td>
+                            <td class="actions-button">
+                                <button class="edit-button" data-item-code="${product.item_code}" aria-label="Edit Product">&#9998;</button>
+                                <button class="delete-button" data-item-code="${product.item_code}" aria-label="Delete Product">&#10006;</button>
+                            </td>
+                        `;
+                        productsTableBody.appendChild(row);
+                    }
+
+                    // ALSO render the mobile card view:
+                    renderProductsCards(products);
+                }
+
+                /**
+                 * Function to show status messages
+                 * @param {string} message - The message to display
+                 * @param {string} type - 'success' or 'error'
+                 */
+                function showStatusMessage(message, type) {
+                    statusMessage.textContent = message;
+                    statusMessage.className = `status-message ${type}`;
+                    statusMessage.style.display = 'block';
+
+                    setTimeout(() => {
+                        statusMessage.style.display = 'none';
+                    }, 3000);
+                }
+
+                /**
+                 * Populate filter dropdowns
+                 */
+                function populateFilters() {
+                    populateFilterOptions(filterCarBrand, 'car_brand');
+                    populateFilterOptions(filterProductCategory, 'product_category');
+                    populateFilterOptions(filterCarModel, 'car_model');
+                    populateFilterOptions(filterRoom, 'room_name');
+                    populateColourTapeFilter();
+                }
+
+                /**
+                 * Helper function to populate a single filter dropdown
+                 * @param {HTMLElement} selectElement
+                 * @param {string} key
+                 */
+                function populateFilterOptions(selectElement, key) {
+                    // Get unique values
+                    const uniqueValues = [...new Set(allProducts.map(p => p[key]).filter(Boolean))].sort();
+                    uniqueValues.forEach(value => {
+                        const option = document.createElement('option');
+                        option.value = value;
+                        option.textContent = capitalizeWords(value.replace(/_/g, ' '));
+                        selectElement.appendChild(option);
+                    });
+                }
+
+                /**
+                 * Function to populate the Colour Tape filter with color swatches
+                 */
+                function populateColourTapeFilter() {
+                    const uniqueColours = [...new Set(allProducts.map(p => p.colour_tape).filter(Boolean))].sort();
+                    uniqueColours.forEach(color => {
+                        const option = document.createElement('option');
+                        option.value = color;
+                        option.textContent = capitalizeWords(color);
+                        // Set background/foreground for visibility
+                        option.style.backgroundColor = color;
+                        option.style.color = getContrastYIQ(color);
+                        filterColourTape.appendChild(option);
+                    });
+                }
+
+                /**
+                 * Function to handle filter changes
+                 */
+                function handleFilters() {
+                    const brand = filterCarBrand.value.toLowerCase();
+                    const category = filterProductCategory.value.toLowerCase();
+                    const model = filterCarModel.value.toLowerCase();
+                    const room = filterRoom.value.toLowerCase();
+                    const colour = filterColourTape.value.toLowerCase();
+
+                    const query = searchInput.value.trim().toLowerCase();
+
+                    const filtered = allProducts.filter(product => {
+                        const matchesBrand = brand ? product.car_brand.toLowerCase() === brand : true;
+                        const matchesCategory = category ? product.product_category.toLowerCase() === category : true;
+                        const matchesModel = model ? product.car_model.toLowerCase() === model : true;
+                        const matchesRoom = room ? product.room_name.toLowerCase() === room : true;
+                        const matchesColour = colour ? product.colour_tape.toLowerCase() === colour : true;
+                        const matchesSearch = product.item_name.toLowerCase().includes(query);
+                        return matchesBrand && matchesCategory && matchesModel && matchesRoom && matchesColour && matchesSearch;
+                    });
+
+                    // Re-render with filtered results
+                    renderProductsTable(filtered);
+                }
+
+                /**
+                 * Handle Add Product form submission
+                 */
+                addProductForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+
+                    // Collect form data
+                    const formData = {
+                        item_code: document.getElementById('itemCode').value.trim(),
+                        room_id: parseInt(document.getElementById('room').value),
+                        item_name: document.getElementById('itemName').value.trim(),
+                        car_brand: document.getElementById('carBrand').value.trim(),
+                        car_model: document.getElementById('carModel').value.trim(),
+                        unit_retail_price: parseFloat(document.getElementById('unitRetailPrice').value),
+                        wholesale_price: parseFloat(document.getElementById('wholesalePrice').value),
+                        unit_cost: parseFloat(document.getElementById('unitCost').value),
+                        supplier_code: document.getElementById('supplierCode').value.trim(),
+                        available_stock: parseInt(document.getElementById('availableStock').value),
+                        location: document.getElementById('location').value.trim(),
+                        colour_tape: document.getElementById('colourTape').value,
+                        product_category: document.getElementById('productCategory').value,
+                        additional_comments: document.getElementById('additionalComments').value.trim()
+                    };
+
+                    // Basic front-end checks
+                    if (!formData.item_code) {
+                        alert('Please enter an item code.');
+                        return;
+                    }
+                    if (isNaN(formData.room_id)) {
+                        alert('Please select a valid room.');
+                        return;
+                    }
+                    if (!formData.product_category) {
+                        alert('Please select a product category.');
+                        return;
+                    }
+
+                    // Send POST request
+                    try {
+                        const response = await fetch(`${API_URL}/products`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(formData)
+                        });
+
+                        if (response.ok) {
+                            await response.json();
+                            showStatusMessage('Product added successfully!', 'success');
+                            addProductForm.reset();
+                            colourTape.value = '#000000';
+                            colourTapeText.value = '#000000';
+                            closeAddModal();
+                            fetchProducts(); // Refresh the list
+                        } else {
+                            const errorData = await response.json();
+                            showStatusMessage(`Error: ${errorData.message}`, 'error');
+                        }
+                    } catch (error) {
+                        console.error('Error adding product:', error);
+                        showStatusMessage('An error occurred while adding the product.', 'error');
+                    }
+                });
+
+                /**
+                 * Handle Edit Product form submission
+                 */
+                editProductForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+
+                    const item_code = document.getElementById('editItemCode').value;
+                    const formData = {
+                        room_id: parseInt(document.getElementById('editRoom').value),
+                        item_name: document.getElementById('editItemName').value.trim(),
+                        car_brand: document.getElementById('editCarBrand').value.trim(),
+                        car_model: document.getElementById('editCarModel').value.trim(),
+                        unit_retail_price: parseFloat(document.getElementById('editUnitRetailPrice').value),
+                        wholesale_price: parseFloat(document.getElementById('editWholesalePrice').value),
+                        unit_cost: parseFloat(document.getElementById('editUnitCost').value),
+                        supplier_code: document.getElementById('editSupplierCode').value.trim(),
+                        available_stock: parseInt(document.getElementById('editAvailableStock').value),
+                        location: document.getElementById('editLocation').value.trim(),
+                        colour_tape: document.getElementById('editColourTape').value,
+                        product_category: document.getElementById('editProductCategory').value,
+                        additional_comments: document.getElementById('editAdditionalComments').value.trim()
+                    };
+
+                    if (isNaN(formData.room_id)) {
+                        alert('Please select a valid room.');
+                        return;
+                    }
+                    if (!formData.product_category) {
+                        alert('Please select a product category.');
+                        return;
+                    }
+
+                    // Send PUT request
+                    try {
+                        const response = await fetch(`${API_URL}/products/${encodeURIComponent(item_code)}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(formData)
+                        });
+
+                        if (response.ok) {
+                            await response.json();
+                            showStatusMessage('Product updated successfully!', 'success');
+                            editProductForm.reset();
+                            editColourTape.value = '#000000';
+                            editColourTapeText.value = '#000000';
+                            closeEditModal();
+                            fetchProducts(); 
+                        } else {
+                            const errorData = await response.json();
+                            showStatusMessage(`Error: ${errorData.message}`, 'error');
+                        }
+                    } catch (error) {
+                        console.error('Error updating product:', error);
+                        showStatusMessage('An error occurred while updating the product.', 'error');
+                    }
+                });
+
+                /**
+                 * Sync color input with text input (Add Form)
+                 */
+                if (colourTape && colourTapeText) {
+                    colourTape.addEventListener('input', () => { colourTapeText.value = colourTape.value; });
+                    colourTapeText.addEventListener('input', () => {
+                        if (/^#[0-9A-Fa-f]{6}$/.test(colourTapeText.value)) {
+                            colourTape.value = colourTapeText.value;
+                        }
+                    });
+                }
+
+                /**
+                 * Sync color input with text input (Edit Form)
+                 */
+                if (editColourTape && editColourTapeText) {
+                    editColourTape.addEventListener('input', () => { editColourTapeText.value = editColourTape.value; });
+                    editColourTapeText.addEventListener('input', () => {
+                        if (/^#[0-9A-Fa-f]{6}$/.test(editColourTapeText.value)) {
+                            editColourTape.value = editColourTapeText.value;
+                        }
+                    });
+                }
+
+                /**
+                 * Event listeners to open/close modals
+                 */
+                addProductBlock.addEventListener('click', openAddModal);
+                closePopup.addEventListener('click', closeAddModal);
+                closeEditPopup.addEventListener('click', closeEditModal);
+
+                // Close modals by clicking outside
+                popupOverlay.addEventListener('click', function(e) {
+                    if (e.target === popupOverlay) {
+                        closeAddModal();
+                    }
+                });
+                editProductOverlay.addEventListener('click', function(e) {
+                    if (e.target === editProductOverlay) {
+                        closeEditModal();
+                    }
+                });
+
+                /**
+                 * Table event delegation for Edit/Delete
+                 */
+                productsTableBody.addEventListener('click', async function(e) {
+                    if (e.target.classList.contains('edit-button')) {
+                        const item_code = e.target.getAttribute('data-item-code');
+                        try {
+                            const response = await fetch(`${API_URL}/products/${encodeURIComponent(item_code)}`);
+                            if (!response.ok) {
+                                throw new Error('Failed to fetch product details');
+                            }
+                            const product = await response.json();
+                            openEditModal(product);
+                        } catch (error) {
+                            console.error('Error fetching product details:', error);
+                            showStatusMessage('Failed to load product details.', 'error');
+                        }
+                    }
+
+                    if (e.target.classList.contains('delete-button')) {
+                        const item_code = e.target.getAttribute('data-item-code');
+                        if (confirm('Are you sure you want to delete this product?')) {
+                            try {
+                                const response = await fetch(`${API_URL}/products/${encodeURIComponent(item_code)}`, {
+                                    method: 'DELETE'
+                                });
+                                if (response.ok) {
+                                    showStatusMessage('Product deleted successfully!', 'success');
+                                    fetchProducts();
+                                } else {
+                                    const errorData = await response.json();
+                                    showStatusMessage(`Error: ${errorData.message}`, 'error');
+                                }
+                            } catch (error) {
+                                console.error('Error deleting product:', error);
+                                showStatusMessage('An error occurred while deleting the product.', 'error');
+                            }
+                        }
+                    }
+                });
+
+                /**
+                 * Card event delegation for Edit/Delete (mobile)
+                 */
+                productsCardsContainer.addEventListener('click', async function(e) {
+                    if (e.target.classList.contains('edit-button')) {
+                        const item_code = e.target.getAttribute('data-item-code');
+                        try {
+                            const response = await fetch(`${API_URL}/products/${encodeURIComponent(item_code)}`);
+                            if (!response.ok) {
+                                throw new Error('Failed to fetch product details');
+                            }
+                            const product = await response.json();
+                            openEditModal(product);
+                        } catch (error) {
+                            console.error('Error fetching product details:', error);
+                            showStatusMessage('Failed to load product details.', 'error');
+                        }
+                    }
+
+                    if (e.target.classList.contains('delete-button')) {
+                        const item_code = e.target.getAttribute('data-item-code');
+                        if (confirm('Are you sure you want to delete this product?')) {
+                            try {
+                                const response = await fetch(`${API_URL}/products/${encodeURIComponent(item_code)}`, {
+                                    method: 'DELETE'
+                                });
+                                if (response.ok) {
+                                    showStatusMessage('Product deleted successfully!', 'success');
+                                    fetchProducts();
+                                } else {
+                                    const errorData = await response.json();
+                                    showStatusMessage(`Error: ${errorData.message}`, 'error');
+                                }
+                            } catch (error) {
+                                console.error('Error deleting product:', error);
+                                showStatusMessage('An error occurred while deleting the product.', 'error');
+                            }
+                        }
+                    }
+                });
+
+                /**
+                 * Handle search input
+                 */
+                searchInput.addEventListener('input', function() {
+                    handleFilters();
+                });
+
+                /**
+                 * Filter change listeners
+                 */
+                filterCarBrand.addEventListener('change', handleFilters);
+                filterProductCategory.addEventListener('change', handleFilters);
+                filterCarModel.addEventListener('change', handleFilters);
+                filterRoom.addEventListener('change', handleFilters);
+                filterColourTape.addEventListener('change', handleFilters);
+
+                // Initial load
+                fetchRooms();
+                fetchProducts();
+            });
+        </script>
+
+        <!-- Repeated styles (keeping for reference) -->
         <style>
             /* frontend/styles.css */
 
-/* Existing styles... */
+            /* Existing styles... */
 
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-}
+            .container {
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 20px;
+            }
 
-.add-product-block {
-    width: 50px;
-    height: 50px;
-    background-color: #007bff;
-    color: white;
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    font-size: 30px;
-    margin-bottom: 20px;
-}
+            .add-product-block {
+                width: 50px;
+                height: 50px;
+                background-color: #007bff;
+                color: white;
+                border-radius: 50%;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                cursor: pointer;
+                font-size: 30px;
+                margin-bottom: 20px;
+            }
 
-.products-section {
-    overflow-x: auto;
-}
+            .products-section {
+                overflow-x: auto;
+            }
 
-/* Search Bar */
-.search-bar {
-    margin-bottom: 15px;
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-}
+            /* Search Bar */
+            .search-bar {
+                margin-bottom: 15px;
+                display: flex;
+                justify-content: flex-start;
+                align-items: center;
+            }
 
-.search-bar input[type="text"] {
-    width: 100%;
-    max-width: 300px;
-    padding: 8px 12px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-}
+            .search-bar input[type="text"] {
+                width: 100%;
+                max-width: 300px;
+                padding: 8px 12px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+            }
 
-.search-bar input[type="text"]:focus {
-    border-color: #007bff;
-    outline: none;
-}
+            .search-bar input[type="text"]:focus {
+                border-color: #007bff;
+                outline: none;
+            }
 
-#productsTable {
-    width: 100%;
-    border-collapse: collapse;
-}
+            #productsTable {
+                width: 100%;
+                border-collapse: collapse;
+            }
 
-#productsTable th, #productsTable td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: center;
-}
+            #productsTable th, #productsTable td {
+                border: 1px solid #ddd;
+                padding: 8px;
+                text-align: center;
+            }
 
-#productsTable th {
-    background-color: #f2f2f2;
-}
+            #productsTable th {
+                background-color: #f2f2f2;
+            }
 
-.actions-button {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
+            .actions-button {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
 
-.edit-button,
-.delete-button {
-    margin: 0 5px;
-    padding: 5px 10px;
-    border: none;
-    border-radius: 3px;
-    cursor: pointer;
-    font-size: 14px;
-}
+            .edit-button,
+            .delete-button {
+                margin: 0 5px;
+                padding: 5px 10px;
+                border: none;
+                border-radius: 3px;
+                cursor: pointer;
+                font-size: 14px;
+            }
 
-.edit-button {
-    background-color: #ffc107;
-    color: white;
-}
+            .edit-button {
+                background-color: #ffc107;
+                color: white;
+            }
 
-.edit-button:hover {
-    background-color: #e0a800;
-}
+            .edit-button:hover {
+                background-color: #e0a800;
+            }
 
-.delete-button {
-    background-color: #dc3545;
-    color: white;
-}
+            .delete-button {
+                background-color: #dc3545;
+                color: white;
+            }
 
-.delete-button:hover {
-    background-color: #c82333;
-}
+            .delete-button:hover {
+                background-color: #c82333;
+            }
 
-/* Status Message */
-.status-message {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    padding: 10px 20px;
-    border-radius: 5px;
-    color: white;
-    font-weight: bold;
-    display: none;
-    z-index: 1001;
-}
+            /* Status Message */
+            .status-message {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 10px 20px;
+                border-radius: 5px;
+                color: white;
+                font-weight: bold;
+                display: none;
+                z-index: 1001;
+            }
 
-.status-message.success {
-    background-color: #28a745;
-}
+            .status-message.success {
+                background-color: #28a745;
+            }
 
-.status-message.error {
-    background-color: #dc3545;
-}
+            .status-message.error {
+                background-color: #dc3545;
+            }
 
-/* Popup Overlay (Add and Edit) */
-.popup-overlay {
-    display: none; /* Hidden by default */
-    position: fixed;
-    z-index: 1000;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5); /* Black w/ opacity */
-    justify-content: center;
-    align-items: center;
-}
+            /* Popup Overlay (Add and Edit) */
+            .popup-overlay {
+                display: none; /* Hidden by default */
+                position: fixed;
+                z-index: 1000;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5); /* Black w/ opacity */
+                justify-content: center;
+                align-items: center;
+            }
 
-.popup-content {
-    background-color: white;
-    padding: 20px;
-    border-radius: 10px;
-    width: 90%;
-    max-width: 800px;
-    max-height: 90vh;
-    overflow-y: auto;
-    position: relative;
-}
+            .popup-content {
+                background-color: white;
+                padding: 20px;
+                border-radius: 10px;
+                width: 90%;
+                max-width: 800px;
+                max-height: 90vh;
+                overflow-y: auto;
+                position: relative;
+            }
 
-.close-popup {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    font-size: 24px;
-    background: none;
-    border: none;
-    cursor: pointer;
-}
+            .close-popup {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                font-size: 24px;
+                background: none;
+                border: none;
+                cursor: pointer;
+            }
 
-/* Form Group */
-.form-group {
-    margin-bottom: 15px;
-    display: flex;
-    flex-direction: column;
-}
+            /* Form Group */
+            .form-group {
+                margin-bottom: 15px;
+                display: flex;
+                flex-direction: column;
+            }
 
-.form-group label {
-    margin-bottom: 5px;
-    font-weight: bold;
-}
+            .form-group label {
+                margin-bottom: 5px;
+                font-weight: bold;
+            }
 
-.form-group input[type="text"],
-.form-group input[type="number"],
-.form-group select,
-.form-group textarea {
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-}
+            .form-group input[type="text"],
+            .form-group input[type="number"],
+            .form-group select,
+            .form-group textarea {
+                padding: 8px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+            }
 
-.form-group textarea {
-    resize: vertical;
-    min-height: 60px;
-}
+            .form-group textarea {
+                resize: vertical;
+                min-height: 60px;
+            }
 
-.color-picker {
-    display: flex;
-    align-items: center;
-}
+            .color-picker {
+                display: flex;
+                align-items: center;
+            }
 
-.color-picker input[type="text"] {
-    margin-left: 10px;
-    width: 100px;
-}
+            .color-picker input[type="text"] {
+                margin-left: 10px;
+                width: 100px;
+            }
 
-/* Button Styles */
-button[type="submit"] {
-    background-color: #28a745;
-    color: white;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
+            /* Button Styles */
+            button[type="submit"] {
+                background-color: #28a745;
+                color: white;
+                padding: 10px 15px;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+            }
 
-button[type="submit"]:hover {
-    background-color: #218838;
-}
+            button[type="submit"]:hover {
+                background-color: #218838;
+            }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-    .popup-content {
-        width: 95%;
-    }
+            /* Responsive Design */
+            @media (max-width: 768px) {
+                .popup-content {
+                    width: 95%;
+                }
 
-    .products-section {
-        padding: 10px;
-    }
+                .products-section {
+                    padding: 10px;
+                }
 
-    #productsTable th,
-    #productsTable td {
-        padding: 6px;
-        font-size: 14px;
-    }
+                #productsTable th,
+                #productsTable td {
+                    padding: 6px;
+                    font-size: 14px;
+                }
 
-    .form-group {
-        flex-direction: column;
-    }
+                .form-group {
+                    flex-direction: column;
+                }
 
-    .color-picker {
-        flex-direction: column;
-        align-items: flex-start;
-    }
+                .color-picker {
+                    flex-direction: column;
+                    align-items: flex-start;
+                }
 
-    .color-picker input[type="text"] {
-        margin-left: 0;
-        margin-top: 5px;
-    }
+                .color-picker input[type="text"] {
+                    margin-left: 0;
+                    margin-top: 5px;
+                }
 
-    .search-bar input[type="text"] {
-        max-width: 100%;
-    }
-}
+                .search-bar input[type="text"] {
+                    max-width: 100%;
+                }
+            }
 
-/* Accessibility: Visually Hidden */
-.visually-hidden { 
-    position: absolute !important; 
-    height: 1px; 
-    width: 1px; 
-    overflow: hidden;
-    clip: rect(1px, 1px, 1px, 1px); 
-    white-space: nowrap; 
-}
-
+            /* Accessibility: Visually Hidden */
+            .visually-hidden { 
+                position: absolute !important; 
+                height: 1px; 
+                width: 1px; 
+                overflow: hidden;
+                clip: rect(1px, 1px, 1px, 1px); 
+                white-space: nowrap; 
+            }
         </style>
     </div>
 </body>
