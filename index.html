@@ -10,7 +10,7 @@
             font-family: Arial, sans-serif;
             line-height: 1.6;
             margin: 0;
-            padding: 20px;
+            padding: 0; /* Changed to 0 to accommodate loading screen */
             background-color: #f4f4f4;
         }
         .container {
@@ -165,9 +165,45 @@
             background-color: #e60000;
         }
 
+        /* Loading Screen Styles */
+        #loadingScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.9);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #loadingScreen .spinner {
+            border: 8px solid #f3f3f3; /* Light grey */
+            border-top: 8px solid #3498db; /* Blue */
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        #loadingScreen p {
+            font-size: 18px;
+            color: #333;
+        }
+
     </style>
 </head>
 <body>
+    <!-- Loading Screen -->
+    <div id="loadingScreen">
+        <div class="spinner"></div>
+        <p>Loading products, please wait...</p>
+    </div>
+
     <div class="container">
         <h1>Receipt and Quotation Generator</h1>
         
@@ -310,6 +346,7 @@
     const selectedProductsTable = document.getElementById('selectedProductsTable');
     const companySelect = document.getElementById('companySelect');
     const commentsTextarea = document.getElementById('comments'); // Added Comments Element
+    const loadingScreen = document.getElementById('loadingScreen'); // Loading Screen Element
 
     // Company Information
     const companies = {
@@ -845,7 +882,12 @@
     });
 
     window.onload = async function() {
-        await fetchAllProducts();
+        try {
+            await fetchAllProducts();
+        } finally {
+            // Hide the loading screen regardless of success or failure
+            loadingScreen.style.display = 'none';
+        }
         updateSelectedProductsTable();
 
         // Optionally, load previously selected company
