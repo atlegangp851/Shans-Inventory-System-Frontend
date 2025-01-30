@@ -139,9 +139,6 @@
         .additional-comments h3 {
             margin-bottom: 10px;
             font-size: 20px;
-            /* Removed border-bottom and padding-bottom to eliminate the horizontal line */
-            /* border-bottom: 1px solid #ddd; */
-            /* padding-bottom: 5px; */
         }
 
         .additional-comments p {
@@ -173,7 +170,6 @@
             border-radius: 5px;
         }
 
-        /* Re-enabled Flexbox for totals p elements */
         .totals p {
             display: flex; /* Enable Flexbox */
             justify-content: space-between; /* Space between label and price */
@@ -182,23 +178,9 @@
             margin-bottom: 10px;
         }
 
-        /* Specific styling for Tax Info to ensure Flexbox alignment */
-        .totals p.tax {
-            display: flex; /* Ensure Flexbox is applied */
-            justify-content: space-between; /* Space between label and price */
-            align-items: center; /* Vertically center align items */
-            font-size: 16px;
-            margin-bottom: 10px;
-        }
-
         .totals p span {
-            text-align: right; /* Right-align the text within the span */
-            font-weight: bold; /* Make the price bold for emphasis */
-        }
-
-        .totals p.tax span {
-            text-align: right; /* Right-align the text within the span */
-            font-weight: bold; /* Make the price bold for emphasis */
+            text-align: right;
+            font-weight: bold;
         }
 
         /* Footer */
@@ -318,9 +300,60 @@
                 font-size: 12px;
             }
         }
+
+        /* Toast Container and Toast Styles */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            background-color: #333;
+            color: #fff;
+            padding: 10px 15px;
+            border-radius: 5px;
+            opacity: 0.95;
+            font-size: 14px;
+            animation: fadeInOut 3s forwards;
+        }
+
+        .toast.success {
+            background-color: #28a745;
+        }
+
+        .toast.error {
+            background-color: #dc3545;
+        }
+
+        .toast.info {
+            background-color: #007bff;
+        }
+
+        @keyframes fadeInOut {
+            0% {
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.95;
+            }
+            90% {
+                opacity: 0.95;
+            }
+            100% {
+                opacity: 0;
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
     <a href="index.html" style="text-decoration: none; color: #007BFF; font-size: 16px; margin-right: 20px;">&larr; Back to Home</a>
     <div class="container">
         
@@ -362,7 +395,6 @@
                         <th>Product</th>
                         <th>QTY</th>
                         <th>UNIT PRICE (R)</th>
-                        <!-- TAX PER UNIT (R) column will be inserted dynamically if tax is applied -->
                         <th>TAX PER UNIT (R)</th>
                         <th>TOTAL (R)</th>
                     </tr>
@@ -416,6 +448,24 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <script>
+        /**
+         * Display a non-blocking toast message in the top-right corner.
+         * @param {string} message - The message to display.
+         * @param {string} [type='info'] - The type of the toast ('success', 'error', 'info').
+         */
+        function showToastMessage(message, type = 'info') {
+            const toastContainer = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.classList.add('toast', type);
+            toast.textContent = message;
+            toastContainer.appendChild(toast);
+
+            // Automatically remove the toast after ~3s
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
         // Function to retrieve a cookie by name
         function getCookie(name) {
             const cname = name + "=";
@@ -462,8 +512,10 @@
             const totalAmountCookie = getCookie('totalAmount');
             const selectedCompanyCookie = getCookie('selectedCompany'); // Retrieve company info
 
-            if (!customerInfoCookie || !selectedProductsCookie || !subtotalAmountCookie || !taxAmountCookie || !totalAmountCookie || !selectedCompanyCookie) {
-                alert('No invoice data found. Please generate an invoice first.');
+            if (!customerInfoCookie || !selectedProductsCookie || !subtotalAmountCookie 
+                || !taxAmountCookie || !totalAmountCookie || !selectedCompanyCookie) {
+                // Was using alert; now replaced with toast:
+                showToastMessage('No invoice data found. Please generate an invoice first.', 'error');
                 window.location.href = 'index.html'; 
                 return;
             }
@@ -513,7 +565,8 @@
 
             if (isTaxAdded) {
                 // Check if TAX PER UNIT (R) column already exists
-                if (!tableHeaderRow.querySelector('th:nth-child(4)') || !tableHeaderRow.querySelector('th:nth-child(4)').textContent.includes('TAX PER UNIT (R)')) {
+                if (!tableHeaderRow.querySelector('th:nth-child(4)') 
+                    || !tableHeaderRow.querySelector('th:nth-child(4)').textContent.includes('TAX PER UNIT (R)')) {
                     const taxHeader = document.createElement('th');
                     taxHeader.textContent = 'TAX PER UNIT (R)';
                     tableHeaderRow.insertBefore(taxHeader, tableHeaderRow.children[3]);
@@ -605,7 +658,8 @@
                 const totalAmountCookie = getCookie('totalAmount');
                 const selectedCompanyCookie = getCookie('selectedCompany');
 
-                if (!customerInfoCookie || !selectedProductsCookie || !subtotalAmountCookie || !taxAmountCookie || !totalAmountCookie || !selectedCompanyCookie) {
+                if (!customerInfoCookie || !selectedProductsCookie || !subtotalAmountCookie 
+                    || !taxAmountCookie || !totalAmountCookie || !selectedCompanyCookie) {
                     throw new Error('No invoice data found.');
                 }
 
@@ -629,14 +683,18 @@
                     referenceNumber: referenceNumber, // Include the reference number
                     billing: customerInfo.billing,
                     shipping: customerInfo.shipping || null,
-                    paymentMethod: customerInfo.paymentMethod || 'N/A', // Dynamically retrieve payment method
-                    comments: customerInfo.comments || "", // Include comments
+                    paymentMethod: customerInfo.paymentMethod || 'N/A',
+                    comments: customerInfo.comments || "",
                     products: selectedProducts.map(product => ({
                         item_code: product.item_code,
                         name: product.name,
                         quantity: product.quantity,
-                        unitPriceExcludingTax: taxAmount > 0 ? parseFloat((product.price / 1.15).toFixed(2)) : parseFloat(product.price.toFixed(2)),
-                        taxPerUnit: taxAmount > 0 ? parseFloat((product.price - (product.price / 1.15)).toFixed(2)) : 0.00,
+                        unitPriceExcludingTax: taxAmount > 0 
+                            ? parseFloat((product.price / 1.15).toFixed(2))
+                            : parseFloat(product.price.toFixed(2)),
+                        taxPerUnit: taxAmount > 0
+                            ? parseFloat((product.price - (product.price / 1.15)).toFixed(2))
+                            : 0.00,
                         totalPrice: parseFloat((product.price * product.quantity).toFixed(2))
                     })),
                     subtotal: parseFloat(subtotalAmount.toFixed(2)),
@@ -650,7 +708,7 @@
 
                 console.log('Sending invoice data to backend:', invoiceData);
 
-                const response = await fetch('https://shans-backend.onrender.com/api/generate-invoice', { // Ensure this endpoint exists on your backend
+                const response = await fetch('https://shans-backend.onrender.com/api/generate-invoice', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -672,12 +730,13 @@
                 const successData = await response.json();
                 console.log('Backend response:', successData);
 
-                alert(`Successfully sent, thanks`);
+                // Replaced alert with a success toast
+                showToastMessage('Successfully sent, thanks!', 'success');
 
             } catch (error) {
                 console.error('Error generating PDF:', error);
-                // Optionally, display a user-friendly error message
-                alert(`Error: ${error.message}`);
+                // Show error toast instead of alert
+                showToastMessage(`Error: ${error.message}`, 'error');
             } finally {
                 confirmButton.disabled = false;
                 loadingSpinner.style.display = 'none';

@@ -10,9 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 
     <style>
-        /* frontend/styles.css */
-
-        /* Existing styles... */
+        /* Existing styles from your code... */
 
         .container {
             max-width: 1200px;
@@ -108,7 +106,7 @@
             background-color: #c82333;
         }
 
-        /* Status Message */
+        /* Status / Toast Message */
         .status-message {
             position: fixed;
             top: 20px;
@@ -257,6 +255,61 @@
             overflow: hidden;
             clip: rect(1px, 1px, 1px, 1px); 
             white-space: nowrap; 
+        }
+
+        /* Additional CSS for table/cards toggle (mobile) */
+        /* By default, show the table and hide cards */
+        #productsTable {
+            display: table;
+        }
+        .products-cards {
+            display: none; /* Hidden by default on desktop */
+        }
+        /* When below 768px, hide the table and show the cards */
+        @media (max-width: 768px) {
+            #productsTable {
+                display: none;
+            }
+            .products-cards {
+                display: block;
+            }
+            /* Basic card layout styling */
+            .product-card {
+                border: 1px solid #ddd;
+                border-radius: 6px;
+                padding: 16px;
+                margin-bottom: 16px;
+                background-color: #fff;
+            }
+            .product-card .card-header {
+                font-weight: bold;
+                margin-bottom: 8px;
+            }
+            .product-card .card-body {
+                font-size: 14px;
+                line-height: 1.4;
+            }
+            .product-card .card-actions {
+                margin-top: 12px;
+                display: flex;
+                gap: 8px;
+            }
+            .product-card .edit-button,
+            .product-card .delete-button {
+                padding: 6px 12px;
+                font-size: 14px;
+                border-radius: 4px;
+                border: none;
+                cursor: pointer;
+            }
+            .product-card .edit-button {
+                background-color: #ffc107;
+                color: #fff;
+            }
+            .product-card .delete-button {
+                background-color: #dc3545;
+                color: #fff;
+            }
         }
     </style>
 </head>
@@ -538,7 +591,7 @@
             </table>
         </div>
 
-        <!-- Status Message -->
+        <!-- Status Message (Toast-like) -->
         <div id="statusMessage" class="status-message"></div>
 
         <!-- Cards Container (Mobile) -->
@@ -546,69 +599,6 @@
             <!-- Cards will be dynamically inserted here -->
         </div>
 
-        <!-- Additional CSS for table/cards toggle -->
-        <style>
-            /* By default, show the table and hide cards */
-            #productsTable {
-                display: table;
-            }
-
-            .products-cards {
-                display: none; /* Hidden by default on desktop */
-            }
-
-            /* When below 768px, hide the table and show the cards */
-            @media (max-width: 768px) {
-                #productsTable {
-                    display: none;
-                }
-                .products-cards {
-                    display: block;
-                }
-                
-                /* Basic card layout styling */
-                .product-card {
-                    border: 1px solid #ddd;
-                    border-radius: 6px;
-                    padding: 16px;
-                    margin-bottom: 16px;
-                    background-color: #fff;
-                }
-                .product-card .card-header {
-                    font-weight: bold;
-                    margin-bottom: 8px;
-                }
-                
-                .product-card .card-body {
-                    font-size: 14px;
-                    line-height: 1.4;
-                }
-                
-                .product-card .card-actions {
-                    margin-top: 12px;
-                    display: flex;
-                    gap: 8px;
-                }
-                .product-card .edit-button,
-                .product-card .delete-button {
-                    padding: 6px 12px;
-                    font-size: 14px;
-                    border-radius: 4px;
-                    border: none;
-                    cursor: pointer;
-                }
-                .product-card .edit-button {
-                    background-color: #ffc107;
-                    color: #fff;
-                }
-                .product-card .delete-button {
-                    background-color: #dc3545;
-                    color: #fff;
-                }
-            }
-        </style>
-
-        <!-- Render Cards JS -->
         <script>
             /**
              * Capitalize words helper (used in both table & cards)
@@ -690,7 +680,6 @@
         </script>
 
         <script>
-            // frontend/script.js
             document.addEventListener('DOMContentLoaded', function() {
                 // Define the base URL for the API
                 const API_URL = 'https://shans-backend.onrender.com/api';
@@ -730,6 +719,7 @@
                 let allProducts = []; // To store all fetched products
 
                 // **Helper Functions**
+
                 /**
                  * Function to determine appropriate text color based on background color for readability
                  * @param {string} hexcolor - The background color in hex format (e.g., "#FFFFFF")
@@ -745,6 +735,21 @@
                     const b = parseInt(hexcolor.substr(4,2),16);
                     const yiq = ((r*299)+(g*587)+(b*114))/1000;
                     return (yiq >= 128) ? 'black' : 'white';
+                }
+
+                /**
+                 * Show a temporary status (toast-like) message in the top-right corner
+                 * @param {string} message - The message to display
+                 * @param {string} type - 'success' or 'error'
+                 */
+                function showStatusMessage(message, type) {
+                    statusMessage.textContent = message;
+                    statusMessage.className = `status-message ${type}`;
+                    statusMessage.style.display = 'block';
+
+                    setTimeout(() => {
+                        statusMessage.style.display = 'none';
+                    }, 3000);
                 }
 
                 /**
@@ -899,21 +904,6 @@
                 }
 
                 /**
-                 * Function to show status messages
-                 * @param {string} message - The message to display
-                 * @param {string} type - 'success' or 'error'
-                 */
-                function showStatusMessage(message, type) {
-                    statusMessage.textContent = message;
-                    statusMessage.className = `status-message ${type}`;
-                    statusMessage.style.display = 'block';
-
-                    setTimeout(() => {
-                        statusMessage.style.display = 'none';
-                    }, 3000);
-                }
-
-                /**
                  * Populate filter dropdowns
                  */
                 function populateFilters() {
@@ -1006,17 +996,17 @@
                         additional_comments: document.getElementById('additionalComments').value.trim()
                     };
 
-                    // Basic front-end checks
+                    // Basic front-end checks, replaced alerts with toast-like messages:
                     if (!formData.item_code) {
-                        alert('Please enter an item code.');
+                        showStatusMessage('Please enter an item code.', 'error');
                         return;
                     }
                     if (isNaN(formData.room_id)) {
-                        alert('Please select a valid room.');
+                        showStatusMessage('Please select a valid room.', 'error');
                         return;
                     }
                     if (!formData.product_category) {
-                        alert('Please select a product category.');
+                        showStatusMessage('Please select a product category.', 'error');
                         return;
                     }
 
@@ -1069,12 +1059,13 @@
                         additional_comments: document.getElementById('editAdditionalComments').value.trim()
                     };
 
+                    // Replaced alerts with toast-like messages:
                     if (isNaN(formData.room_id)) {
-                        alert('Please select a valid room.');
+                        showStatusMessage('Please select a valid room.', 'error');
                         return;
                     }
                     if (!formData.product_category) {
-                        alert('Please select a product category.');
+                        showStatusMessage('Please select a product category.', 'error');
                         return;
                     }
 
@@ -1250,258 +1241,6 @@
                 fetchProducts();
             });
         </script>
-
-        <!-- Repeated styles (keeping for reference) -->
-        <style>
-            /* frontend/styles.css */
-
-            /* Existing styles... */
-
-            .container {
-                max-width: 1200px;
-                margin: 0 auto;
-                padding: 20px;
-            }
-
-            .add-product-block {
-                width: 50px;
-                height: 50px;
-                background-color: #007bff;
-                color: white;
-                border-radius: 50%;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                cursor: pointer;
-                font-size: 30px;
-                margin-bottom: 20px;
-            }
-
-            .products-section {
-                overflow-x: auto;
-            }
-
-            /* Search Bar */
-            .search-bar {
-                margin-bottom: 15px;
-                display: flex;
-                justify-content: flex-start;
-                align-items: center;
-            }
-
-            .search-bar input[type="text"] {
-                width: 100%;
-                max-width: 300px;
-                padding: 8px 12px;
-                border: 1px solid #ccc;
-                border-radius: 4px;
-            }
-
-            .search-bar input[type="text"]:focus {
-                border-color: #007bff;
-                outline: none;
-            }
-
-            #productsTable {
-                width: 100%;
-                border-collapse: collapse;
-            }
-
-            #productsTable th, #productsTable td {
-                border: 1px solid #ddd;
-                padding: 8px;
-                text-align: center;
-            }
-
-            #productsTable th {
-                background-color: #f2f2f2;
-            }
-
-            .actions-button {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-            }
-
-            .edit-button,
-            .delete-button {
-                margin: 0 5px;
-                padding: 5px 10px;
-                border: none;
-                border-radius: 3px;
-                cursor: pointer;
-                font-size: 14px;
-            }
-
-            .edit-button {
-                background-color: #ffc107;
-                color: white;
-            }
-
-            .edit-button:hover {
-                background-color: #e0a800;
-            }
-
-            .delete-button {
-                background-color: #dc3545;
-                color: white;
-            }
-
-            .delete-button:hover {
-                background-color: #c82333;
-            }
-
-            /* Status Message */
-            .status-message {
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                padding: 10px 20px;
-                border-radius: 5px;
-                color: white;
-                font-weight: bold;
-                display: none;
-                z-index: 1001;
-            }
-
-            .status-message.success {
-                background-color: #28a745;
-            }
-
-            .status-message.error {
-                background-color: #dc3545;
-            }
-
-            /* Popup Overlay (Add and Edit) */
-            .popup-overlay {
-                display: none; /* Hidden by default */
-                position: fixed;
-                z-index: 1000;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background-color: rgba(0, 0, 0, 0.5); /* Black w/ opacity */
-                justify-content: center;
-                align-items: center;
-            }
-
-            .popup-content {
-                background-color: white;
-                padding: 20px;
-                border-radius: 10px;
-                width: 90%;
-                max-width: 800px;
-                max-height: 90vh;
-                overflow-y: auto;
-                position: relative;
-            }
-
-            .close-popup {
-                position: absolute;
-                top: 10px;
-                right: 10px;
-                font-size: 24px;
-                background: none;
-                border: none;
-                cursor: pointer;
-            }
-
-            /* Form Group */
-            .form-group {
-                margin-bottom: 15px;
-                display: flex;
-                flex-direction: column;
-            }
-
-            .form-group label {
-                margin-bottom: 5px;
-                font-weight: bold;
-            }
-
-            .form-group input[type="text"],
-            .form-group input[type="number"],
-            .form-group select,
-            .form-group textarea {
-                padding: 8px;
-                border: 1px solid #ccc;
-                border-radius: 4px;
-            }
-
-            .form-group textarea {
-                resize: vertical;
-                min-height: 60px;
-            }
-
-            .color-picker {
-                display: flex;
-                align-items: center;
-            }
-
-            .color-picker input[type="text"] {
-                margin-left: 10px;
-                width: 100px;
-            }
-
-            /* Button Styles */
-            button[type="submit"] {
-                background-color: #28a745;
-                color: white;
-                padding: 10px 15px;
-                border: none;
-                border-radius: 4px;
-                cursor: pointer;
-            }
-
-            button[type="submit"]:hover {
-                background-color: #218838;
-            }
-
-            /* Responsive Design */
-            @media (max-width: 768px) {
-                .popup-content {
-                    width: 95%;
-                }
-
-                .products-section {
-                    padding: 10px;
-                }
-
-                #productsTable th,
-                #productsTable td {
-                    padding: 6px;
-                    font-size: 14px;
-                }
-
-                .form-group {
-                    flex-direction: column;
-                }
-
-                .color-picker {
-                    flex-direction: column;
-                    align-items: flex-start;
-                }
-
-                .color-picker input[type="text"] {
-                    margin-left: 0;
-                    margin-top: 5px;
-                }
-
-                .search-bar input[type="text"] {
-                    max-width: 100%;
-                }
-            }
-
-            /* Accessibility: Visually Hidden */
-            .visually-hidden { 
-                position: absolute !important; 
-                height: 1px; 
-                width: 1px; 
-                overflow: hidden;
-                clip: rect(1px, 1px, 1px, 1px); 
-                white-space: nowrap; 
-            }
-        </style>
     </div>
 </body>
 </html>

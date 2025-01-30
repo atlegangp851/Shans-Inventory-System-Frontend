@@ -237,13 +237,59 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* 
-           ALL responsive code has been removed to keep
-           the layout fixed at 800px wide on all screens
-        */
+        /* Toast Container and Toast Styles */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            background-color: #333;
+            color: #fff;
+            padding: 10px 15px;
+            border-radius: 5px;
+            opacity: 0.95;
+            font-size: 14px;
+            animation: fadeInOut 3s forwards;
+        }
+
+        .toast.success {
+            background-color: #28a745;
+        }
+
+        .toast.error {
+            background-color: #dc3545;
+        }
+
+        .toast.info {
+            background-color: #007bff;
+        }
+
+        @keyframes fadeInOut {
+            0% {
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.95;
+            }
+            90% {
+                opacity: 0.95;
+            }
+            100% {
+                opacity: 0;
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
     <a href="index.html" style="text-decoration: none; color: #007BFF; font-size: 16px; margin-right: 20px;">&larr; Back to Home</a>
     <div class="container">
         
@@ -280,7 +326,6 @@
                         <th>Product</th>
                         <th>QTY</th>
                         <th>UNIT PRICE (R)</th>
-                        <!-- TAX PER UNIT (R) column will be inserted dynamically if tax is applied -->
                         <th>TAX PER UNIT (R)</th>
                         <th>TOTAL (R)</th>
                     </tr>
@@ -334,6 +379,24 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <script>
+        /**
+         * Display a non-blocking toast message in the top-right corner.
+         * @param {string} message - The message to display.
+         * @param {string} [type='info'] - The type of the toast ('success', 'error', 'info').
+         */
+        function showToastMessage(message, type = 'info') {
+            const toastContainer = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.classList.add('toast', type);
+            toast.textContent = message;
+            toastContainer.appendChild(toast);
+
+            // Automatically remove the toast after ~3s
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
         // Function to retrieve a cookie by name
         function getCookie(name) {
             const cname = name + "=";
@@ -384,7 +447,8 @@
                 !taxAmountCookie ||
                 !totalAmountCookie ||
                 !selectedCompanyCookie) {
-                alert('No quotation data found. Please generate a quotation first.');
+                // Replaced alert with toast + redirect
+                showToastMessage('No quotation data found. Please generate a quotation first.', 'error');
                 window.location.href = 'index.html';
                 return;
             }
@@ -585,11 +649,13 @@
                 const successData = await response.json();
                 console.log('Backend response:', successData);
 
-                alert(`Quotation successfully sent, thanks`);
+                // Replaced alert with success toast
+                showToastMessage('Quotation successfully sent, thanks!', 'success');
 
             } catch (error) {
                 console.error('Error generating PDF:', error);
-                alert(`An error occurred while sending the quotation. Please try again.`);
+                // Show error toast instead of alert
+                showToastMessage('An error occurred while sending the quotation. Please try again.', 'error');
             } finally {
                 confirmButton.disabled = false;
                 loadingSpinner.style.display = 'none';

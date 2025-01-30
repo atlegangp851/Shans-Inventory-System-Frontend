@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shans System </title>
+    <title>Shans System</title>
     <style>
-        /* [Your existing CSS styles remain unchanged] */
         body {
             font-family: Arial, sans-serif;
             line-height: 1.6;
@@ -108,17 +107,14 @@
             margin-left: 10px;
             vertical-align: middle;
         }
-
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-
         .table-responsive {
             width: 100%;
             overflow-x: auto;
         }
-
         @media (max-width: 600px) {
             body {
                 padding: 10px;
@@ -148,11 +144,9 @@
                 align-items: stretch;
             }
         }
-
         .hidden {
             display: none;
         }
-
         .remove-button {
             background-color: #ff4d4d;
             color: white;
@@ -164,7 +158,6 @@
         .remove-button:hover {
             background-color: #e60000;
         }
-
         /* Loading Screen Styles */
         #loadingScreen {
             position: fixed;
@@ -179,7 +172,6 @@
             justify-content: center;
             align-items: center;
         }
-
         #loadingScreen .spinner {
             border: 8px solid #f3f3f3; /* Light grey */
             border-top: 8px solid #3498db; /* Blue */
@@ -189,12 +181,53 @@
             animation: spin 1s linear infinite;
             margin-bottom: 20px;
         }
-
         #loadingScreen p {
             font-size: 18px;
             color: #333;
         }
 
+        /* Toast Container and Toast Styles */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000; /* on top of loading screen */
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .toast {
+            background-color: #333;
+            color: #fff;
+            padding: 10px 15px;
+            border-radius: 5px;
+            opacity: 0.95;
+            font-size: 14px;
+            animation: fadeInOut 3s forwards;
+        }
+        .toast.success {
+            background-color: #28a745;
+        }
+        .toast.error {
+            background-color: #dc3545;
+        }
+        .toast.info {
+            background-color: #007bff;
+        }
+        @keyframes fadeInOut {
+            0% {
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.95;
+            }
+            90% {
+                opacity: 0.95;
+            }
+            100% {
+                opacity: 0;
+            }
+        }
     </style>
 </head>
 <body>
@@ -203,6 +236,9 @@
         <div class="spinner"></div>
         <p>Loading products, please wait...</p>
     </div>
+
+    <!-- Toast Container (for all messages) -->
+    <div class="toast-container" id="toastContainer"></div>
 
     <div class="container">
         <h1>Receipt and Quotation Generator</h1>
@@ -369,6 +405,24 @@
         }
     };
 
+    /**
+     * Toast message helper
+     * @param {string} message - The message to display
+     * @param {string} type - 'success', 'error', or 'info'
+     */
+    function showToastMessage(message, type = 'info') {
+        const toastContainer = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.classList.add('toast', type);
+        toast.textContent = message;
+        toastContainer.appendChild(toast);
+
+        // Remove after animation (~3s)
+        setTimeout(() => {
+            toast.remove();
+        }, 3000);
+    }
+
     function setCookie(name, value, days) {
         const d = new Date();
         d.setTime(d.getTime() + (days*24*60*60*1000));
@@ -396,7 +450,7 @@
             allProducts = await response.json();
         } catch (error) {
             console.error('Error fetching products:', error);
-            alert('Failed to load products. Please try again later.');
+            showToastMessage('Failed to load products. Please try again later.', 'error');
         }
     }
 
@@ -441,22 +495,22 @@
         const product = allProducts.find(p => p.item_name.toLowerCase() === productName.toLowerCase());
 
         if (productName === '' || isNaN(quantity) || isNaN(price)) {
-            alert('Please enter valid product details.');
+            showToastMessage('Please enter valid product details.', 'error');
             return;
         }
 
         if (quantity <= 0) {
-            alert('Quantity must be at least 1.');
+            showToastMessage('Quantity must be at least 1.', 'error');
             return;
         }
 
         if (price < 0) {
-            alert('Price cannot be negative.');
+            showToastMessage('Price cannot be negative.', 'error');
             return;
         }
 
         if (product && quantity > product.available_stock) {
-            alert(`Cannot add ${quantity} units. Only ${product.available_stock} available in stock.`);
+            showToastMessage(`Cannot add ${quantity} units. Only ${product.available_stock} available in stock.`, 'error');
             return;
         }
 
@@ -469,10 +523,9 @@
         if (product) {
             // Existing product
             if (quantity > product.available_stock) {
-                alert(`Cannot add ${quantity} units. Only ${product.available_stock} available in stock.`);
+                showToastMessage(`Cannot add ${quantity} units. Only ${product.available_stock} available in stock.`, 'error');
                 return;
             }
-
             selectedProducts.push({ 
                 item_code: product.item_code,
                 name: productName, 
@@ -481,7 +534,6 @@
                 tax_per_product: taxPerProduct,
                 is_new: false
             });
-
             // Update stock
             product.available_stock -= quantity;
         } else {
@@ -525,11 +577,11 @@
         selectedProducts.forEach(product => {
             const priceExclTax = product.price - product.tax_per_product;
             if (taxCheckbox.checked) {
-                // With tax checked, use the base price excluding tax for subtotal
+                // With tax checked, use base price excluding tax for subtotal
                 subtotal += priceExclTax * product.quantity;
                 tax += product.tax_per_product * product.quantity;
             } else {
-                // Without tax, use the full price as subtotal
+                // Without tax, use full price
                 subtotal += product.price * product.quantity;
             }
         });
@@ -632,6 +684,7 @@
         const removedProduct = selectedProducts.splice(index, 1)[0];
         updateSelectedProductsTable();
 
+        // Restore stock if it was an existing product
         if (!removedProduct.is_new && removedProduct && allProducts.length > 0) {
             const product = allProducts.find(p => p.item_code === removedProduct.item_code);
             if (product) {
@@ -639,14 +692,14 @@
             }
         }
 
-        alert(`Removed ${removedProduct.name} from the selection.`);
+        showToastMessage(`Removed ${removedProduct.name} from the selection.`, 'info');
     }
 
     function generateReceipt() {
         // Check if company is selected
         const selectedCompanyCookie = getCookie('selectedCompany');
         if (!selectedCompanyCookie) {
-            alert('Please select a company before generating a receipt.');
+            showToastMessage('Please select a company before generating a receipt.', 'error');
             return;
         }
 
@@ -667,18 +720,18 @@
             };
 
             if (!shippingInfo.name || !shippingInfo.email || !shippingInfo.address || !shippingInfo.phone) {
-                alert('Please fill in all shipping information fields or select "Ship to the same address as billing".');
+                showToastMessage('Please fill in all shipping information fields or select "Ship to the same address as billing".', 'error');
                 return;
             }
         }
 
         if (!billingInfo.name || !billingInfo.email || !billingInfo.address || !billingInfo.phone) {
-            alert('Please fill in all customer information fields.');
+            showToastMessage('Please fill in all customer information fields.', 'error');
             return;
         }
 
         if (selectedProducts.length === 0) {
-            alert('No products selected.');
+            showToastMessage('No products selected.', 'error');
             return;
         }
 
@@ -710,7 +763,7 @@
         // Check if company is selected
         const selectedCompanyCookie = getCookie('selectedCompany');
         if (!selectedCompanyCookie) {
-            alert('Please select a company before generating a quotation.');
+            showToastMessage('Please select a company before generating a quotation.', 'error');
             return;
         }
 
@@ -731,18 +784,18 @@
             };
 
             if (!shippingInfo.name || !shippingInfo.email || !shippingInfo.address || !shippingInfo.phone) {
-                alert('Please fill in all shipping information fields or select "Ship to the same address as billing".');
+                showToastMessage('Please fill in all shipping information fields or select "Ship to the same address as billing".', 'error');
                 return;
             }
         }
 
         if (!billingInfo.name || !billingInfo.email || !billingInfo.address || !billingInfo.phone) {
-            alert('Please fill in all customer information fields.');
+            showToastMessage('Please fill in all customer information fields.', 'error');
             return;
         }
 
         if (selectedProducts.length === 0) {
-            alert('No products selected.');
+            showToastMessage('No products selected.', 'error');
             return;
         }
 
@@ -752,7 +805,7 @@
             billing: billingInfo,
             shipping: sameAsBillingCheckbox.checked ? null : shippingInfo,
             paymentMethod: 'N/A', // not applicable for quotation
-            comments: comments // Include comments
+            comments: comments
         };
 
         // Retrieve selected company info
@@ -773,7 +826,7 @@
         // Check if company is selected
         const selectedCompanyCookie = getCookie('selectedCompany');
         if (!selectedCompanyCookie) {
-            alert('Please select a company before generating an invoice.');
+            showToastMessage('Please select a company before generating an invoice.', 'error');
             return;
         }
 
@@ -794,18 +847,18 @@
             };
 
             if (!shippingInfo.name || !shippingInfo.email || !shippingInfo.address || !shippingInfo.phone) {
-                alert('Please fill in all shipping information fields or select "Ship to the same address as billing".');
+                showToastMessage('Please fill in all shipping information fields or select "Ship to the same address as billing".', 'error');
                 return;
             }
         }
 
         if (!billingInfo.name || !billingInfo.email || !billingInfo.address || !billingInfo.phone) {
-            alert('Please fill in all customer information fields.');
+            showToastMessage('Please fill in all customer information fields.', 'error');
             return;
         }
 
         if (selectedProducts.length === 0) {
-            alert('No products selected.');
+            showToastMessage('No products selected.', 'error');
             return;
         }
 
@@ -816,7 +869,7 @@
             billing: billingInfo,
             shipping: sameAsBillingCheckbox.checked ? null : shippingInfo,
             paymentMethod: paymentMethod,
-            comments: comments // Include comments
+            comments: comments
         };
 
         // Retrieve selected company info
@@ -845,7 +898,7 @@
     function setCompanyInfo() {
         const selectedCompanyKey = companySelect.value;
         if (!selectedCompanyKey || !companies[selectedCompanyKey]) {
-            alert('Please select a valid company.');
+            showToastMessage('Please select a valid company.', 'error');
             return;
         }
         const selectedCompany = companies[selectedCompanyKey];
@@ -900,3 +953,4 @@
 </script>
 
 </body>
+</html>
