@@ -516,42 +516,38 @@
      * Handle Delete Room action
      * @param {number} id - The ID of the room to delete
      */
-    async function deleteRoom(id) {
-      // Keeping native confirm so user can confirm the action
-      if (!confirm('Are you sure you want to delete this room? This will also delete all products linked to this room.')) return;
+     async function deleteRoom(id) {
+    if (!confirm('Are you sure you want to delete this room? This will also delete all products linked to this room.')) return;
 
-      try {
-        // Step 1: Bulk delete products linked to the room using the new endpoint
-        const bulkDeleteResponse = await fetch(`${PRODUCTS_API_URL}?room_id=${id}`, {
-          method: 'DELETE'
+    try {
+        // Delete the room (the backend will handle cascading deletion of associated products)
+        const response = await fetch(`${ROOMS_API_URL}/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
         });
 
-        if (!bulkDeleteResponse.ok) {
-          const errorData = await bulkDeleteResponse.json();
-          throw new Error(errorData.message || 'Failed to delete products linked to the room');
+        if (!response.ok) {
+            if (response.headers.get('content-type')?.includes('application/json')) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to delete the room');
+            } else {
+                throw new Error(`Server error: ${response.status}`);
+            }
         }
 
-        const bulkDeleteResult = await bulkDeleteResponse.json();
-        console.log(bulkDeleteResult.message);
-
-        // Step 2: Delete the room
-        const roomDeleteResponse = await fetch(`${ROOMS_API_URL}/${id}`, { method: 'DELETE' });
-        if (!roomDeleteResponse.ok) {
-          const errorData = await roomDeleteResponse.json();
-          throw new Error(errorData.message || 'Failed to delete the room');
-        }
-
-        // Step 3: Remove the room block from the UI
+        // Remove the room block from the UI
         const roomBlock = document.querySelector(`.delete-button[data-id='${id}']`).parentElement;
-        roomBlock.remove();
-
-        showToast('Room and its associated products deleted successfully.', 'success');
-      } catch (error) {
-        console.error('Error deleting room and associated products:', error);
-        showToast(`An error occurred while deleting the room and its associated products: ${error.message}`, 'error');
-      }
+        if (roomBlock) {
+            roomBlock.remove();
+            showToast('Room and its associated products deleted successfully.', 'success');
+        }
+    } catch (error) {
+        console.error('Error deleting room:', error);
+        showToast('Failed to delete room. Please try again later.', 'error');
     }
-
+}
     /**
      * Handle Delete Room form submission
      * @param {number} id - The ID of the room to delete

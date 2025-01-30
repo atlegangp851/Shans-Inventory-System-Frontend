@@ -107,7 +107,6 @@
             background-color: var(--secondary-color);
         }
 
-        /* Footer Styling for Grand Total */
         tfoot td {
             padding: 12px;
             border-top: 2px solid var(--border-color);
@@ -144,7 +143,6 @@
             font-size: 16px;
         }
 
-        /* Responsive Design */
         @media (max-width: 768px) {
             table, .month-header {
                 display: none;
@@ -181,69 +179,27 @@
         </div>
 
         <button class="view-toggle" id="save-to-excel">Save to Excel</button>
-
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-<script>
-    document.getElementById('save-to-excel').addEventListener('click', saveToExcel);
-
-    function saveToExcel() {
-        if (allSalesData.length === 0) {
-            alert('No data available to save!');
-            return;
-        }
-
-        // Prepare data for Excel
-        const sheetData = allSalesData.map((item) => ({
-            "Reference Number": item.reference_number,
-            "Date": formatDate(item.date),
-            "Client Name": item.billing_name,
-            "Billing Address": item.billing_address,
-            "Billing Email": item.billing_email,
-            "Billing Phone": item.billing_phone || 'N/A',
-            "Item Purchased": item.item_name,
-            "Quantity": item.quantity,
-            "Tax per Unit (R)": parseFloat(item.tax_per_product || 0).toFixed(2),
-            "Unit Price Before Tax (R)": (
-                parseFloat(item.total_price) / (parseInt(item.quantity) || 1) - 
-                parseFloat(item.tax_per_product || 0)
-            ).toFixed(2),
-            "Payment Method": item.payment_method,
-            "Total Paid (R)": parseFloat(item.total_price).toFixed(2),
-        }));
-
-        // Convert data to worksheet
-        const worksheet = XLSX.utils.json_to_sheet(sheetData);
-        
-        // Create a workbook and add the worksheet
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Sales Data');
-
-        // Save the workbook as an Excel file
-        XLSX.writeFile(workbook, `Sales_Data_${new Date().toISOString().split('T')[0]}.xlsx`);
-    }
-</script>
-
-
     <script>
+        document.getElementById('save-to-excel').addEventListener('click', saveToExcel);
         const tablesContainer = document.getElementById('tables-container');
         const cardView = document.getElementById('card-view');
         const viewToggle = document.querySelector('.view-toggle');
         const searchBar = document.querySelector('.search-bar');
 
-        let allSalesData = []; // We'll store fetched sales data here
-        let groupedSalesData = {}; // To store data grouped by month
+        let allSalesData = [];
+        let groupedSalesData = {};
 
-        // Fetch sales data from the API
         async function fetchSalesData() {
             try {
-                const response = await fetch('https://shans-backend.onrender.com/api/sales'); 
-                // Adjust the URL if your server runs elsewhere
+                const response = await fetch('https://shans-backend.onrender.com/api/sales');
                 if (!response.ok) {
                     throw new Error('Network response was not ok.');
                 }
                 const data = await response.json();
+                console.log('Raw data from API:', data);
                 allSalesData = data;
                 groupDataByMonth(allSalesData);
                 renderTables(groupedSalesData);
@@ -254,9 +210,8 @@
             }
         }
 
-        // Function to group data by month
         function groupDataByMonth(data) {
-            groupedSalesData = {}; // Reset the grouped data
+            groupedSalesData = {};
             data.forEach(item => {
                 const date = new Date(item.date);
                 const monthYear = date.toLocaleString('default', { month: 'long', year: 'numeric' });
@@ -267,9 +222,8 @@
             });
         }
 
-        // Function to render tables grouped by month
         function renderTables(groupedData) {
-            tablesContainer.innerHTML = ''; // Clear previous tables
+            tablesContainer.innerHTML = '';
 
             if (Object.keys(groupedData).length === 0) {
                 tablesContainer.innerHTML = '<p style="text-align: center;">No sales data found for your search.</p>';
@@ -277,20 +231,15 @@
             }
 
             for (const [monthYear, sales] of Object.entries(groupedData)) {
-                // Create a section for each month
                 const monthSection = document.createElement('div');
                 monthSection.className = 'month-section';
 
-                // Month Header
                 const monthHeader = document.createElement('div');
                 monthHeader.className = 'month-header';
                 monthHeader.textContent = monthYear;
                 monthSection.appendChild(monthHeader);
 
-                // Create table
                 const table = document.createElement('table');
-
-                // Table Head
                 const thead = document.createElement('thead');
                 thead.innerHTML = `
                     <tr>
@@ -303,66 +252,57 @@
                         <th>Item Purchase</th>
                         <th>Quantity</th>
                         <th>Tax per Unit (R)</th>
-                        <th>Unit Price Before Tax (R)</th>
+                        <th>Unit Price (R)</th>
                         <th>Payment Method</th>
-                        <th>Total Paid (R)</th>
+                        <th>Total (R)</th>
                     </tr>
                 `;
                 table.appendChild(thead);
 
-                // Calculate number of columns for dynamic colspan
-                const numColumns = thead.querySelectorAll('th').length;
-
-                // Table Body
                 const tbody = document.createElement('tbody');
-                let grandTotal = 0; // Initialize grand total for the month
-                let grandTax = 0;    // Initialize grand tax for the month
+                let monthTotal = 0;
+                let monthTotalTax = 0;
 
-                sales.forEach(item => {
-                    // Ensure tax_per_product is a number; set to 0 if missing or invalid
-                    const taxPerProduct = parseFloat(item.tax_per_product);
-                    const validTax = isNaN(taxPerProduct) ? 0 : taxPerProduct;
-
-                    // Ensure quantity is a number; set to 1 if missing or invalid to prevent division by zero
-                    const quantity = parseInt(item.quantity);
-                    const validQuantity = isNaN(quantity) || quantity === 0 ? 1 : quantity;
-
-                    // Calculate Unit Price Before Tax
-                    const unitPriceBeforeTax = parseFloat(item.total_price) / validQuantity - validTax;
-                    const formattedUnitPriceBeforeTax = isFinite(unitPriceBeforeTax) ? `R${unitPriceBeforeTax.toFixed(2)}` : 'N/A';
-
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${sanitizeHTML(item.reference_number)}</td>
-                        <td>${sanitizeHTML(formatDate(item.date))}</td>
-                        <td>${sanitizeHTML(item.billing_name)}</td>
-                        <td>${sanitizeHTML(item.billing_address)}</td>
-                        <td>${sanitizeHTML(item.billing_email)}</td>
-                        <td>${sanitizeHTML(item.billing_phone || 'N/A')}</td>
-                        <td>${sanitizeHTML(item.item_name)}</td>
-                        <td>${sanitizeHTML(item.quantity)}</td>
-                        <td>R${validTax.toFixed(2)}</td>
-                        <td>${sanitizeHTML(formattedUnitPriceBeforeTax)}</td>
-                        <td>${sanitizeHTML(item.payment_method)}</td>
-                        <td>R${parseFloat(item.total_price).toFixed(2)}</td>
-                    `;
-                    tbody.appendChild(row);
-                    grandTotal += parseFloat(item.total_price);
-                    grandTax += validTax * validQuantity;
+                sales.forEach(sale => {
+                    sale.items.forEach(item => {
+                        const row = document.createElement('tr');
+                        
+                        const quantity = parseFloat(item.quantity) || 0;
+                        const taxPerProduct = parseFloat(item.tax_per_product) || 0;
+                        const totalPrice = parseFloat(item.total_price) || 0;
+                        
+                        row.innerHTML = `
+                            <td>${sanitizeHTML(sale.reference_number)}</td>
+                            <td>${sanitizeHTML(formatDate(sale.date))}</td>
+                            <td>${sanitizeHTML(sale.billing_name)}</td>
+                            <td>${sanitizeHTML(sale.billing_address)}</td>
+                            <td>${sanitizeHTML(sale.billing_email)}</td>
+                            <td>${sanitizeHTML(sale.billing_phone || 'N/A')}</td>
+                            <td>${sanitizeHTML(item.item_name)}</td>
+                            <td>${quantity}</td>
+                            <td>R${taxPerProduct.toFixed(2)}</td>
+                            <td>R${(totalPrice / quantity).toFixed(2)}</td>
+                            <td>${sanitizeHTML(sale.payment_method)}</td>
+                            <td>R${totalPrice.toFixed(2)}</td>
+                        `;
+                        tbody.appendChild(row);
+                        
+                        monthTotal += totalPrice;
+                        monthTotalTax += taxPerProduct * quantity;
+                    });
                 });
 
                 table.appendChild(tbody);
 
-                // Table Footer for Grand Total and Total Tax
                 const tfoot = document.createElement('tfoot');
                 tfoot.innerHTML = `
                     <tr>
-                        <td colspan="${numColumns - 2}" style="text-align: right;">Total Tax for ${monthYear}:</td>
-                        <td colspan="2">R${grandTax.toFixed(2)}</td>
+                        <td colspan="10" style="text-align: right;"><strong>Total Tax for ${monthYear}:</strong></td>
+                        <td colspan="2">R${monthTotalTax.toFixed(2)}</td>
                     </tr>
                     <tr>
-                        <td colspan="${numColumns - 2}" style="text-align: right;">Grand Total for ${monthYear}:</td>
-                        <td colspan="2">R${grandTotal.toFixed(2)}</td>
+                        <td colspan="10" style="text-align: right;"><strong>Grand Total for ${monthYear}:</strong></td>
+                        <td colspan="2">R${monthTotal.toFixed(2)}</td>
                     </tr>
                 `;
                 table.appendChild(tfoot);
@@ -372,82 +312,107 @@
             }
         }
 
-        // Function to render cards for mobile view
         function renderCards(data) {
             cardView.innerHTML = '';
             const groupedByMonth = {};
 
-            data.forEach(item => {
-                const date = new Date(item.date);
+            data.forEach(sale => {
+                const date = new Date(sale.date);
                 const monthYear = date.toLocaleString('default', { month: 'long', year: 'numeric' });
                 if (!groupedByMonth[monthYear]) {
                     groupedByMonth[monthYear] = [];
                 }
-                groupedByMonth[monthYear].push(item);
+                groupedByMonth[monthYear].push(sale);
             });
 
             for (const [monthYear, sales] of Object.entries(groupedByMonth)) {
-                // Month Header for Cards
                 const monthHeader = document.createElement('div');
                 monthHeader.className = 'month-header';
                 monthHeader.textContent = monthYear;
                 cardView.appendChild(monthHeader);
 
-                sales.forEach(item => {
-                    // Ensure tax_per_product is a number; set to 0 if missing or invalid
-                    const taxPerProduct = parseFloat(item.tax_per_product);
-                    const validTax = isNaN(taxPerProduct) ? 0 : taxPerProduct;
+                sales.forEach(sale => {
+                    sale.items.forEach(item => {
+                        const quantity = parseFloat(item.quantity) || 0;
+                        const taxPerProduct = parseFloat(item.tax_per_product) || 0;
+                        const totalPrice = parseFloat(item.total_price) || 0;
+                        const unitPrice = quantity > 0 ? totalPrice / quantity : 0;
 
-                    // Ensure quantity is a number; set to 1 if missing or invalid to prevent division by zero
-                    const quantity = parseInt(item.quantity);
-                    const validQuantity = isNaN(quantity) || quantity === 0 ? 1 : quantity;
-
-                    // Calculate Unit Price Before Tax
-                    const unitPriceBeforeTax = parseFloat(item.total_price) / validQuantity - validTax;
-                    const formattedUnitPriceBeforeTax = isFinite(unitPriceBeforeTax) ? `R${unitPriceBeforeTax.toFixed(2)}` : 'N/A';
-
-                    const card = document.createElement('div');
-                    card.className = 'card';
-                    const totalTax = validTax * validQuantity;
-                    card.innerHTML = `
-                        <h3>${sanitizeHTML(formatDate(item.date))}</h3>
-                        <p><strong>Reference Number:</strong> ${sanitizeHTML(item.reference_number)}</p>
-                        <p><strong>Client Name:</strong> ${sanitizeHTML(item.billing_name)}</p>
-                        <p><strong>Billing Address:</strong> ${sanitizeHTML(item.billing_address)}</p>
-                        <p><strong>Billing Email:</strong> ${sanitizeHTML(item.billing_email)}</p>
-                        <p><strong>Billing Phone:</strong> ${sanitizeHTML(item.billing_phone || 'N/A')}</p>
-                        <p><strong>Item:</strong> ${sanitizeHTML(item.item_name)}</p>
-                        <p><strong>Quantity:</strong> ${sanitizeHTML(item.quantity)}</p>
-                        <p><strong>Tax per Unit:</strong> R${validTax.toFixed(2)}</p>
-                        <p><strong>Unit Price Before Tax:</strong> ${sanitizeHTML(formattedUnitPriceBeforeTax)}</p>
-                        <p><strong>Total Tax:</strong> R${totalTax.toFixed(2)}</p>
-                        <p><strong>Payment Method:</strong> ${sanitizeHTML(item.payment_method)}</p>
-                        <p><strong>Total Paid:</strong> R${parseFloat(item.total_price).toFixed(2)}</p>
-                    `;
-                    cardView.appendChild(card);
+                        const card = document.createElement('div');
+                        card.className = 'card';
+                        card.innerHTML = `
+                            <h3>${sanitizeHTML(formatDate(sale.date))}</h3>
+                            <p><strong>Reference Number:</strong> ${sanitizeHTML(sale.reference_number)}</p>
+                            <p><strong>Client Name:</strong> ${sanitizeHTML(sale.billing_name)}</p>
+                            <p><strong>Billing Address:</strong> ${sanitizeHTML(sale.billing_address)}</p>
+                            <p><strong>Billing Email:</strong> ${sanitizeHTML(sale.billing_email)}</p>
+                            <p><strong>Billing Phone:</strong> ${sanitizeHTML(sale.billing_phone || 'N/A')}</p>
+                            <p><strong>Item:</strong> ${sanitizeHTML(item.item_name)}</p>
+                            <p><strong>Quantity:</strong> ${quantity}</p>
+                            <p><strong>Tax per Unit:</strong> R${taxPerProduct.toFixed(2)}</p>
+                            <p><strong>Unit Price:</strong> R${unitPrice.toFixed(2)}</p>
+                            <p><strong>Total Tax:</strong> R${(taxPerProduct * quantity).toFixed(2)}</p>
+                            <p><strong>Payment Method:</strong> ${sanitizeHTML(sale.payment_method)}</p>
+                            <p><strong>Total Price:</strong> R${totalPrice.toFixed(2)}</p>
+                        `;
+                        cardView.appendChild(card);
+                    });
                 });
 
-                // Grand Total Card (Optional)
-                const grandTotal = sales.reduce((total, item) => total + parseFloat(item.total_price), 0);
-                const grandTax = sales.reduce((total, item) => {
-                    const tax = parseFloat(item.tax_per_product);
-                    const quantity = parseInt(item.quantity);
-                    const validTax = isNaN(tax) ? 0 : tax;
-                    const validQuantity = isNaN(quantity) || quantity === 0 ? 1 : quantity;
-                    return total + (validTax * validQuantity);
+                const monthlyTotal = sales.reduce((total, sale) => {
+                    return total + sale.items.reduce((itemTotal, item) => {
+                        return itemTotal + (parseFloat(item.total_price) || 0);
+                    }, 0);
                 }, 0);
+
+                const monthlyTaxTotal = sales.reduce((total, sale) => {
+                    return total + sale.items.reduce((itemTotal, item) => {
+                        const quantity = parseFloat(item.quantity) || 0;
+                        const taxPerProduct = parseFloat(item.tax_per_product) || 0;
+                        return itemTotal + (quantity * taxPerProduct);
+                    }, 0);
+                }, 0);
+
                 const totalCard = document.createElement('div');
                 totalCard.className = 'card';
                 totalCard.innerHTML = `
-                    <h3>Grand Totals for ${monthYear}</h3>
-                    <p><strong>Total Tax:</strong> R${grandTax.toFixed(2)}</p>
-                    <p><strong>Total Sales:</strong> R${grandTotal.toFixed(2)}</p>
+                    <h3>Monthly Totals for ${monthYear}</h3>
+                    <p><strong>Total Tax:</strong> R${monthlyTaxTotal.toFixed(2)}</p>
+                    <p><strong>Total Sales:</strong> R${monthlyTotal.toFixed(2)}</p>
                 `;
                 cardView.appendChild(totalCard);
             }
         }
 
-        // Toggle between table and card view
+        function saveToExcel() {
+            if (allSalesData.length === 0) {
+                alert('No data available to save!');
+                return;
+            }
+
+            const flattenedData = allSalesData.flatMap(sale => 
+                sale.items.map(item => ({
+                    "Reference Number": sale.reference_number,
+                    "Date": formatDate(sale.date),
+                    "Client Name": sale.billing_name,
+                    "Billing Address": sale.billing_address,
+                    "Billing Email": sale.billing_email,
+                    "Billing Phone": sale.billing_phone || 'N/A',
+                    "Item Purchased": item.item_name,
+                    "Quantity": parseFloat(item.quantity) || 0,
+                    "Tax per Unit (R)": (parseFloat(item.tax_per_product) || 0).toFixed(2),
+                    "Unit Price (R)": ((parseFloat(item.total_price) || 0) / (parseFloat(item.quantity) || 1)).toFixed(2),
+                    "Payment Method": sale.payment_method,
+                    "Total Price (R)": (parseFloat(item.total_price) || 0).toFixed(2)
+                }))
+            );
+
+            const worksheet = XLSX.utils.json_to_sheet(flattenedData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Sales Data');
+            XLSX.writeFile(workbook, `Sales_Data_${new Date().toISOString().split('T')[0]}.xlsx`);
+        }
+
         function toggleView() {
             const tables = document.getElementById('tables-container');
             if (tables.style.display === 'none') {
@@ -459,47 +424,42 @@
             }
         }
 
-        // Filter data based on search query and re-render views
         function filterAndRender(query) {
-            const filteredData = allSalesData.filter(item => 
-                // Flatten all sale properties and sale items for searching
-                (
-                    item.reference_number.toLowerCase().includes(query.toLowerCase()) ||
-                    item.date.toLowerCase().includes(query.toLowerCase()) ||
-                    item.billing_name.toLowerCase().includes(query.toLowerCase()) ||
-                    item.billing_address.toLowerCase().includes(query.toLowerCase()) ||
-                    item.billing_email.toLowerCase().includes(query.toLowerCase()) ||
-                    (item.billing_phone && item.billing_phone.toLowerCase().includes(query.toLowerCase())) ||
+            const filteredData = allSalesData.filter(sale => 
+                sale.reference_number.toLowerCase().includes(query.toLowerCase()) ||
+                sale.date.toLowerCase().includes(query.toLowerCase()) ||
+                sale.billing_name.toLowerCase().includes(query.toLowerCase()) ||
+                sale.billing_address.toLowerCase().includes(query.toLowerCase()) ||
+                sale.billing_email.toLowerCase().includes(query.toLowerCase()) ||
+                (sale.billing_phone && sale.billing_phone.toLowerCase().includes(query.toLowerCase())) ||
+                sale.payment_method.toLowerCase().includes(query.toLowerCase()) ||
+                sale.items.some(item => 
                     item.item_name.toLowerCase().includes(query.toLowerCase()) ||
-                    item.quantity.toString().includes(query) ||
-                    item.tax_per_product.toString().includes(query) ||
-                    item.payment_method.toLowerCase().includes(query.toLowerCase()) ||
-                    item.total_price.toString().includes(query)
+                    String(item.quantity).includes(query) ||
+                    String(item.tax_per_product).includes(query) ||
+                    String(item.total_price).includes(query)
                 )
             );
+            
             groupDataByMonth(filteredData);
             renderTables(groupedSalesData);
             renderCards(filteredData);
         }
 
-        // Sanitize HTML to prevent XSS attacks
         function sanitizeHTML(str) {
+            if (str === null || str === undefined) return '';
             const temp = document.createElement('div');
             temp.textContent = str;
             return temp.innerHTML;
         }
 
-        // Format date to "12 December 2024"
         function formatDate(dateString) {
+            if (!dateString) return '';
             const options = { day: 'numeric', month: 'long', year: 'numeric' };
             const date = new Date(dateString);
             return date.toLocaleDateString('en-US', options);
         }
 
-        // Event listener for toggle view button
-        viewToggle.addEventListener('click', toggleView);
-
-        // Event listener for search bar input with debounce for performance
         function debounce(func, delay) {
             let debounceTimer;
             return function() {
@@ -510,14 +470,13 @@
             }
         }
 
+        viewToggle.addEventListener('click', toggleView);
         searchBar.addEventListener('input', debounce((e) => {
             const query = e.target.value.trim();
             filterAndRender(query);
-        }, 300)); // Adjust the delay as needed
+        }, 300));
 
-        // Fetch and render data on page load
         document.addEventListener('DOMContentLoaded', fetchSalesData);
     </script>
-
 </body>
 </html>
