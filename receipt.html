@@ -2,369 +2,287 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
     <title>Shans System - Receipt</title>
     <style>
         /* Basic Reset */
         * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
+          box-sizing: border-box;
+          margin: 0;
+          padding: 0;
         }
-
+    
         /* Body Styling */
         body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background-color: #f4f4f4;
-            padding: 20px;
+          font-family: Arial, sans-serif;
+          line-height: 1.6;
+          color: #333;
+          background-color: #f4f4f4;
+          padding: 20px;
+          /* If you want to allow horizontal scrolling on very small devices: */
+          overflow-x: auto;
         }
-
-        /* Container */
+    
+        /* Container with fixed width (the layout remains exactly the same) */
         .container {
-            max-width: 800px;
-            margin: auto;
-            background: white;
-            padding: 20px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+          width: 800px;
+          margin: 0 auto;
+          background: white;
+          padding: 20px;
+          box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
-
+    
         /* Header */
         .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 20px;
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          margin-bottom: 20px;
         }
-
+    
         .logo {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            background-image: url('./Assets/logo.png');
-            background-position: center;
-            background-size: cover;
-            background-repeat: no-repeat;
+          width: 100px;
+          height: 100px;
+          border-radius: 50%;
+          background-image: url('./Assets/logo.png');
+          background-position: center;
+          background-size: cover;
+          background-repeat: no-repeat;
         }
-
+    
         h1 {
-            text-align: center;
-            flex-grow: 1;
-            margin: 0 20px;
-            font-size: 32px;
+          text-align: center;
+          flex-grow: 1;
+          margin: 0 20px;
+          font-size: 32px;
         }
-
+    
         /* Company Details */
         .company-details {
-            margin-bottom: 20px;
+          margin-bottom: 20px;
         }
-
+    
         .company-details h2 {
-            margin-bottom: 10px;
-            font-size: 24px;
+          margin-bottom: 10px;
+          font-size: 24px;
         }
-
+    
         .address-contact {
-            margin-bottom: 10px;
+          margin-bottom: 10px;
         }
-
-        /* Reference Number */
-        .reference-number {
-            margin-top: 10px;
-            font-size: 16px;
-            font-weight: bold;
-        }
-
+    
         /* Billing and Shipping */
         .billing-shipping {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 20px;
         }
-
-        .billing, .shipping {
-            flex-basis: 48%;
-            margin-bottom: 20px;
+    
+        .billing,
+        .shipping {
+          width: 48%;
         }
-
-        .billing h3, .shipping h3 {
-            margin-bottom: 10px;
-            font-size: 20px;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 5px;
+    
+        .billing h3,
+        .shipping h3 {
+          margin-bottom: 10px;
+          font-size: 20px;
+          border-bottom: 1px solid #ddd;
+          padding-bottom: 5px;
         }
-
-        /* Payment Method Section */
-        .payment-method {
-            margin-bottom: 20px;
-            font-size: 16px;
-        }
-
+    
         /* Table Styling */
         table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-            table-layout: fixed;
+          width: 100%;
+          border-collapse: collapse;
+          margin-bottom: 20px;
+          table-layout: fixed;
         }
-
-        th, td {
-            padding: 12px 15px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-            word-wrap: break-word;
+    
+        th,
+        td {
+          padding: 12px 15px;
+          text-align: left;
+          border-bottom: 1px solid #ddd;
+          word-wrap: break-word;
         }
-
+    
         th {
-            background-color: #f2f2f2;
-            font-size: 16px;
+          background-color: #f2f2f2;
+          font-size: 16px;
         }
-
+    
         tr:nth-child(even) {
-            background-color: #f9f9f9;
+          background-color: #f9f9f9;
         }
-
-        /* Ensure all table headers and data cells within #receipt are left-aligned */
-        #receipt table th,
-        #receipt table td {
-            text-align: left;
+    
+        /* Ensure all table headers and cells in #quotation are left-aligned */
+        #quotation table th,
+        #quotation table td {
+          text-align: left;
         }
-
+    
         /* Additional Comments Section */
         .additional-comments {
-            margin-bottom: 20px;
+          margin-bottom: 20px;
         }
-
+    
         .additional-comments h3 {
-            margin-bottom: 10px;
-            font-size: 20px;
+          margin-bottom: 10px;
+          font-size: 20px;
         }
-
+    
         .additional-comments p {
-            font-size: 16px;
-            white-space: pre-wrap; /* Preserve line breaks */
+          font-size: 16px;
+          white-space: pre-wrap;
         }
-
+    
         /* Terms Section */
         .terms {
-            text-align: left;
-            margin-bottom: 20px;
+          text-align: left;
+          margin-bottom: 20px;
         }
-
+    
         .terms h3 {
-            margin-bottom: 5px;
-            font-size: 16px;
+          margin-bottom: 5px;
+          font-size: 16px;
         }
-
+    
         .terms p {
-            font-size: 14px;
+          font-size: 14px;
         }
-
+    
         /* Totals Section */
         .totals {
-            margin-top: 30px;
-            padding: 20px;
-            background-color: #f9f9f9;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+          margin-top: 30px;
+          padding: 20px;
+          background-color: #f9f9f9;
+          border: 1px solid #ddd;
+          border-radius: 5px;
         }
-
-        /* Flexbox for totals p elements */
+    
         .totals p {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 16px;
-            margin-bottom: 10px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-size: 16px;
+          margin-bottom: 10px;
         }
-
-        /* Specific styling for Tax Info */
-        .totals p.tax {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 16px;
-            margin-bottom: 10px;
-        }
-
+    
         .totals p span {
-            text-align: right;
-            font-weight: bold;
+          text-align: right;
+          font-weight: bold;
         }
-
+    
+        .totals p.tax {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-size: 16px;
+          margin-bottom: 10px;
+        }
+    
         .totals p.tax span {
-            text-align: right;
-            font-weight: bold;
+          text-align: right;
+          font-weight: bold;
         }
-
+    
         /* Footer */
         .footer {
-            text-align: center;
-            color: #666;
-            font-size: 14px;
-            margin-top: 30px;
+          text-align: center;
+          color: #666;
+          font-size: 14px;
+          margin-top: 30px;
         }
-
+    
         /* Button Styles */
         .button-container {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin-top: 20px;
+          display: flex;
+          gap: 10px;
+          justify-content: center;
+          margin-top: 20px;
         }
-
+    
         .action-button {
-            background-color: #4a90e2; /* Blue */
-            color: white;
-            border: none;
-            border-radius: 5px;
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
+          background-color: #4a90e2;
+          color: white;
+          border: none;
+          border-radius: 5px;
+          padding: 10px 20px;
+          font-size: 16px;
+          cursor: pointer;
+          transition: background-color 0.3s ease;
         }
-
+    
         .action-button:hover {
-            background-color: #357ABD; /* Darker Blue on Hover */
+          background-color: #357ABD;
         }
-
+    
         .action-button:disabled {
-            background-color: #aaa;
-            cursor: not-allowed;
+          background-color: #aaa;
+          cursor: not-allowed;
         }
-
+    
         /* Loading Spinner Styles */
         .spinner {
-            border: 4px solid #f3f3f3; /* Light grey */
-            border-top: 4px solid #3498db; /* Blue */
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            animation: spin 2s linear infinite;
-            display: inline-block;
-            vertical-align: middle;
-            margin-left: 10px;
+          border: 4px solid #f3f3f3;
+          border-top: 4px solid #3498db;
+          border-radius: 50%;
+          width: 20px;
+          height: 20px;
+          animation: spin 2s linear infinite;
+          display: inline-block;
+          vertical-align: middle;
+          margin-left: 10px;
         }
-
+    
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
         }
-
-        /* PDF Preview Styles (Optional) */
-        #pdf-preview {
-            margin-top: 20px;
-            text-align: center;
-        }
-
-        #pdf-preview a {
-            display: inline-block;
-            margin-top: 10px;
-            text-decoration: none;
-            color: #007BFF;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 600px) {
-            .billing, .shipping {
-                flex-basis: 100%;
-            }
-
-            .totals {
-                padding: 15px;
-            }
-
-            .totals p {
-                font-size: 14px;
-            }
-
-            .totals .total {
-                font-size: 16px;
-            }
-
-            table, th, td {
-                font-size: 14px;
-            }
-
-            h1 {
-                font-size: 24px;
-            }
-
-            .company-details h2 {
-                font-size: 20px;
-            }
-
-            .billing h3, .shipping h3 {
-                font-size: 18px;
-            }
-
-            .additional-comments h3 {
-                font-size: 18px;
-            }
-
-            .additional-comments p {
-                font-size: 14px;
-            }
-
-            .terms h3 {
-                font-size: 14px;
-            }
-
-            .terms p {
-                font-size: 12px;
-            }
-        }
-
-        /* Toast Container & Toast Styles */
+    
+        /* Toast Container and Toast Styles */
         .toast-container {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          z-index: 9999;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
         }
-
+    
         .toast {
-            background-color: #333;
-            color: #fff;
-            padding: 10px 15px;
-            border-radius: 5px;
-            font-size: 14px;
-            opacity: 0.95;
-            animation: fadeInOut 3s forwards;
+          background-color: #333;
+          color: #fff;
+          padding: 10px 15px;
+          border-radius: 5px;
+          opacity: 0.95;
+          font-size: 14px;
+          animation: fadeInOut 3s forwards;
         }
-
+    
         .toast.success {
-            background-color: #28a745;
+          background-color: #28a745;
         }
-
+    
         .toast.error {
-            background-color: #dc3545;
+          background-color: #dc3545;
         }
-
+    
         .toast.info {
-            background-color: #007bff;
+          background-color: #007bff;
         }
-
+    
         @keyframes fadeInOut {
-            0% {
-                opacity: 0;
-            }
-            10% {
-                opacity: 0.95;
-            }
-            90% {
-                opacity: 0.95;
-            }
-            100% {
-                opacity: 0;
-            }
+          0% { opacity: 0; }
+          10% { opacity: 0.95; }
+          90% { opacity: 0.95; }
+          100% { opacity: 0; }
         }
-    </style>
+      </style>
+    
+    
 </head>
 <body>
     <!-- Toast Container -->
