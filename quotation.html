@@ -211,23 +211,6 @@
             transition: background-color 0.3s ease;
         }
 
-        @media only screen and (max-width: 600px) {
-          .action-button {
-          background-color: #4a90e2;
-          color: white;
-          border: none;
-          width: 350px;
-          height: 150px;
-          margin-top: 50px;
-          border-radius: 5px;
-          padding: 10px 20px;
-          font-size: 40px;
-          cursor: pointer;
-          transition: background-color 0.3s ease;
-        }
-        }
-
-
         .action-button:hover {
             background-color: #357ABD; /* Darker Blue on Hover */
         }
@@ -302,24 +285,13 @@
                 opacity: 0;
             }
         }
-
-        .backButton{
-          text-decoration: none; color: #007BFF; font-size: 16px; margin-right: 20px;
-        }
-
-        @media only screen and (max-width: 600px) {
-          .backButton{
-          text-decoration: none; color: #007BFF; font-size: 36px; margin-right: 20px; margin-bottom: 60px;
-        }
-        }
-
     </style>
 </head>
 <body>
     <!-- Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
 
-    <a href="index.html" class="backButton">&larr; Back to Home</a>
+    <a href="index.html" style="text-decoration: none; color: #007BFF; font-size: 16px; margin-right: 20px;">&larr; Back to Home</a>
     <div class="container">
         
         <div id="quotation">
