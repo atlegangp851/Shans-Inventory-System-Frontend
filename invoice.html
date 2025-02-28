@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Shans System - Invoice</title>
+    <title>Shans System - Quotation</title>
     <style>
         /* Basic Reset */
         * {
@@ -11,7 +11,7 @@
             margin: 0;
             padding: 0;
         }
-
+        
         /* Body Styling */
         body {
             font-family: Arial, sans-serif;
@@ -20,16 +20,17 @@
             background-color: #f4f4f4;
             padding: 20px;
         }
-
-        /* Container */
+        
+        /* Fluid Container */
         .container {
+            width: 100%;
             max-width: 800px;
-            margin: auto;
+            margin: 0 auto;
             background: white;
             padding: 20px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
-
+        
         /* Header */
         .header {
             display: flex;
@@ -37,7 +38,7 @@
             align-items: flex-start;
             margin-bottom: 20px;
         }
-
+        
         .logo {
             width: 100px;
             height: 100px;
@@ -47,61 +48,48 @@
             background-size: cover;
             background-repeat: no-repeat;
         }
-
+        
         h1 {
             text-align: center;
             flex-grow: 1;
             margin: 0 20px;
             font-size: 32px;
         }
-
+        
         /* Company Details */
         .company-details {
             margin-bottom: 20px;
         }
-
+        
         .company-details h2 {
             margin-bottom: 10px;
             font-size: 24px;
         }
-
+        
         .address-contact {
             margin-bottom: 10px;
         }
-
-        /* Reference Number */
-        .reference-number {
-            margin-top: 10px;
-            font-size: 16px;
-            font-weight: bold;
-        }
-
+        
         /* Billing and Shipping */
         .billing-shipping {
             display: flex;
             justify-content: space-between;
             margin-bottom: 20px;
-            flex-wrap: wrap;
         }
-
-        .billing, .shipping {
-            flex-basis: 48%;
-            margin-bottom: 20px;
+        
+        .billing,
+        .shipping {
+            width: 48%;
         }
-
-        .billing h3, .shipping h3 {
+        
+        .billing h3,
+        .shipping h3 {
             margin-bottom: 10px;
             font-size: 20px;
             border-bottom: 1px solid #ddd;
             padding-bottom: 5px;
         }
-
-        /* Payment Method Section */
-        .payment-method {
-            margin-bottom: 20px;
-            font-size: 16px;
-        }
-
+        
         /* Table Styling */
         table {
             width: 100%;
@@ -109,59 +97,59 @@
             margin-bottom: 20px;
             table-layout: fixed;
         }
-
+        
         th, td {
             padding: 12px 15px;
             text-align: left;
             border-bottom: 1px solid #ddd;
             word-wrap: break-word;
         }
-
+        
         th {
             background-color: #f2f2f2;
             font-size: 16px;
         }
-
+        
         tr:nth-child(even) {
             background-color: #f9f9f9;
         }
-
-        /* Ensure all table headers and data cells within #invoice are left-aligned */
-        #invoice table th,
-        #invoice table td {
+        
+        /* Ensure all table headers and data cells within #quotation are left-aligned */
+        #quotation table th,
+        #quotation table td {
             text-align: left;
         }
-
+        
         /* Additional Comments Section */
         .additional-comments {
             margin-bottom: 20px;
         }
-
+        
         .additional-comments h3 {
             margin-bottom: 10px;
             font-size: 20px;
         }
-
+        
         .additional-comments p {
             font-size: 16px;
-            white-space: pre-wrap; /* Preserve line breaks */
+            white-space: pre-wrap;
         }
-
+        
         /* Terms Section */
         .terms {
             text-align: left;
             margin-bottom: 20px;
         }
-
+        
         .terms h3 {
             margin-bottom: 5px;
             font-size: 16px;
         }
-
+        
         .terms p {
             font-size: 14px;
         }
-
+        
         /* Totals Section */
         .totals {
             margin-top: 30px;
@@ -170,20 +158,33 @@
             border: 1px solid #ddd;
             border-radius: 5px;
         }
-
+        
         .totals p {
-            display: flex; /* Enable Flexbox */
-            justify-content: space-between; /* Space between label and price */
-            align-items: center; /* Vertically center align items */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             font-size: 16px;
             margin-bottom: 10px;
         }
-
+        
         .totals p span {
             text-align: right;
             font-weight: bold;
         }
-
+        
+        .totals p.tax {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        
+        .totals p.tax span {
+            text-align: right;
+            font-weight: bold;
+        }
+        
         /* Footer */
         .footer {
             text-align: center;
@@ -191,7 +192,7 @@
             font-size: 14px;
             margin-top: 30px;
         }
-
+        
         /* Button Styles */
         .button-container {
             display: flex;
@@ -199,9 +200,9 @@
             justify-content: center;
             margin-top: 20px;
         }
-
+        
         .action-button {
-            background-color: #4a90e2; /* Blue */
+            background-color: #4a90e2;
             color: white;
             border: none;
             border-radius: 5px;
@@ -210,20 +211,20 @@
             cursor: pointer;
             transition: background-color 0.3s ease;
         }
-
+        
         .action-button:hover {
-            background-color: #357ABD; /* Darker Blue on Hover */
+            background-color: #357ABD;
         }
-
+        
         .action-button:disabled {
             background-color: #aaa;
             cursor: not-allowed;
         }
-
+        
         /* Loading Spinner Styles */
         .spinner {
-            border: 4px solid #f3f3f3; /* Light grey */
-            border-top: 4px solid #3498db; /* Blue */
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
             border-radius: 50%;
             width: 20px;
             height: 20px;
@@ -232,76 +233,12 @@
             vertical-align: middle;
             margin-left: 10px;
         }
-
+        
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-
-        /* PDF Preview Styles */
-        #pdf-preview {
-            margin-top: 20px;
-            text-align: center;
-        }
-
-        #pdf-preview a {
-            display: inline-block;
-            margin-top: 10px;
-            text-decoration: none;
-            color: #007BFF;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 600px) {
-            .billing, .shipping {
-                flex-basis: 100%;
-            }
-
-            .totals {
-                padding: 15px;
-            }
-
-            .totals p {
-                font-size: 14px;
-            }
-
-            .totals .total {
-                font-size: 16px;
-            }
-
-            table, th, td {
-                font-size: 14px;
-            }
-
-            h1 {
-                font-size: 24px;
-            }
-
-            .company-details h2 {
-                font-size: 20px;
-            }
-
-            .billing h3, .shipping h3 {
-                font-size: 18px;
-            }
-
-            .additional-comments h3 {
-                font-size: 18px;
-            }
-
-            .additional-comments p {
-                font-size: 14px;
-            }
-
-            .terms h3 {
-                font-size: 14px;
-            }
-
-            .terms p {
-                font-size: 12px;
-            }
-        }
-
+        
         /* Toast Container and Toast Styles */
         .toast-container {
             position: fixed;
@@ -312,7 +249,7 @@
             flex-direction: column;
             gap: 10px;
         }
-
+        
         .toast {
             background-color: #333;
             color: #fff;
@@ -322,31 +259,72 @@
             font-size: 14px;
             animation: fadeInOut 3s forwards;
         }
-
+        
         .toast.success {
             background-color: #28a745;
         }
-
+        
         .toast.error {
             background-color: #dc3545;
         }
-
+        
         .toast.info {
             background-color: #007bff;
         }
-
+        
         @keyframes fadeInOut {
-            0% {
-                opacity: 0;
+            0% { opacity: 0; }
+            10% { opacity: 0.95; }
+            90% { opacity: 0.95; }
+            100% { opacity: 0; }
+        }
+        
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            body {
+                font-size: 16px;
             }
-            10% {
-                opacity: 0.95;
+            .container {
+                padding: 15px;
             }
-            90% {
-                opacity: 0.95;
+            h1 { font-size: 28px; }
+            h2 { font-size: 22px; }
+            h3 { font-size: 18px; }
+            .logo {
+                width: 80px;
+                height: 80px;
             }
-            100% {
-                opacity: 0;
+            th, td {
+                padding: 10px 12px;
+                font-size: 14px;
+            }
+            /* Stack billing and shipping vertically */
+            .billing, .shipping {
+                width: 100%;
+                margin-bottom: 15px;
+            }
+            .billing-shipping {
+                flex-direction: column;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                font-size: 14px;
+            }
+            .container {
+                padding: 10px;
+            }
+            h1 { font-size: 24px; }
+            h2 { font-size: 20px; }
+            h3 { font-size: 16px; }
+            .logo {
+                width: 60px;
+                height: 60px;
+            }
+            th, td {
+                padding: 8px 10px;
+                font-size: 12px;
             }
         }
     </style>
@@ -354,27 +332,24 @@
 <body>
     <!-- Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
-
+    
     <a href="index.html" style="text-decoration: none; color: #007BFF; font-size: 16px; margin-right: 20px;">&larr; Back to Home</a>
     <div class="container">
-        
-        <div id="invoice">
+        <div id="quotation">
             <div class="header">
-                <p id="invoice-date">Date: <!-- Dynamic Date --></p>
-                <h1>INVOICE</h1>
+                <p id="quotation-date">Date: <!-- Dynamic Date --></p>
+                <h1>QUOTATION</h1>
                 <div class="logo"></div>
             </div>
-
+    
             <div class="company-details">
                 <h2 id="company-name">Shans Accessories PTY LTD</h2>
                 <p>61 Civin Drive<br>Bedfordview<br>Johannesburg</p>
                 <div class="address-contact">
                     <p id="banking-info"></p>
                 </div>
-                <!-- Reference Number (Non-editable) -->
-                <p class="reference-number" id="reference-number">Reference Number: <!-- Dynamic Reference --></p>
             </div>
-
+    
             <div class="billing-shipping">
                 <div class="billing">
                     <h3>BILL TO</h3>
@@ -385,10 +360,7 @@
                     <p><!-- Customer Shipping Information --></p>
                 </div>
             </div>
-
-            <!-- Payment Method Section -->
-            <p class="payment-method">Payment Method: <span id="paymentMethod">N/A</span></p>
-
+    
             <!-- Products Table -->
             <table>
                 <thead>
@@ -404,18 +376,18 @@
                     <!-- Dynamic Product Rows Will Be Inserted Here -->
                 </tbody>
             </table>
-
-            <!-- Added Additional Comments Section -->
+    
+            <!-- Additional Comments Section -->
             <div id="additional-comments" class="additional-comments" style="margin-bottom: 20px;">
                 <!-- Additional Comments will be inserted here if available -->
             </div>
-
-            <!-- Added Terms Section -->
+    
+            <!-- Terms Section -->
             <div class="terms">
                 <h3>Terms</h3>
                 <p>No refunds or exchanges on correctly supplied items</p>
             </div>
-
+    
             <!-- Totals Section -->
             <div class="totals">
                 <p class="subtotal">Product Amount (Subtotal): <span id="subtotalAmount">R0.00</span></p>
@@ -423,7 +395,7 @@
                 <p class="total">Total Amount: <span id="totalAmount">R0.00</span></p>
             </div>
         </div>
-
+    
         <div class="footer">
             <p>Follow us to see more on</p>
             <p>Instagram: @shans_car_accessories</p>
@@ -432,22 +404,22 @@
             <p>YouTube/Tik Tok: Shans Accessories All products are Non OEM</p>
         </div>
     </div>
-
+    
     <!-- Buttons Container -->
     <div class="button-container">
         <!-- Confirm Button -->
         <button id="confirm-button" class="action-button">Confirm</button>
-
+    
         <!-- Loading Spinner (Hidden by Default) -->
         <div id="loading-spinner" class="spinner" style="display: none;"></div>
     </div>
-
-    <!-- PDF Preview Section (Optional: Can be repurposed or removed) -->
+    
+    <!-- PDF Preview Section (Optional) -->
     <div id="pdf-preview"></div>
-
+    
     <!-- Include html2pdf.js from CDN (Optional, if using for screenshots) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
+    
     <script>
         /**
          * Display a non-blocking toast message in the top-right corner.
@@ -460,13 +432,13 @@
             toast.classList.add('toast', type);
             toast.textContent = message;
             toastContainer.appendChild(toast);
-
+    
             // Automatically remove the toast after ~3s
             setTimeout(() => {
                 toast.remove();
             }, 3000);
         }
-
+    
         // Function to retrieve a cookie by name
         function getCookie(name) {
             const cname = name + "=";
@@ -480,63 +452,60 @@
             }
             return "";
         }
-
+    
         // Function to format currency in ZAR
         function formatCurrency(amount) {
-            return 'R' + parseFloat(amount).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            return 'R' + parseFloat(amount).toLocaleString('en-ZA', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
         }
-
+    
         // Function to sanitize HTML to prevent XSS
         function sanitizeHTML(str) {
             const temp = document.createElement('div');
             temp.textContent = str;
             return temp.innerHTML;
         }
-
+    
         // Function to format date
         function formatDate(date) {
             const options = { year: 'numeric', month: 'short', day: 'numeric' };
             return new Intl.DateTimeFormat('en-US', options).format(date);
         }
-
-        // Function to generate a random 7-digit reference number
-        function generateReferenceNumber() {
-            return Math.floor(1000000 + Math.random() * 9000000).toString();
-        }
-
-        // Function to populate the invoice with data from cookies
-        function populateInvoice() {
+    
+        // Function to populate the quotation with data from cookies
+        function populateQuotation() {
             const customerInfoCookie = getCookie('customerInfo');
             const selectedProductsCookie = getCookie('selectedProducts');
             const subtotalAmountCookie = getCookie('subtotalAmount');
             const taxAmountCookie = getCookie('taxAmount');
             const totalAmountCookie = getCookie('totalAmount');
             const selectedCompanyCookie = getCookie('selectedCompany'); // Retrieve company info
-
-            if (!customerInfoCookie || !selectedProductsCookie || !subtotalAmountCookie 
-                || !taxAmountCookie || !totalAmountCookie || !selectedCompanyCookie) {
-                // Was using alert; now replaced with toast:
-                showToastMessage('No invoice data found. Please generate an invoice first.', 'error');
-                window.location.href = 'index.html'; 
+    
+            if (!customerInfoCookie ||
+                !selectedProductsCookie ||
+                !subtotalAmountCookie ||
+                !taxAmountCookie ||
+                !totalAmountCookie ||
+                !selectedCompanyCookie) {
+                // Replaced alert with toast + redirect
+                showToastMessage('No quotation data found. Please generate a quotation first.', 'error');
+                window.location.href = 'index.html';
                 return;
             }
-
+    
             const customerInfo = JSON.parse(customerInfoCookie);
             const selectedProducts = JSON.parse(selectedProductsCookie);
             const subtotalAmount = parseFloat(JSON.parse(subtotalAmountCookie));
             const taxAmount = parseFloat(JSON.parse(taxAmountCookie));
             const totalAmount = parseFloat(JSON.parse(totalAmountCookie));
-            const selectedCompany = JSON.parse(selectedCompanyCookie); // Parse company info
-
+            const selectedCompany = JSON.parse(selectedCompanyCookie);
+    
             // Populate Company Information
             document.getElementById('company-name').textContent = selectedCompany.name;
             document.getElementById('banking-info').innerHTML = selectedCompany.bankingInformation;
-
-            // Generate and set reference number
-            const referenceNumberElement = document.getElementById('reference-number');
-            const generatedReference = generateReferenceNumber();
-            referenceNumberElement.textContent = 'Reference Number: ' + generatedReference;
-
+    
             // Populate Billing Information
             const billingElement = document.querySelector('.billing p');
             billingElement.innerHTML = `
@@ -545,7 +514,7 @@
                 Email: ${sanitizeHTML(customerInfo.billing.email)}<br>
                 Phone: ${sanitizeHTML(customerInfo.billing.phone)}
             `;
-
+    
             // Populate Shipping Information
             const shippingElement = document.querySelector('.shipping p');
             if (customerInfo.shipping) {
@@ -558,46 +527,46 @@
             } else {
                 shippingElement.innerHTML = `Same as billing address`;
             }
-
+    
             // Handle Tax Column in Table
             const isTaxAdded = taxAmount > 0;
             const tableHeaderRow = document.getElementById('table-header');
             const taxInfo = document.getElementById('tax-info');
-
+    
             if (isTaxAdded) {
                 // Check if TAX PER UNIT (R) column already exists
-                if (!tableHeaderRow.querySelector('th:nth-child(4)') 
-                    || !tableHeaderRow.querySelector('th:nth-child(4)').textContent.includes('TAX PER UNIT (R)')) {
+                if (!tableHeaderRow.querySelector('th:nth-child(4)') ||
+                    !tableHeaderRow.querySelector('th:nth-child(4)').textContent.includes('TAX PER UNIT')) {
                     const taxHeader = document.createElement('th');
                     taxHeader.textContent = 'TAX PER UNIT (R)';
                     tableHeaderRow.insertBefore(taxHeader, tableHeaderRow.children[3]);
                 }
-                taxInfo.style.display = 'flex'; // Ensure display is flex
+                taxInfo.style.display = 'flex';
             } else {
                 // Remove TAX PER UNIT (R) column if it exists
                 const taxHeader = tableHeaderRow.querySelector('th:nth-child(4)');
-                if (taxHeader && taxHeader.textContent.includes('TAX PER UNIT (R)')) {
+                if (taxHeader && taxHeader.textContent.includes('TAX PER UNIT')) {
                     taxHeader.parentNode.removeChild(taxHeader);
                 }
                 taxInfo.style.display = 'none';
             }
-
+    
             // Populate Product Rows
             const tbody = document.querySelector('table tbody');
-            tbody.innerHTML = ''; 
-
+            tbody.innerHTML = '';
+    
             selectedProducts.forEach(product => {
                 const row = tbody.insertRow();
                 const descCell = row.insertCell(0);
                 descCell.textContent = product.name;
-
+    
                 const qtyCell = row.insertCell(1);
                 qtyCell.textContent = product.quantity;
-
+    
                 const unitPriceCell = row.insertCell(2);
                 let unitPriceExcludingTax = product.price;
                 let taxPerUnit = 0;
-
+    
                 if (isTaxAdded) {
                     unitPriceExcludingTax = product.price / 1.15;
                     unitPriceCell.textContent = formatCurrency(unitPriceExcludingTax.toFixed(2));
@@ -612,7 +581,7 @@
                     totalCell.textContent = formatCurrency((product.price * product.quantity).toFixed(2));
                 }
             });
-
+    
             // Populate Additional Comments
             const comments = customerInfo.comments;
             const commentsDiv = document.getElementById('additional-comments');
@@ -625,32 +594,27 @@
             } else {
                 commentsDiv.style.display = 'none';
             }
-
+    
             // Populate Totals
             document.getElementById('subtotalAmount').textContent = formatCurrency(subtotalAmount.toFixed(2));
             document.getElementById('taxAmount').textContent = formatCurrency(taxAmount.toFixed(2));
             document.getElementById('totalAmount').textContent = formatCurrency(totalAmount.toFixed(2));
-
-            // Populate Payment Method
-            const paymentMethodSpan = document.getElementById('paymentMethod');
-            paymentMethodSpan.textContent = customerInfo.paymentMethod ? sanitizeHTML(customerInfo.paymentMethod) : 'N/A';
-
+    
             // Populate Date
-            const dateElement = document.getElementById('invoice-date');
+            const dateElement = document.getElementById('quotation-date');
             dateElement.textContent = 'Date: ' + formatDate(new Date());
         }
-
-        // Function to confirm and send the invoice
-        async function confirmInvoice() {
+    
+        // Function to confirm and send the quotation
+        async function confirmQuotation() {
             const confirmButton = document.getElementById('confirm-button');
             const loadingSpinner = document.getElementById('loading-spinner');
             const pdfPreview = document.getElementById('pdf-preview');
-            const referenceNumberElement = document.getElementById('reference-number');
-
+    
             confirmButton.disabled = true;
             loadingSpinner.style.display = 'inline-block';
             pdfPreview.innerHTML = '';
-
+    
             try {
                 const customerInfoCookie = getCookie('customerInfo');
                 const selectedProductsCookie = getCookie('selectedProducts');
@@ -658,30 +622,30 @@
                 const taxAmountCookie = getCookie('taxAmount');
                 const totalAmountCookie = getCookie('totalAmount');
                 const selectedCompanyCookie = getCookie('selectedCompany');
-
-                if (!customerInfoCookie || !selectedProductsCookie || !subtotalAmountCookie 
-                    || !taxAmountCookie || !totalAmountCookie || !selectedCompanyCookie) {
-                    throw new Error('No invoice data found.');
+    
+                if (!customerInfoCookie ||
+                    !selectedProductsCookie ||
+                    !subtotalAmountCookie ||
+                    !taxAmountCookie ||
+                    !totalAmountCookie ||
+                    !selectedCompanyCookie) {
+                    throw new Error('No quotation data found.');
                 }
-
+    
                 const customerInfo = JSON.parse(customerInfoCookie);
                 const selectedProducts = JSON.parse(selectedProductsCookie);
                 const subtotalAmount = parseFloat(JSON.parse(subtotalAmountCookie));
                 const taxAmount = parseFloat(JSON.parse(taxAmountCookie));
                 const totalAmount = parseFloat(JSON.parse(totalAmountCookie));
                 const selectedCompany = JSON.parse(selectedCompanyCookie);
-
-                // Retrieve the reference number from the element
-                const referenceNumberText = referenceNumberElement.textContent;
-                const referenceNumber = referenceNumberText.replace('Reference Number: ', '').trim();
-
-                if (referenceNumber === "") {
-                    throw new Error('Reference number is missing.');
-                }
-
-                const invoiceData = {
+    
+                const quotationData = {
                     date: new Date().toISOString().slice(0,10),
-                    referenceNumber: referenceNumber, // Include the reference number
+                    referenceNumber: customerInfo.referenceNumber || generateReferenceNumber(), // Use existing or generate new
+                    company: {
+                        name: selectedCompany.name,
+                        bankingInformation: selectedCompany.bankingInformation
+                    },
                     billing: customerInfo.billing,
                     shipping: customerInfo.shipping || null,
                     paymentMethod: customerInfo.paymentMethod || 'N/A',
@@ -690,7 +654,7 @@
                         item_code: product.item_code,
                         name: product.name,
                         quantity: product.quantity,
-                        unitPriceExcludingTax: taxAmount > 0 
+                        unitPriceExcludingTax: taxAmount > 0
                             ? parseFloat((product.price / 1.15).toFixed(2))
                             : parseFloat(product.price.toFixed(2)),
                         taxPerUnit: taxAmount > 0
@@ -700,23 +664,19 @@
                     })),
                     subtotal: parseFloat(subtotalAmount.toFixed(2)),
                     tax: parseFloat(taxAmount.toFixed(2)),
-                    total: parseFloat(totalAmount.toFixed(2)),
-                    company: {
-                        name: selectedCompany.name,
-                        bankingInformation: selectedCompany.bankingInformation
-                    }
+                    total: parseFloat(totalAmount.toFixed(2))
                 };
-
-                console.log('Sending invoice data to backend:', invoiceData);
-
-                const response = await fetch('http://localhost:3000/api/generate-invoice', {
+    
+                console.log('Sending quotation data to backend:', quotationData);
+    
+                const response = await fetch('https://shans-backend-1.onrender.com/api/generate-quotation', { 
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(invoiceData)
+                    body: JSON.stringify(quotationData)
                 });
-
+    
                 if (!response.ok) {
                     let errorMessage = 'Failed to generate PDF.';
                     try {
@@ -727,26 +687,31 @@
                     }
                     throw new Error(errorMessage);
                 }
-
+    
                 const successData = await response.json();
                 console.log('Backend response:', successData);
-
-                // Replaced alert with a success toast
-                showToastMessage('Successfully sent, thanks!', 'success');
-
+    
+                // Replaced alert with success toast
+                showToastMessage('Quotation successfully sent, thanks!', 'success');
+    
             } catch (error) {
                 console.error('Error generating PDF:', error);
                 // Show error toast instead of alert
-                showToastMessage(`Error: ${error.message}`, 'error');
+                showToastMessage('An error occurred while sending the quotation. Please try again.', 'error');
             } finally {
                 confirmButton.disabled = false;
                 loadingSpinner.style.display = 'none';
             }
         }
-
+    
+        // Function to generate a random 7-digit reference number (in case needed)
+        function generateReferenceNumber() {
+            return Math.floor(1000000 + Math.random() * 9000000).toString();
+        }
+    
         // Event Listeners
-        document.addEventListener('DOMContentLoaded', populateInvoice);
-        document.getElementById('confirm-button').addEventListener('click', confirmInvoice);
+        document.addEventListener('DOMContentLoaded', populateQuotation);
+        document.getElementById('confirm-button').addEventListener('click', confirmQuotation);
     </script>
 </body>
 </html>
