@@ -210,7 +210,7 @@
             cursor: pointer;
             transition: background-color 0.3s ease;
         }
-    
+
         .action-button:hover {
             background-color: #357ABD; /* Darker Blue on Hover */
         }
@@ -336,15 +336,20 @@
         }
 
         @keyframes fadeInOut {
-          0% { opacity: 0; }
-          10% { opacity: 0.95; }
-          90% { opacity: 0.95; }
-          100% { opacity: 0; }
+            0% {
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.95;
+            }
+            90% {
+                opacity: 0.95;
+            }
+            100% {
+                opacity: 0;
+            }
         }
-        
-        /* Optional: If you want to preserve the layout exactly on very small screens,
-           you can remove or comment out responsive media queries that change font sizes or layout. */
-      </style>
+    </style>
 </head>
 <body>
     <!-- Toast Container -->
