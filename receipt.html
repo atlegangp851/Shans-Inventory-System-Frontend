@@ -368,7 +368,9 @@
   <div class="toast-container" id="toastContainer"></div>
 
   <a href="index.html" style="text-decoration: none; color: #007BFF; font-size: 16px; margin-right: 20px;">&larr; Back to Home</a>
-  <div class="container">
+  
+  <!-- The element to be captured is wrapped in div with id "pdf-1" -->
+  <div id="pdf-1" class="container">
     <div id="receipt">
       <div class="header">
         <p id="receipt-date">Date: <!-- Dynamic Date --></p>
@@ -444,12 +446,16 @@
 
   <div class="button-container">
     <button id="confirm-button" class="action-button">Confirm</button>
+    <button id="screenshot-button" class="action-button">Download Image</button>
     <div id="loading-spinner" class="spinner" style="display: none;"></div>
   </div>
 
   <div id="pdf-preview"></div>
 
+  <!-- Include html2pdf.js if needed -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <!-- Include html2canvas for image capturing -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
   <script>
     /**
@@ -732,6 +738,24 @@
         loadingSpinner.style.display = 'none';
       }
     }
+
+    // Event listener for the "Download Image" button
+    document.getElementById('screenshot-button').addEventListener('click', () => {
+      const element = document.getElementById('pdf-1');
+      // Use html2canvas to capture the element. A higher scale ensures better quality.
+      html2canvas(element, { scale: 2 }).then(canvas => {
+        // Convert the canvas to an image data URL
+        const imgData = canvas.toDataURL('image/png');
+        // Create a temporary link to trigger the download
+        const link = document.createElement('a');
+        link.href = imgData;
+        link.download = 'receipt.png';
+        link.click();
+      }).catch(err => {
+        console.error('Error capturing image:', err);
+        showToastMessage('Failed to capture image.', 'error');
+      });
+    });
 
     document.addEventListener('DOMContentLoaded', populateReceipt);
     document.getElementById('confirm-button').addEventListener('click', confirmReceipt);
