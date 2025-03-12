@@ -407,7 +407,7 @@
             <th>Product</th>
             <th>QTY</th>
             <th>UNIT PRICE (R)</th>
-            <th>TAX PER UNIT (R)</th>
+            <th id="tax-header" style="display: none;">TAX PER UNIT (R)</th>
             <th>TOTAL (R)</th>
           </tr>
         </thead>
@@ -429,9 +429,9 @@
 
       <!-- Totals Section -->
       <div class="totals">
-        <p class="subtotal">Product Amount (Subtotal): <span id="subtotalAmount">R0.00</span></p>
-        <p class="tax" id="tax-info" style="display: none;">Tax (15%): <span id="taxAmount">R0.00</span></p>
-        <p class="total">Total Amount: <span id="totalAmount">R0.00</span></p>
+        <p class="subtotal">Product Amount (Subtotal): <span id="subtotalAmount">R0</span></p>
+        <p class="tax" id="tax-info" style="display: none;">Tax (15%): <span id="taxAmount">R0</span></p>
+        <p class="total">Total Amount: <span id="totalAmount">R0</span></p>
       </div>
     </div>
 
@@ -488,11 +488,11 @@
       return "";
     }
 
-    // Function to format currency in ZAR
+    // Function to format currency in ZAR using whole numbers
     function formatCurrency(amount) {
       return 'R' + parseFloat(amount).toLocaleString('en-ZA', { 
-        minimumFractionDigits: 2, 
-        maximumFractionDigits: 2 
+        minimumFractionDigits: 0, 
+        maximumFractionDigits: 0 
       });
     }
 
@@ -543,13 +543,16 @@
       const totalAmount = parseFloat(JSON.parse(totalAmountCookie));
       const selectedCompany = JSON.parse(selectedCompanyCookie);
 
+      // Populate company info
       document.getElementById('company-name').textContent = selectedCompany.name;
       document.getElementById('banking-info').innerHTML = selectedCompany.bankingInformation;
 
+      // Generate a new reference number
       const referenceNumberElement = document.getElementById('reference-number');
       const generatedReference = generateReferenceNumber();
       referenceNumberElement.textContent = 'Reference Number: ' + generatedReference;
 
+      // Populate billing info
       const billingElement = document.querySelector('.billing p');
       billingElement.innerHTML = `
         <strong>${sanitizeHTML(customerInfo.billing.name)}</strong><br>
@@ -558,6 +561,7 @@
         Phone: ${sanitizeHTML(customerInfo.billing.phone)}
       `;
 
+      // Populate shipping info
       const shippingElement = document.querySelector('.shipping p');
       if (customerInfo.shipping) {
         shippingElement.innerHTML = `
@@ -570,56 +574,49 @@
         shippingElement.innerHTML = `Same as billing address`;
       }
 
+      // Show or hide the tax row in the totals
       const isTaxAdded = taxAmount > 0;
-      const tableHeaderRow = document.getElementById('table-header');
-      const taxInfo = document.getElementById('tax-info');
-
+      const taxInfoRow = document.getElementById('tax-info');
+      const taxHeader = document.getElementById('tax-header');
       if (isTaxAdded) {
-        if (!tableHeaderRow.querySelector('th:nth-child(4)') ||
-            !tableHeaderRow.querySelector('th:nth-child(4)').textContent.includes('TAX PER UNIT')) {
-          const taxHeader = document.createElement('th');
-          taxHeader.textContent = 'TAX PER UNIT (R)';
-          tableHeaderRow.insertBefore(taxHeader, tableHeaderRow.children[3]);
-        }
-        taxInfo.style.display = 'flex';
+        taxInfoRow.style.display = 'flex';
+        taxHeader.style.display = '';
       } else {
-        const taxHeader = tableHeaderRow.querySelector('th:nth-child(4)');
-        if (taxHeader && taxHeader.textContent.includes('TAX PER UNIT')) {
-          taxHeader.parentNode.removeChild(taxHeader);
-        }
-        taxInfo.style.display = 'none';
+        taxInfoRow.style.display = 'none';
+        taxHeader.style.display = 'none';
       }
 
+      // Populate the table rows
       const tbody = document.querySelector('table tbody');
       tbody.innerHTML = '';
 
       selectedProducts.forEach(product => {
         const row = tbody.insertRow();
-        const descCell = row.insertCell(0);
-        descCell.textContent = product.name;
+        const productCell = row.insertCell(0);
+        productCell.textContent = product.name;
 
         const qtyCell = row.insertCell(1);
         qtyCell.textContent = product.quantity;
 
         const unitPriceCell = row.insertCell(2);
-        let unitPriceExcludingTax = product.price;
-        let taxPerProduct = 0;
+        const taxCell = row.insertCell(3);
+        const totalCell = row.insertCell(4);
 
-        if (isTaxAdded) {
-          unitPriceExcludingTax = product.price / 1.15;
-          unitPriceCell.textContent = formatCurrency(unitPriceExcludingTax.toFixed(2));
-          taxPerProduct = product.price - unitPriceExcludingTax;
-          const taxCell = row.insertCell(3);
-          taxCell.textContent = formatCurrency(taxPerProduct.toFixed(2));
-          const totalCell = row.insertCell(4);
-          totalCell.textContent = formatCurrency((product.price * product.quantity).toFixed(2));
+        // If tax is present, show net_price as the "Unit Price (R)"
+        if (product.tax_per_product && product.tax_per_product > 0) {
+          unitPriceCell.textContent = formatCurrency(product.net_price.toFixed(0));
+          taxCell.textContent = formatCurrency(product.tax_per_product.toFixed(0));
         } else {
-          unitPriceCell.textContent = formatCurrency(product.price.toFixed(2));
-          const totalCell = row.insertCell(3);
-          totalCell.textContent = formatCurrency((product.price * product.quantity).toFixed(2));
+          unitPriceCell.textContent = formatCurrency(product.final_price.toFixed(0));
+          taxCell.textContent = '';
         }
+  
+        // The total for this line = final_price * quantity
+        const lineTotal = product.final_price * product.quantity;
+        totalCell.textContent = formatCurrency(lineTotal.toFixed(0));
       });
 
+      // Additional comments
       const comments = customerInfo.comments;
       const commentsDiv = document.getElementById('additional-comments');
       if (comments && comments.trim() !== "") {
@@ -632,13 +629,16 @@
         commentsDiv.style.display = 'none';
       }
 
-      document.getElementById('subtotalAmount').textContent = formatCurrency(subtotalAmount.toFixed(2));
-      document.getElementById('taxAmount').textContent = formatCurrency(taxAmount.toFixed(2));
-      document.getElementById('totalAmount').textContent = formatCurrency(totalAmount.toFixed(2));
+      // Populate totals
+      document.getElementById('subtotalAmount').textContent = formatCurrency(subtotalAmount.toFixed(0));
+      document.getElementById('taxAmount').textContent = formatCurrency(taxAmount.toFixed(0));
+      document.getElementById('totalAmount').textContent = formatCurrency(totalAmount.toFixed(0));
 
+      // Payment method
       const paymentMethodSpan = document.getElementById('paymentMethod');
       paymentMethodSpan.textContent = customerInfo.paymentMethod ? sanitizeHTML(customerInfo.paymentMethod) : 'N/A';
 
+      // Date
       const dateElement = document.getElementById('receipt-date');
       dateElement.textContent = 'Date: ' + formatDate(new Date());
     }
@@ -677,10 +677,12 @@
         const totalAmount = parseFloat(JSON.parse(totalAmountCookie));
         const selectedCompany = JSON.parse(selectedCompanyCookie);
 
+        // Generate a new reference number
         const referenceNumberElement = document.getElementById('reference-number');
         const generatedReference = generateReferenceNumber();
         referenceNumberElement.textContent = 'Reference Number: ' + generatedReference;
 
+        // Build the data to send
         const receiptData = {
           date: new Date().toISOString().slice(0,10),
           referenceNumber: generatedReference,
@@ -696,18 +698,19 @@
             item_code: product.item_code,
             name: product.name,
             quantity: product.quantity,
-            unitPriceExcludingTax: taxAmount > 0 ? parseFloat((product.price / 1.15).toFixed(2)) : parseFloat(product.price.toFixed(2)),
-            taxPerProduct: taxAmount > 0 ? parseFloat((product.price - (product.price / 1.15)).toFixed(2)) : 0.00,
-            totalPrice: parseFloat((product.price * product.quantity).toFixed(2))
+            net_price: product.net_price,
+            tax_per_product: product.tax_per_product,
+            final_price: product.final_price,
+            line_total: product.final_price * product.quantity
           })),
-          subtotal: parseFloat(subtotalAmount.toFixed(2)),
-          tax: parseFloat(taxAmount.toFixed(2)),
-          total: parseFloat(totalAmount.toFixed(2))
+          subtotal: parseFloat(subtotalAmount.toFixed(0)),
+          tax: parseFloat(taxAmount.toFixed(0)),
+          total: parseFloat(totalAmount.toFixed(0))
         };
 
         console.log('Sending receipt data to backend:', receiptData);
 
-        const response = await fetch('https://shans-backend-1.onrender.com/api/generate-pdf', { 
+        const response = await fetch('http://localhost:8000/api/generate-pdf', { 
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -739,21 +742,28 @@
       }
     }
 
-    // Event listener for the "Download Image" button
+    // Event listener for the "Download Image" button with loading spinner and ensuring reference number is set
     document.getElementById('screenshot-button').addEventListener('click', () => {
+      const loadingSpinner = document.getElementById('loading-spinner');
+      // Ensure the receipt reference number is present before capturing
+      const refElement = document.getElementById('reference-number');
+      if (!refElement.textContent || !refElement.textContent.includes('Reference Number:')) {
+        const generatedReference = generateReferenceNumber();
+        refElement.textContent = 'Reference Number: ' + generatedReference;
+      }
+      loadingSpinner.style.display = 'inline-block'; // Show spinner
       const element = document.getElementById('pdf-1');
-      // Use html2canvas to capture the element. A higher scale ensures better quality.
       html2canvas(element, { scale: 2 }).then(canvas => {
-        // Convert the canvas to an image data URL
         const imgData = canvas.toDataURL('image/png');
-        // Create a temporary link to trigger the download
         const link = document.createElement('a');
         link.href = imgData;
         link.download = 'receipt.png';
         link.click();
+        loadingSpinner.style.display = 'none'; // Hide spinner
       }).catch(err => {
         console.error('Error capturing image:', err);
         showToastMessage('Failed to capture image.', 'error');
+        loadingSpinner.style.display = 'none'; // Hide spinner even if error
       });
     });
 

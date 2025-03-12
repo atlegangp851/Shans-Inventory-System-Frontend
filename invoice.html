@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <!-- One viewport meta tag is enough -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Shans System - Quotation</title>
     <style>
@@ -334,6 +335,7 @@
     <div class="toast-container" id="toastContainer"></div>
     
     <a href="index.html" style="text-decoration: none; color: #007BFF; font-size: 16px; margin-right: 20px;">&larr; Back to Home</a>
+    
     <div class="container">
         <div id="quotation">
             <div class="header">
@@ -390,9 +392,9 @@
     
             <!-- Totals Section -->
             <div class="totals">
-                <p class="subtotal">Product Amount (Subtotal): <span id="subtotalAmount">R0.00</span></p>
-                <p class="tax" id="tax-info" style="display: none;">Tax (15%): <span id="taxAmount">R0.00</span></p>
-                <p class="total">Total Amount: <span id="totalAmount">R0.00</span></p>
+                <p class="subtotal">Product Amount (Subtotal): <span id="subtotalAmount">R0</span></p>
+                <p class="tax" id="tax-info" style="display: none;">Tax (15%): <span id="taxAmount">R0</span></p>
+                <p class="total">Total Amount: <span id="totalAmount">R0</span></p>
             </div>
         </div>
     
@@ -453,11 +455,11 @@
             return "";
         }
     
-        // Function to format currency in ZAR
+        // Function to format currency in ZAR (using whole numbers)
         function formatCurrency(amount) {
             return 'R' + parseFloat(amount).toLocaleString('en-ZA', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
             });
         }
     
@@ -489,7 +491,6 @@
                 !taxAmountCookie ||
                 !totalAmountCookie ||
                 !selectedCompanyCookie) {
-                // Replaced alert with toast + redirect
                 showToastMessage('No quotation data found. Please generate a quotation first.', 'error');
                 window.location.href = 'index.html';
                 return;
@@ -528,13 +529,14 @@
                 shippingElement.innerHTML = `Same as billing address`;
             }
     
-            // Handle Tax Column in Table
+            // Handle Tax Column in Table using new product fields:
+            // Each product now has final_price, tax_per_product, and net_price.
             const isTaxAdded = taxAmount > 0;
             const tableHeaderRow = document.getElementById('table-header');
             const taxInfo = document.getElementById('tax-info');
     
             if (isTaxAdded) {
-                // Check if TAX PER UNIT (R) column already exists
+                // Ensure TAX PER UNIT (R) column is present
                 if (!tableHeaderRow.querySelector('th:nth-child(4)') ||
                     !tableHeaderRow.querySelector('th:nth-child(4)').textContent.includes('TAX PER UNIT')) {
                     const taxHeader = document.createElement('th');
@@ -543,7 +545,6 @@
                 }
                 taxInfo.style.display = 'flex';
             } else {
-                // Remove TAX PER UNIT (R) column if it exists
                 const taxHeader = tableHeaderRow.querySelector('th:nth-child(4)');
                 if (taxHeader && taxHeader.textContent.includes('TAX PER UNIT')) {
                     taxHeader.parentNode.removeChild(taxHeader);
@@ -551,7 +552,7 @@
                 taxInfo.style.display = 'none';
             }
     
-            // Populate Product Rows
+            // Populate Product Rows using new fields
             const tbody = document.querySelector('table tbody');
             tbody.innerHTML = '';
     
@@ -564,21 +565,18 @@
                 qtyCell.textContent = product.quantity;
     
                 const unitPriceCell = row.insertCell(2);
-                let unitPriceExcludingTax = product.price;
-                let taxPerUnit = 0;
-    
-                if (isTaxAdded) {
-                    unitPriceExcludingTax = product.price / 1.15;
-                    unitPriceCell.textContent = formatCurrency(unitPriceExcludingTax.toFixed(2));
-                    taxPerUnit = product.price - unitPriceExcludingTax;
+                if (isTaxAdded && product.tax_per_product && product.tax_per_product > 0) {
+                    // Show net_price as the unit price when tax is applied
+                    unitPriceCell.textContent = formatCurrency(product.net_price.toFixed(0));
                     const taxCell = row.insertCell(3);
-                    taxCell.textContent = formatCurrency(taxPerUnit.toFixed(2));
+                    taxCell.textContent = formatCurrency(product.tax_per_product.toFixed(0));
                     const totalCell = row.insertCell(4);
-                    totalCell.textContent = formatCurrency((product.price * product.quantity).toFixed(2));
+                    totalCell.textContent = formatCurrency((product.final_price * product.quantity).toFixed(0));
                 } else {
-                    unitPriceCell.textContent = formatCurrency(product.price.toFixed(2));
+                    // No tax: show final_price as the unit price
+                    unitPriceCell.textContent = formatCurrency(product.final_price.toFixed(0));
                     const totalCell = row.insertCell(3);
-                    totalCell.textContent = formatCurrency((product.price * product.quantity).toFixed(2));
+                    totalCell.textContent = formatCurrency((product.final_price * product.quantity).toFixed(0));
                 }
             });
     
@@ -596,9 +594,9 @@
             }
     
             // Populate Totals
-            document.getElementById('subtotalAmount').textContent = formatCurrency(subtotalAmount.toFixed(2));
-            document.getElementById('taxAmount').textContent = formatCurrency(taxAmount.toFixed(2));
-            document.getElementById('totalAmount').textContent = formatCurrency(totalAmount.toFixed(2));
+            document.getElementById('subtotalAmount').textContent = formatCurrency(subtotalAmount.toFixed(0));
+            document.getElementById('taxAmount').textContent = formatCurrency(taxAmount.toFixed(0));
+            document.getElementById('totalAmount').textContent = formatCurrency(totalAmount.toFixed(0));
     
             // Populate Date
             const dateElement = document.getElementById('quotation-date');
@@ -639,9 +637,10 @@
                 const totalAmount = parseFloat(JSON.parse(totalAmountCookie));
                 const selectedCompany = JSON.parse(selectedCompanyCookie);
     
+                // Build the data to send using the new fields
                 const quotationData = {
                     date: new Date().toISOString().slice(0,10),
-                    referenceNumber: customerInfo.referenceNumber || generateReferenceNumber(), // Use existing or generate new
+                    referenceNumber: customerInfo.referenceNumber || generateReferenceNumber(),
                     company: {
                         name: selectedCompany.name,
                         bankingInformation: selectedCompany.bankingInformation
@@ -654,17 +653,17 @@
                         item_code: product.item_code,
                         name: product.name,
                         quantity: product.quantity,
-                        unitPriceExcludingTax: taxAmount > 0
-                            ? parseFloat((product.price / 1.15).toFixed(2))
-                            : parseFloat(product.price.toFixed(2)),
-                        taxPerUnit: taxAmount > 0
-                            ? parseFloat((product.price - (product.price / 1.15)).toFixed(2))
-                            : 0.00,
-                        totalPrice: parseFloat((product.price * product.quantity).toFixed(2))
+                        unitPriceExcludingTax: (product.tax_per_product && product.tax_per_product > 0)
+                            ? parseFloat(product.net_price.toFixed(0))
+                            : parseFloat(product.final_price.toFixed(0)),
+                        taxPerUnit: (product.tax_per_product && product.tax_per_product > 0)
+                            ? parseFloat(product.tax_per_product.toFixed(0))
+                            : 0,
+                        totalPrice: parseFloat((product.final_price * product.quantity).toFixed(0))
                     })),
-                    subtotal: parseFloat(subtotalAmount.toFixed(2)),
-                    tax: parseFloat(taxAmount.toFixed(2)),
-                    total: parseFloat(totalAmount.toFixed(2))
+                    subtotal: parseFloat(subtotalAmount.toFixed(0)),
+                    tax: parseFloat(taxAmount.toFixed(0)),
+                    total: parseFloat(totalAmount.toFixed(0))
                 };
     
                 console.log('Sending quotation data to backend:', quotationData);
@@ -691,12 +690,10 @@
                 const successData = await response.json();
                 console.log('Backend response:', successData);
     
-                // Replaced alert with success toast
                 showToastMessage('Quotation successfully sent, thanks!', 'success');
     
             } catch (error) {
                 console.error('Error generating PDF:', error);
-                // Show error toast instead of alert
                 showToastMessage('An error occurred while sending the quotation. Please try again.', 'error');
             } finally {
                 confirmButton.disabled = false;
@@ -704,7 +701,7 @@
             }
         }
     
-        // Function to generate a random 7-digit reference number (in case needed)
+        // Function to generate a random 7-digit reference number (if needed)
         function generateReferenceNumber() {
             return Math.floor(1000000 + Math.random() * 9000000).toString();
         }
