@@ -23,6 +23,7 @@
         }
         
         /* Fluid Container */
+        /* Added id="pdf-1" to wrap the content for screenshot capturing */
         .container {
             width: 100%;
             max-width: 800px;
@@ -336,7 +337,8 @@
     
     <a href="index.html" style="text-decoration: none; color: #007BFF; font-size: 16px; margin-right: 20px;">&larr; Back to Home</a>
     
-    <div class="container">
+    <!-- Wrap the content in a div with id "pdf-1" for screenshot capturing -->
+    <div id="pdf-1" class="container">
         <div id="quotation">
             <div class="header">
                 <p id="quotation-date">Date: <!-- Dynamic Date --></p>
@@ -411,7 +413,8 @@
     <div class="button-container">
         <!-- Confirm Button -->
         <button id="confirm-button" class="action-button">Confirm</button>
-    
+        <!-- Screenshot Button -->
+        <button id="screenshot-button" class="action-button">Download Image</button>
         <!-- Loading Spinner (Hidden by Default) -->
         <div id="loading-spinner" class="spinner" style="display: none;"></div>
     </div>
@@ -421,6 +424,8 @@
     
     <!-- Include html2pdf.js from CDN (Optional, if using for screenshots) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Include html2canvas for image capturing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
     <script>
         /**
@@ -434,8 +439,6 @@
             toast.classList.add('toast', type);
             toast.textContent = message;
             toastContainer.appendChild(toast);
-    
-            // Automatically remove the toast after ~3s
             setTimeout(() => {
                 toast.remove();
             }, 3000);
@@ -709,6 +712,25 @@
         // Event Listeners
         document.addEventListener('DOMContentLoaded', populateQuotation);
         document.getElementById('confirm-button').addEventListener('click', confirmQuotation);
+    
+        // Screenshot functionality
+        document.getElementById('screenshot-button').addEventListener('click', () => {
+            const loadingSpinner = document.getElementById('loading-spinner');
+            loadingSpinner.style.display = 'inline-block';
+            const element = document.getElementById('pdf-1');
+            html2canvas(element, { scale: 2 }).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const link = document.createElement('a');
+                link.href = imgData;
+                link.download = 'invoice.png';
+                link.click();
+                loadingSpinner.style.display = 'none';
+            }).catch(err => {
+                console.error('Error capturing image:', err);
+                showToastMessage('Failed to capture image.', 'error');
+                loadingSpinner.style.display = 'none';
+            });
+        });
     </script>
 </body>
 </html>

@@ -590,31 +590,40 @@
       const tbody = document.querySelector('table tbody');
       tbody.innerHTML = '';
 
-      selectedProducts.forEach(product => {
-        const row = tbody.insertRow();
-        const productCell = row.insertCell(0);
-        productCell.textContent = product.name;
+      // In receipt.html, modify the populateReceipt function to ensure proper number formatting:
 
-        const qtyCell = row.insertCell(1);
-        qtyCell.textContent = product.quantity;
+// Add this helper function for safer number parsing
+function parseNumberSafely(value) {
+  const parsed = parseFloat(value);
+  return isNaN(parsed) ? 0 : parsed;
+}
 
-        const unitPriceCell = row.insertCell(2);
-        const taxCell = row.insertCell(3);
-        const totalCell = row.insertCell(4);
+// Then modify the table population part:
+selectedProducts.forEach(product => {
+  const row = tbody.insertRow();
+  const productCell = row.insertCell(0);
+  productCell.textContent = product.name;
 
-        // If tax is present, show net_price as the "Unit Price (R)"
-        if (product.tax_per_product && product.tax_per_product > 0) {
-          unitPriceCell.textContent = formatCurrency(product.net_price.toFixed(0));
-          taxCell.textContent = formatCurrency(product.tax_per_product.toFixed(0));
-        } else {
-          unitPriceCell.textContent = formatCurrency(product.final_price.toFixed(0));
-          taxCell.textContent = '';
-        }
-  
-        // The total for this line = final_price * quantity
-        const lineTotal = product.final_price * product.quantity;
-        totalCell.textContent = formatCurrency(lineTotal.toFixed(0));
-      });
+  const qtyCell = row.insertCell(1);
+  qtyCell.textContent = product.quantity;
+
+  const unitPriceCell = row.insertCell(2);
+  const taxCell = row.insertCell(3);
+  const totalCell = row.insertCell(4);
+
+  // If tax is present, show net_price as the "Unit Price (R)"
+  if (product.tax_per_product && product.tax_per_product > 0) {
+    unitPriceCell.textContent = formatCurrency(parseNumberSafely(product.net_price).toFixed(0));
+    taxCell.textContent = formatCurrency(parseNumberSafely(product.tax_per_product).toFixed(0));
+  } else {
+    unitPriceCell.textContent = formatCurrency(parseNumberSafely(product.final_price).toFixed(0));
+    taxCell.textContent = '';
+  }
+
+  // The total for this line = final_price * quantity
+  const lineTotal = parseNumberSafely(product.final_price) * parseNumberSafely(product.quantity);
+  totalCell.textContent = formatCurrency(lineTotal.toFixed(0));
+});
 
       // Additional comments
       const comments = customerInfo.comments;
@@ -710,7 +719,7 @@
 
         console.log('Sending receipt data to backend:', receiptData);
 
-        const response = await fetch('http://localhost:8000/api/generate-pdf', { 
+        const response = await fetch('https://shans-backend-1.onrender.com/api/generate-pdf', { 
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
