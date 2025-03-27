@@ -508,6 +508,12 @@
       return Math.floor(1000000 + Math.random() * 9000000).toString();
     }
 
+    // Helper function for safer number parsing
+    function parseNumberSafely(value) {
+      const parsed = parseFloat(value);
+      return isNaN(parsed) ? 0 : parsed;
+    }
+
     // Function to populate the receipt with data from cookies
     function populateReceipt() {
       const customerInfoCookie = getCookie('customerInfo');
@@ -580,44 +586,47 @@
         taxHeader.style.display = 'none';
       }
 
-      // Populate the table rows
+      // Transform product data on the fly
+      const normalizedProducts = selectedProducts.map(product => ({
+        ...product,
+        unitPriceExcludingTax: product.net_price,
+        taxPerProduct: product.tax_per_product,
+        totalPrice: product.final_price
+      }));
+
+      // Populate the table rows using normalizedProducts
       const tbody = document.querySelector('table tbody');
       tbody.innerHTML = '';
 
-      // In receipt.html, modify the populateReceipt function to ensure proper number formatting:
+      normalizedProducts.forEach(product => {
+        const row = tbody.insertRow();
+        const productCell = row.insertCell(0);
+        productCell.textContent = product.name;
 
-// Add this helper function for safer number parsing
-function parseNumberSafely(value) {
-  const parsed = parseFloat(value);
-  return isNaN(parsed) ? 0 : parsed;
-}
+        const qtyCell = row.insertCell(1);
+        qtyCell.textContent = product.quantity;
 
-// Then modify the table population part:
-selectedProducts.forEach(product => {
-  const row = tbody.insertRow();
-  const productCell = row.insertCell(0);
-  productCell.textContent = product.name;
+        const unitPriceCell = row.insertCell(2);
+        const taxCell = row.insertCell(3);
+        const totalCell = row.insertCell(4);
 
-  const qtyCell = row.insertCell(1);
-  qtyCell.textContent = product.quantity;
+        unitPriceCell.textContent = formatCurrency(
+          parseNumberSafely(product.unitPriceExcludingTax).toFixed(0)
+        );
 
-  const unitPriceCell = row.insertCell(2);
-  const taxCell = row.insertCell(3);
-  const totalCell = row.insertCell(4);
+        if (product.taxPerProduct && parseFloat(product.taxPerProduct) > 0) {
+          taxCell.textContent = formatCurrency(
+            parseNumberSafely(product.taxPerProduct).toFixed(0)
+          );
+        } else {
+          taxCell.textContent = '';
+        }
 
-  // If tax is present, show net_price as the "Unit Price (R)"
-  if (product.tax_per_product && product.tax_per_product > 0) {
-    unitPriceCell.textContent = formatCurrency(parseNumberSafely(product.net_price).toFixed(0));
-    taxCell.textContent = formatCurrency(parseNumberSafely(product.tax_per_product).toFixed(0));
-  } else {
-    unitPriceCell.textContent = formatCurrency(parseNumberSafely(product.final_price).toFixed(0));
-    taxCell.textContent = '';
-  }
-
-  // The total for this line = final_price * quantity
-  const lineTotal = parseNumberSafely(product.final_price) * parseNumberSafely(product.quantity);
-  totalCell.textContent = formatCurrency(lineTotal.toFixed(0));
-});
+        const lineTotal = product.totalPrice
+          ? parseNumberSafely(product.totalPrice)
+          : parseNumberSafely(product.unitPriceExcludingTax) * parseNumberSafely(product.quantity);
+        totalCell.textContent = formatCurrency(lineTotal.toFixed(0));
+      });
 
       // Additional comments
       const comments = customerInfo.comments;
@@ -685,6 +694,14 @@ selectedProducts.forEach(product => {
         const generatedReference = generateReferenceNumber();
         referenceNumberElement.textContent = 'Reference Number: ' + generatedReference;
 
+        // Transform products on the fly as before
+        const normalizedProducts = selectedProducts.map(product => ({
+          ...product,
+          unitPriceExcludingTax: product.net_price,
+          taxPerProduct: product.tax_per_product,
+          totalPrice: product.final_price
+        }));
+
         // Build the data to send
         const receiptData = {
           date: new Date().toISOString().slice(0,10),
@@ -697,14 +714,13 @@ selectedProducts.forEach(product => {
           shipping: customerInfo.shipping || null,
           paymentMethod: customerInfo.paymentMethod || 'N/A',
           comments: customerInfo.comments || "",
-          products: selectedProducts.map(product => ({
+          products: normalizedProducts.map(product => ({
             item_code: product.item_code,
             name: product.name,
             quantity: product.quantity,
-            net_price: product.net_price,
-            tax_per_product: product.tax_per_product,
-            final_price: product.final_price,
-            line_total: product.final_price * product.quantity
+            unitPriceExcludingTax: product.unitPriceExcludingTax,
+            taxPerProduct: product.taxPerProduct,
+            totalPrice: product.totalPrice
           })),
           subtotal: parseFloat(subtotalAmount.toFixed(0)),
           tax: parseFloat(taxAmount.toFixed(0)),
