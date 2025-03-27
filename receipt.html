@@ -405,7 +405,7 @@
             <th>Product</th>
             <th>QTY</th>
             <th>UNIT PRICE (R)</th>
-            <th id="tax-header" style="display: none;">TAX PER UNIT (R)</th>
+            <th>TAX PER UNIT (R)</th>
             <th>TOTAL (R)</th>
           </tr>
         </thead>
@@ -427,9 +427,9 @@
 
       <!-- Totals Section -->
       <div class="totals">
-        <p class="subtotal">Product Amount (Subtotal): <span id="subtotalAmount">R0</span></p>
-        <p class="tax" id="tax-info" style="display: none;">Tax (15%): <span id="taxAmount">R0</span></p>
-        <p class="total">Total Amount: <span id="totalAmount">R0</span></p>
+        <p class="subtotal">Product Amount (Subtotal): <span id="subtotalAmount">R0.00</span></p>
+        <p class="tax" id="tax-info" style="display: none;">Tax (15%): <span id="taxAmount">R0.00</span></p>
+        <p class="total">Total Amount: <span id="totalAmount">R0.00</span></p>
       </div>
     </div>
 
@@ -482,11 +482,11 @@
       return "";
     }
 
-    // Function to format currency in ZAR using whole numbers
+    // Function to format currency in ZAR
     function formatCurrency(amount) {
       return 'R' + parseFloat(amount).toLocaleString('en-ZA', { 
-        minimumFractionDigits: 0, 
-        maximumFractionDigits: 0 
+        minimumFractionDigits: 2, 
+        maximumFractionDigits: 2 
       });
     }
 
@@ -506,12 +506,6 @@
     // Function to generate a random 7-digit reference number
     function generateReferenceNumber() {
       return Math.floor(1000000 + Math.random() * 9000000).toString();
-    }
-
-    // Helper function for safer number parsing
-    function parseNumberSafely(value) {
-      const parsed = parseFloat(value);
-      return isNaN(parsed) ? 0 : parsed;
     }
 
     // Function to populate the receipt with data from cookies
@@ -543,16 +537,13 @@
       const totalAmount = parseFloat(JSON.parse(totalAmountCookie));
       const selectedCompany = JSON.parse(selectedCompanyCookie);
 
-      // Populate company info
       document.getElementById('company-name').textContent = selectedCompany.name;
       document.getElementById('banking-info').innerHTML = selectedCompany.bankingInformation;
 
-      // Generate a new reference number
       const referenceNumberElement = document.getElementById('reference-number');
       const generatedReference = generateReferenceNumber();
       referenceNumberElement.textContent = 'Reference Number: ' + generatedReference;
 
-      // Populate billing info
       const billingElement = document.querySelector('.billing p');
       billingElement.innerHTML = `
         <strong>${sanitizeHTML(customerInfo.billing.name)}</strong><br>
@@ -561,7 +552,6 @@
         Phone: ${sanitizeHTML(customerInfo.billing.phone)}
       `;
 
-      // Populate shipping info
       const shippingElement = document.querySelector('.shipping p');
       if (customerInfo.shipping) {
         shippingElement.innerHTML = `
@@ -574,61 +564,56 @@
         shippingElement.innerHTML = `Same as billing address`;
       }
 
-      // Show or hide the tax row in the totals
       const isTaxAdded = taxAmount > 0;
-      const taxInfoRow = document.getElementById('tax-info');
-      const taxHeader = document.getElementById('tax-header');
+      const tableHeaderRow = document.getElementById('table-header');
+      const taxInfo = document.getElementById('tax-info');
+
       if (isTaxAdded) {
-        taxInfoRow.style.display = 'flex';
-        taxHeader.style.display = '';
+        if (!tableHeaderRow.querySelector('th:nth-child(4)') ||
+            !tableHeaderRow.querySelector('th:nth-child(4)').textContent.includes('TAX PER UNIT')) {
+          const taxHeader = document.createElement('th');
+          taxHeader.textContent = 'TAX PER UNIT (R)';
+          tableHeaderRow.insertBefore(taxHeader, tableHeaderRow.children[3]);
+        }
+        taxInfo.style.display = 'flex';
       } else {
-        taxInfoRow.style.display = 'none';
-        taxHeader.style.display = 'none';
+        const taxHeader = tableHeaderRow.querySelector('th:nth-child(4)');
+        if (taxHeader && taxHeader.textContent.includes('TAX PER UNIT')) {
+          taxHeader.parentNode.removeChild(taxHeader);
+        }
+        taxInfo.style.display = 'none';
       }
 
-      // Transform product data on the fly
-      const normalizedProducts = selectedProducts.map(product => ({
-        ...product,
-        unitPriceExcludingTax: product.net_price,
-        taxPerProduct: product.tax_per_product,
-        totalPrice: product.final_price
-      }));
-
-      // Populate the table rows using normalizedProducts
       const tbody = document.querySelector('table tbody');
       tbody.innerHTML = '';
 
-      normalizedProducts.forEach(product => {
+      selectedProducts.forEach(product => {
         const row = tbody.insertRow();
-        const productCell = row.insertCell(0);
-        productCell.textContent = product.name;
+        const descCell = row.insertCell(0);
+        descCell.textContent = product.name;
 
         const qtyCell = row.insertCell(1);
         qtyCell.textContent = product.quantity;
 
         const unitPriceCell = row.insertCell(2);
-        const taxCell = row.insertCell(3);
-        const totalCell = row.insertCell(4);
+        let unitPriceExcludingTax = product.price;
+        let taxPerProduct = 0;
 
-        unitPriceCell.textContent = formatCurrency(
-          parseNumberSafely(product.unitPriceExcludingTax).toFixed(0)
-        );
-
-        if (product.taxPerProduct && parseFloat(product.taxPerProduct) > 0) {
-          taxCell.textContent = formatCurrency(
-            parseNumberSafely(product.taxPerProduct).toFixed(0)
-          );
+        if (isTaxAdded) {
+          unitPriceExcludingTax = product.price / 1.15;
+          unitPriceCell.textContent = formatCurrency(unitPriceExcludingTax.toFixed(2));
+          taxPerProduct = product.price - unitPriceExcludingTax;
+          const taxCell = row.insertCell(3);
+          taxCell.textContent = formatCurrency(taxPerProduct.toFixed(2));
+          const totalCell = row.insertCell(4);
+          totalCell.textContent = formatCurrency((product.price * product.quantity).toFixed(2));
         } else {
-          taxCell.textContent = '';
+          unitPriceCell.textContent = formatCurrency(product.price.toFixed(2));
+          const totalCell = row.insertCell(3);
+          totalCell.textContent = formatCurrency((product.price * product.quantity).toFixed(2));
         }
-
-        const lineTotal = product.totalPrice
-          ? parseNumberSafely(product.totalPrice)
-          : parseNumberSafely(product.unitPriceExcludingTax) * parseNumberSafely(product.quantity);
-        totalCell.textContent = formatCurrency(lineTotal.toFixed(0));
       });
 
-      // Additional comments
       const comments = customerInfo.comments;
       const commentsDiv = document.getElementById('additional-comments');
       if (comments && comments.trim() !== "") {
@@ -641,16 +626,13 @@
         commentsDiv.style.display = 'none';
       }
 
-      // Populate totals
-      document.getElementById('subtotalAmount').textContent = formatCurrency(subtotalAmount.toFixed(0));
-      document.getElementById('taxAmount').textContent = formatCurrency(taxAmount.toFixed(0));
-      document.getElementById('totalAmount').textContent = formatCurrency(totalAmount.toFixed(0));
+      document.getElementById('subtotalAmount').textContent = formatCurrency(subtotalAmount.toFixed(2));
+      document.getElementById('taxAmount').textContent = formatCurrency(taxAmount.toFixed(2));
+      document.getElementById('totalAmount').textContent = formatCurrency(totalAmount.toFixed(2));
 
-      // Payment method
       const paymentMethodSpan = document.getElementById('paymentMethod');
       paymentMethodSpan.textContent = customerInfo.paymentMethod ? sanitizeHTML(customerInfo.paymentMethod) : 'N/A';
 
-      // Date
       const dateElement = document.getElementById('receipt-date');
       dateElement.textContent = 'Date: ' + formatDate(new Date());
     }
@@ -689,20 +671,10 @@
         const totalAmount = parseFloat(JSON.parse(totalAmountCookie));
         const selectedCompany = JSON.parse(selectedCompanyCookie);
 
-        // Generate a new reference number
         const referenceNumberElement = document.getElementById('reference-number');
         const generatedReference = generateReferenceNumber();
         referenceNumberElement.textContent = 'Reference Number: ' + generatedReference;
 
-        // Transform products on the fly as before
-        const normalizedProducts = selectedProducts.map(product => ({
-          ...product,
-          unitPriceExcludingTax: product.net_price,
-          taxPerProduct: product.tax_per_product,
-          totalPrice: product.final_price
-        }));
-
-        // Build the data to send
         const receiptData = {
           date: new Date().toISOString().slice(0,10),
           referenceNumber: generatedReference,
@@ -714,17 +686,17 @@
           shipping: customerInfo.shipping || null,
           paymentMethod: customerInfo.paymentMethod || 'N/A',
           comments: customerInfo.comments || "",
-          products: normalizedProducts.map(product => ({
+          products: selectedProducts.map(product => ({
             item_code: product.item_code,
             name: product.name,
             quantity: product.quantity,
-            unitPriceExcludingTax: product.unitPriceExcludingTax,
-            taxPerProduct: product.taxPerProduct,
-            totalPrice: product.totalPrice
+            unitPriceExcludingTax: taxAmount > 0 ? parseFloat((product.price / 1.15).toFixed(2)) : parseFloat(product.price.toFixed(2)),
+            taxPerProduct: taxAmount > 0 ? parseFloat((product.price - (product.price / 1.15)).toFixed(2)) : 0.00,
+            totalPrice: parseFloat((product.price * product.quantity).toFixed(2))
           })),
-          subtotal: parseFloat(subtotalAmount.toFixed(0)),
-          tax: parseFloat(taxAmount.toFixed(0)),
-          total: parseFloat(totalAmount.toFixed(0))
+          subtotal: parseFloat(subtotalAmount.toFixed(2)),
+          tax: parseFloat(taxAmount.toFixed(2)),
+          total: parseFloat(totalAmount.toFixed(2))
         };
 
         console.log('Sending receipt data to backend:', receiptData);
