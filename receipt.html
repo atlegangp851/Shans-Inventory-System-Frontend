@@ -508,7 +508,14 @@
       return Math.floor(1000000 + Math.random() * 9000000).toString();
     }
 
-    // Function to populate the receipt with data from cookies
+    /**
+     * Populate the receipt with data from cookies, applying the "tax = 15% of final price" logic:
+     *   If tax is added, then for each product price P:
+     *     - Net (Unit Price) = P * 0.85
+     *     - Tax per Unit = P * 0.15
+     *     - Total per line = P * quantity
+     *   If no tax, we simply show P as the unit price, 0 for tax, and total = P * quantity.
+     */
     function populateReceipt() {
       const customerInfoCookie = getCookie('customerInfo');
       const selectedProductsCookie = getCookie('selectedProducts');
@@ -544,6 +551,7 @@
       const generatedReference = generateReferenceNumber();
       referenceNumberElement.textContent = 'Reference Number: ' + generatedReference;
 
+      // Populate Billing
       const billingElement = document.querySelector('.billing p');
       billingElement.innerHTML = `
         <strong>${sanitizeHTML(customerInfo.billing.name)}</strong><br>
@@ -552,6 +560,7 @@
         Phone: ${sanitizeHTML(customerInfo.billing.phone)}
       `;
 
+      // Populate Shipping
       const shippingElement = document.querySelector('.shipping p');
       if (customerInfo.shipping) {
         shippingElement.innerHTML = `
@@ -564,19 +573,23 @@
         shippingElement.innerHTML = `Same as billing address`;
       }
 
-      const isTaxAdded = taxAmount > 0;
+      // Determine if tax is actually added by checking if taxAmount > 0
+      const isTaxAdded = (taxAmount > 0);
       const tableHeaderRow = document.getElementById('table-header');
       const taxInfo = document.getElementById('tax-info');
 
+      // If there's any tax, show the "TAX PER UNIT" column, otherwise remove it
       if (isTaxAdded) {
-        if (!tableHeaderRow.querySelector('th:nth-child(4)') ||
-            !tableHeaderRow.querySelector('th:nth-child(4)').textContent.includes('TAX PER UNIT')) {
+        // Make sure the 4th column is "TAX PER UNIT"
+        const possibleTaxHeader = tableHeaderRow.querySelector('th:nth-child(4)');
+        if (!possibleTaxHeader || !possibleTaxHeader.textContent.includes('TAX PER UNIT')) {
           const taxHeader = document.createElement('th');
           taxHeader.textContent = 'TAX PER UNIT (R)';
           tableHeaderRow.insertBefore(taxHeader, tableHeaderRow.children[3]);
         }
         taxInfo.style.display = 'flex';
       } else {
+        // If there's a "TAX PER UNIT" header, remove it
         const taxHeader = tableHeaderRow.querySelector('th:nth-child(4)');
         if (taxHeader && taxHeader.textContent.includes('TAX PER UNIT')) {
           taxHeader.parentNode.removeChild(taxHeader);
@@ -584,36 +597,55 @@
         taxInfo.style.display = 'none';
       }
 
+      // Now populate the table rows
       const tbody = document.querySelector('table tbody');
       tbody.innerHTML = '';
 
       selectedProducts.forEach(product => {
         const row = tbody.insertRow();
+
+        // Product name
         const descCell = row.insertCell(0);
         descCell.textContent = product.name;
 
+        // Quantity
         const qtyCell = row.insertCell(1);
         qtyCell.textContent = product.quantity;
 
-        const unitPriceCell = row.insertCell(2);
-        let unitPriceExcludingTax = product.price;
-        let taxPerProduct = 0;
-
+        // We'll apply the same "tax = 15% of final price" logic used in the main code
         if (isTaxAdded) {
-          unitPriceExcludingTax = product.price / 1.15;
-          unitPriceCell.textContent = formatCurrency(unitPriceExcludingTax.toFixed(2));
-          taxPerProduct = product.price - unitPriceExcludingTax;
+          // net = price * 0.85, tax = price * 0.15, total = price * quantity
+          const netPrice = product.price * 0.85;
+          const taxPerUnit = product.price * 0.15;
+          const lineTotal = product.price * product.quantity;
+
+          // Unit Price cell
+          const unitPriceCell = row.insertCell(2);
+          unitPriceCell.textContent = formatCurrency(netPrice.toFixed(2));
+
+          // Tax cell
           const taxCell = row.insertCell(3);
-          taxCell.textContent = formatCurrency(taxPerProduct.toFixed(2));
+          taxCell.textContent = formatCurrency(taxPerUnit.toFixed(2));
+
+          // Total cell
           const totalCell = row.insertCell(4);
-          totalCell.textContent = formatCurrency((product.price * product.quantity).toFixed(2));
+          totalCell.textContent = formatCurrency(lineTotal.toFixed(2));
         } else {
+          // No tax => unit price is the full product.price
+          // total = price * quantity
+          const lineTotal = product.price * product.quantity;
+
+          // Unit Price cell
+          const unitPriceCell = row.insertCell(2);
           unitPriceCell.textContent = formatCurrency(product.price.toFixed(2));
+
+          // Then the 4th cell is "Total" (since no separate tax column)
           const totalCell = row.insertCell(3);
-          totalCell.textContent = formatCurrency((product.price * product.quantity).toFixed(2));
+          totalCell.textContent = formatCurrency(lineTotal.toFixed(2));
         }
       });
 
+      // Additional Comments
       const comments = customerInfo.comments;
       const commentsDiv = document.getElementById('additional-comments');
       if (comments && comments.trim() !== "") {
@@ -626,13 +658,16 @@
         commentsDiv.style.display = 'none';
       }
 
+      // Fill in the Subtotal, Tax, and Total
       document.getElementById('subtotalAmount').textContent = formatCurrency(subtotalAmount.toFixed(2));
       document.getElementById('taxAmount').textContent = formatCurrency(taxAmount.toFixed(2));
       document.getElementById('totalAmount').textContent = formatCurrency(totalAmount.toFixed(2));
 
+      // Payment Method
       const paymentMethodSpan = document.getElementById('paymentMethod');
       paymentMethodSpan.textContent = customerInfo.paymentMethod ? sanitizeHTML(customerInfo.paymentMethod) : 'N/A';
 
+      // Date
       const dateElement = document.getElementById('receipt-date');
       dateElement.textContent = 'Date: ' + formatDate(new Date());
     }
@@ -671,9 +706,14 @@
         const totalAmount = parseFloat(JSON.parse(totalAmountCookie));
         const selectedCompany = JSON.parse(selectedCompanyCookie);
 
+        // Generate new reference for the PDF
         const referenceNumberElement = document.getElementById('reference-number');
         const generatedReference = generateReferenceNumber();
         referenceNumberElement.textContent = 'Reference Number: ' + generatedReference;
+
+        // Construct the object to send to the backend
+        // We'll apply the same net=85% / tax=15% logic if taxAmount>0
+        const isTaxAdded = (taxAmount > 0);
 
         const receiptData = {
           date: new Date().toISOString().slice(0,10),
@@ -686,14 +726,33 @@
           shipping: customerInfo.shipping || null,
           paymentMethod: customerInfo.paymentMethod || 'N/A',
           comments: customerInfo.comments || "",
-          products: selectedProducts.map(product => ({
-            item_code: product.item_code,
-            name: product.name,
-            quantity: product.quantity,
-            unitPriceExcludingTax: taxAmount > 0 ? parseFloat((product.price / 1.15).toFixed(2)) : parseFloat(product.price.toFixed(2)),
-            taxPerProduct: taxAmount > 0 ? parseFloat((product.price - (product.price / 1.15)).toFixed(2)) : 0.00,
-            totalPrice: parseFloat((product.price * product.quantity).toFixed(2))
-          })),
+          products: selectedProducts.map(product => {
+            if (isTaxAdded) {
+              // net = price * 0.85, tax = price * 0.15, total = price * quantity
+              const netPrice = parseFloat((product.price * 0.85).toFixed(2));
+              const taxPerUnit = parseFloat((product.price * 0.15).toFixed(2));
+              const lineTotal = parseFloat((product.price * product.quantity).toFixed(2));
+              return {
+                item_code: product.item_code,
+                name: product.name,
+                quantity: product.quantity,
+                unitPriceExcludingTax: netPrice,
+                taxPerProduct: taxPerUnit,
+                totalPrice: lineTotal
+              };
+            } else {
+              // no tax
+              const lineTotal = parseFloat((product.price * product.quantity).toFixed(2));
+              return {
+                item_code: product.item_code,
+                name: product.name,
+                quantity: product.quantity,
+                unitPriceExcludingTax: parseFloat(product.price.toFixed(2)),
+                taxPerProduct: 0.00,
+                totalPrice: lineTotal
+              };
+            }
+          }),
           subtotal: parseFloat(subtotalAmount.toFixed(2)),
           tax: parseFloat(taxAmount.toFixed(2)),
           total: parseFloat(totalAmount.toFixed(2))
@@ -701,6 +760,7 @@
 
         console.log('Sending receipt data to backend:', receiptData);
 
+        // Make the POST request to your PDF generation endpoint
         const response = await fetch('https://shans-backend-1.onrender.com/api/generate-pdf', { 
           method: 'POST',
           headers: {

@@ -1,365 +1,355 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
-    <title>Shans System</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            padding: 0; /* Changed to 0 to accommodate loading screen */
-            background-color: #f4f4f4;
-        }
-        .container {
-            max-width: 800px;
-            margin: auto;
-            background: white;
-            padding: 20px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        h1, h2 {
-            color: #333;
-        }
-        .section {
-            margin-bottom: 20px;
-            border: 1px solid #ddd;
-            padding: 15px;
-            border-radius: 5px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-        }
-        input, select, textarea {
-            width: 100%;
-            padding: 8px;
-            margin-bottom: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        textarea {
-            resize: vertical;
-            min-height: 80px;
-        }
-        input[readonly] {
-            background-color: #e9e9e9;
-            cursor: not-allowed;
-        }
-        button {
-            background-color: #4a90e2;
-            color: white;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            margin-right: 10px;
-        }
-        button:hover {
-            background-color: #81b0e6;
-        }
-        .button-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            table-layout: auto;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-            word-wrap: break-word;
-        }
-        th {
-            background-color: #f2f2f2;
-        }
-        #productList {
-            list-style-type: none;
-            padding: 0;
-            margin-top: 10px;
-            max-height: 150px;
-            overflow-y: auto;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        #productList li {
-            padding: 5px;
-            cursor: pointer;
-        }
-        #productList li:hover {
-            background-color: #f0f0f0;
-        }
-        .loader {
-            border: 4px solid #f3f3f3; /* Light grey */
-            border-top: 4px solid #3498db; /* Blue */
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            animation: spin 1s linear infinite;
-            display: none;
-            margin-left: 10px;
-            vertical-align: middle;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .table-responsive {
-            width: 100%;
-            overflow-x: auto;
-        }
-        @media (max-width: 600px) {
-            body {
-                padding: 10px;
-            }
-            .container {
-                padding: 15px;
-            }
-            button {
-                width: 100%;
-                padding: 12px 0;
-                font-size: 18px;
-                margin-right: 0;
-            }
-            th, td {
-                padding: 10px;
-                font-size: 14px;
-            }
-            .loader {
-                width: 25px;
-                height: 25px;
-            }
-            .section {
-                padding: 10px;
-            }
-            .button-group {
-                flex-direction: column;
-                align-items: stretch;
-            }
-        }
-        .hidden {
-            display: none;
-        }
-        .remove-button {
-            background-color: #ff4d4d;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .remove-button:hover {
-            background-color: #e60000;
-        }
-        /* Loading Screen Styles */
-        #loadingScreen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(255, 255, 255, 0.9);
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-        #loadingScreen .spinner {
-            border: 8px solid #f3f3f3; /* Light grey */
-            border-top: 8px solid #3498db; /* Blue */
-            border-radius: 50%;
-            width: 60px;
-            height: 60px;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
-        }
-        #loadingScreen p {
-            font-size: 18px;
-            color: #333;
-        }
-
-        /* Toast Container and Toast Styles */
-        .toast-container {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 10000; /* on top of loading screen */
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .toast {
-            background-color: #333;
-            color: #fff;
-            padding: 10px 15px;
-            border-radius: 5px;
-            opacity: 0.95;
-            font-size: 14px;
-            animation: fadeInOut 3s forwards;
-        }
-        .toast.success {
-            background-color: #28a745;
-        }
-        .toast.error {
-            background-color: #dc3545;
-        }
-        .toast.info {
-            background-color: #007bff;
-        }
-        @keyframes fadeInOut {
-            0% {
-                opacity: 0;
-            }
-            10% {
-                opacity: 0.95;
-            }
-            90% {
-                opacity: 0.95;
-            }
-            100% {
-                opacity: 0;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Shans System</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 0; /* Changed to 0 to accommodate loading screen */
+      background-color: #f4f4f4;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h1, h2 {
+      color: #333;
+    }
+    .section {
+      margin-bottom: 20px;
+      border: 1px solid #ddd;
+      padding: 15px;
+      border-radius: 5px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+    input[readonly] {
+      background-color: #e9e9e9;
+      cursor: not-allowed;
+    }
+    button {
+      background-color: #4a90e2;
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-right: 10px;
+    }
+    button:hover {
+      background-color: #81b0e6;
+    }
+    .button-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: auto;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+      word-wrap: break-word;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    #productList {
+      list-style-type: none;
+      padding: 0;
+      margin-top: 10px;
+      max-height: 150px;
+      overflow-y: auto;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    #productList li {
+      padding: 5px;
+      cursor: pointer;
+    }
+    #productList li:hover {
+      background-color: #f0f0f0;
+    }
+    .loader {
+      border: 4px solid #f3f3f3; /* Light grey */
+      border-top: 4px solid #3498db; /* Blue */
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      animation: spin 1s linear infinite;
+      display: none;
+      margin-left: 10px;
+      vertical-align: middle;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+    }
+    @media (max-width: 600px) {
+      body {
+        padding: 10px;
+      }
+      .container {
+        padding: 15px;
+      }
+      button {
+        width: 100%;
+        padding: 12px 0;
+        font-size: 18px;
+        margin-right: 0;
+      }
+      th, td {
+        padding: 10px;
+        font-size: 14px;
+      }
+      .loader {
+        width: 25px;
+        height: 25px;
+      }
+      .section {
+        padding: 10px;
+      }
+      .button-group {
+        flex-direction: column;
+        align-items: stretch;
+      }
+    }
+    .hidden {
+      display: none;
+    }
+    .remove-button {
+      background-color: #ff4d4d;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .remove-button:hover {
+      background-color: #e60000;
+    }
+    /* Loading Screen Styles */
+    #loadingScreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(255, 255, 255, 0.9);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    #loadingScreen .spinner {
+      border: 8px solid #f3f3f3; /* Light grey */
+      border-top: 8px solid #3498db; /* Blue */
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+    #loadingScreen p {
+      font-size: 18px;
+      color: #333;
+    }
+    /* Toast Container and Toast Styles */
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 10000; /* on top of loading screen */
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .toast {
+      background-color: #333;
+      color: #fff;
+      padding: 10px 15px;
+      border-radius: 5px;
+      opacity: 0.95;
+      font-size: 14px;
+      animation: fadeInOut 3s forwards;
+    }
+    .toast.success {
+      background-color: #28a745;
+    }
+    .toast.error {
+      background-color: #dc3545;
+    }
+    .toast.info {
+      background-color: #007bff;
+    }
+    @keyframes fadeInOut {
+      0% { opacity: 0; }
+      10% { opacity: 0.95; }
+      90% { opacity: 0.95; }
+      100% { opacity: 0; }
+    }
+  </style>
 </head>
 <body>
-    <!-- Loading Screen -->
-    <div id="loadingScreen">
-        <div class="spinner"></div>
-        <p>Loading products, please wait...</p>
+  <!-- Loading Screen -->
+  <div id="loadingScreen">
+    <div class="spinner"></div>
+    <p>Loading products, please wait...</p>
+  </div>
+
+  <!-- Toast Container (for all messages) -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <div class="container">
+    <h1>Receipt and Quotation Generator</h1>
+    
+    <!-- Company Selection Section -->
+    <div class="section">
+      <h2>Select Company</h2>
+      <label for="companySelect">Choose a company:</label>
+      <select id="companySelect" required>
+        <option value="" disabled selected>Select a company</option>
+        <option value="company1">Shans Accessories PTY LTD</option>
+        <option value="company2">Shans Autosport PTY LTD</option>
+      </select>
     </div>
 
-    <!-- Toast Container (for all messages) -->
-    <div class="toast-container" id="toastContainer"></div>
-
-    <div class="container">
-        <h1>Receipt and Quotation Generator</h1>
-        
-        <!-- Company Selection Section -->
-        <div class="section">
-            <h2>Select Company</h2>
-            <label for="companySelect">Choose a company:</label>
-            <select id="companySelect" required>
-                <option value="" disabled selected>Select a company</option>
-                <option value="company1">Shans Accessories PTY LTD</option>
-                <option value="company2">Shans Autosport PTY LTD</option>
-            </select>
-        </div>
-
-        <!-- Customer Information Section -->
-        <div class="section">
-            <h2>Customer Information</h2>
-            <label for="customerName">Name:</label>
-            <input type="text" id="customerName" required>
-            
-            <label for="customerEmail">Email:</label>
-            <input type="email" id="customerEmail">
-            
-            <label for="customerAddress">Address:</label>
-            <input type="text" id="customerAddress">
-            
-            <label for="customerPhone">Phone:</label>
-            <input type="tel" id="customerPhone">
-        </div>
-        
-        <!-- Shipping Information Section -->
-        <div class="section">
-            <h2>Shipping Information</h2>
-            <div style="display: flex; gap: 10px; align-items: center;">
-                <label for="sameAsBilling">Ship to the same address as billing</label>
-                <input type="checkbox" id="sameAsBilling" checked>
-            </div>
-            
-            <div id="shippingInfo" class="hidden">
-                <label for="shippingName">Name:</label>
-                <input type="text" id="shippingName">
-                
-                <label for="shippingEmail">Email:</label>
-                <input type="email" id="shippingEmail">
-                
-                <label for="shippingAddress">Address:</label>
-                <input type="text" id="shippingAddress">
-                
-                <label for="shippingPhone">Phone:</label>
-                <input type="tel" id="shippingPhone">
-            </div>
-        </div>
-        
-        <!-- Add Products Section -->
-        <div class="section">
-            <h2>Add Products</h2>
-            <label for="productSearch">Search Products:</label>
-            <input type="text" id="productSearch" placeholder="Type to search products or enter new product">
-            <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                <ul id="productList"></ul>
-                <div class="loader" id="searchLoader"></div>
-            </div>
-            
-            <label for="quantity">Quantity:</label>
-            <input type="number" id="quantity" value="1" min="1">
-            
-            <label for="price">Price (R):</label>
-            <input type="number" id="price" value="0.00" min="0" step="0.01">
-            
-            <label for="room" class="hidden" id="roomLabel">Room:</label>
-            <input type="text" id="room" class="hidden" placeholder="Select a product to see the room" readonly>
-            
-            <button onclick="addSelectedProduct()">Add Product</button>
-        </div>
-        
-        <!-- Selected Products and Totals Section -->
-        <div class="section">
-            <h2>Selected Products</h2>
-            <div class="table-responsive">
-                <table id="selectedProductsTable">
-                    <thead></thead>
-                    <tbody id="selectedProductsBody"></tbody>
-                </table>
-            </div>
-
-            <div style="display: flex;  align-items: center;">
-                <label for="Tax">Add Tax</label>
-                <input type="checkbox" id="Tax" checked>
-            </div>
-
-            <!-- Display the calculated values -->
-            <p>Product Amount (Subtotal): R<span id="subtotalAmount">0.00</span></p>
-            <p>Tax (15%): R<span id="taxAmount">0.00</span></p>
-            <p>Total Amount: R<span id="totalAmount">0.00</span></p>
-
-            <!-- Comments Section -->
-            <div class="section" style="border:none; padding:0;">
-                <label for="paymentMethod">Payment Method:</label>
-                <select id="paymentMethod">
-                    <option value="Cash">Cash</option>
-                    <option value="EFT">EFT</option>
-                </select>
-            </div>
-
-            <!-- Added Comments Box -->
-            <div class="section" style="border:none; padding:0;">
-                <label for="comments">Additional Comments:</label>
-                <textarea id="comments" placeholder="Enter any additional comments here..."></textarea>
-            </div>
-
-            <div class="button-group">
-                <button onclick="generateReceipt()">Generate Receipt</button>
-                <button onclick="generateQuotation()">Generate Quotation</button>
-                <button onclick="generateInvoice()">Generate Invoice</button> <!-- New Button -->
-            </div>
-        </div>
+    <!-- Customer Information Section -->
+    <div class="section">
+      <h2>Customer Information</h2>
+      <label for="customerName">Name:</label>
+      <input type="text" id="customerName" required>
+      
+      <label for="customerEmail">Email:</label>
+      <input type="email" id="customerEmail">
+      
+      <label for="customerAddress">Address:</label>
+      <input type="text" id="customerAddress">
+      
+      <label for="customerPhone">Phone:</label>
+      <input type="tel" id="customerPhone">
     </div>
+    
+    <!-- Shipping Information Section -->
+    <div class="section">
+      <h2>Shipping Information</h2>
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <label for="sameAsBilling">Ship to the same address as billing</label>
+        <input type="checkbox" id="sameAsBilling" checked>
+      </div>
+      
+      <div id="shippingInfo" class="hidden">
+        <label for="shippingName">Name:</label>
+        <input type="text" id="shippingName">
+        
+        <label for="shippingEmail">Email:</label>
+        <input type="email" id="shippingEmail">
+        
+        <label for="shippingAddress">Address:</label>
+        <input type="text" id="shippingAddress">
+        
+        <label for="shippingPhone">Phone:</label>
+        <input type="tel" id="shippingPhone">
+      </div>
+    </div>
+    
+    <!-- Add Products Section -->
+    <div class="section">
+      <h2>Add Products</h2>
+      <label for="productSearch">Search Products:</label>
+      <input type="text" id="productSearch" placeholder="Type to search products or enter new product">
+      <div style="display: flex; align-items: center; margin-bottom: 10px;">
+        <ul id="productList"></ul>
+        <div class="loader" id="searchLoader"></div>
+      </div>
+      
+      <label for="quantity">Quantity:</label>
+      <input type="number" id="quantity" value="1" min="1">
+      
+      <label for="price">Price (R):</label>
+      <input type="number" id="price" value="0.00" min="0" step="0.01">
+      
+      <label for="room" class="hidden" id="roomLabel">Room:</label>
+      <input type="text" id="room" class="hidden" placeholder="Select a product to see the room" readonly>
+      
+      <button onclick="addSelectedProduct()">Add Product</button>
+    </div>
+    
+    <!-- Selected Products and Totals Section -->
+    <div class="section">
+      <h2>Selected Products</h2>
+      <div class="table-responsive">
+        <table id="selectedProductsTable">
+          <thead></thead>
+          <tbody id="selectedProductsBody"></tbody>
+        </table>
+      </div>
 
-<script>
+      <div style="display: flex; align-items: center;">
+        <label for="Tax">Add Tax</label>
+        <input type="checkbox" id="Tax" checked>
+      </div>
+
+      <!-- Display the calculated values -->
+      <p>Product Amount (Subtotal): R<span id="subtotalAmount">0.00</span></p>
+      <p>Tax (15%): R<span id="taxAmount">0.00</span></p>
+      <p>Total Amount: R<span id="totalAmount">0.00</span></p>
+
+      <!-- Comments Section -->
+      <div class="section" style="border:none; padding:0;">
+        <label for="paymentMethod">Payment Method:</label>
+        <select id="paymentMethod">
+          <option value="Cash">Cash</option>
+          <option value="EFT">EFT</option>
+        </select>
+      </div>
+
+      <!-- Added Comments Box -->
+      <div class="section" style="border:none; padding:0;">
+        <label for="comments">Additional Comments:</label>
+        <textarea id="comments" placeholder="Enter any additional comments here..."></textarea>
+      </div>
+
+      <div class="button-group">
+        <button onclick="generateReceipt()">Generate Receipt</button>
+        <button onclick="generateQuotation()">Generate Quotation</button>
+        <button onclick="generateInvoice()">Generate Invoice</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
     let selectedProducts = [];
     let allProducts = []; // To store all fetched products
     let newProductCounter = 1; // Counter for new products
@@ -382,28 +372,28 @@
     const totalAmountSpan = document.getElementById('totalAmount');
     const selectedProductsTable = document.getElementById('selectedProductsTable');
     const companySelect = document.getElementById('companySelect');
-    const commentsTextarea = document.getElementById('comments'); // Added Comments Element
-    const loadingScreen = document.getElementById('loadingScreen'); // Loading Screen Element
+    const commentsTextarea = document.getElementById('comments');
+    const loadingScreen = document.getElementById('loadingScreen');
 
     // Company Information
     const companies = {
-        company1: {
-            name: "Shans Accessories PTY LTD",
-            bankingInformation: `
-                First National Bank<br>
-                Account :  62898901098<br>
-                Branch code 257705<br>
-                Swift code FIRNZAJJ
-            `
-        },
-        company2: {
-            name: "Shans Autosport PTY LTD",
-            bankingInformation: `
-                Business Account<br>
-                Capitec Current Account<br>
-                Account: 1052498876
-            `
-        }
+      company1: {
+        name: "Shans Accessories PTY LTD",
+        bankingInformation: `
+          First National Bank<br>
+          Account :  62898901098<br>
+          Branch code 257705<br>
+          Swift code FIRNZAJJ
+        `
+      },
+      company2: {
+        name: "Shans Autosport PTY LTD",
+        bankingInformation: `
+          Business Account<br>
+          Capitec Current Account<br>
+          Account: 1052498876
+        `
+      }
     };
 
     /**
@@ -412,548 +402,492 @@
      * @param {string} type - 'success', 'error', or 'info'
      */
     function showToastMessage(message, type = 'info') {
-        const toastContainer = document.getElementById('toastContainer');
-        const toast = document.createElement('div');
-        toast.classList.add('toast', type);
-        toast.textContent = message;
-        toastContainer.appendChild(toast);
-
-        // Remove after animation (~3s)
-        setTimeout(() => {
-            toast.remove();
-        }, 3000);
+      const toastContainer = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.classList.add('toast', type);
+      toast.textContent = message;
+      toastContainer.appendChild(toast);
+      setTimeout(() => {
+        toast.remove();
+      }, 3000);
     }
 
     function setCookie(name, value, days) {
-        const d = new Date();
-        d.setTime(d.getTime() + (days*24*60*60*1000));
-        const expires = "expires="+ d.toUTCString();
-        document.cookie = name + "=" + encodeURIComponent(value) + ";" + expires + ";path=/";
+      const d = new Date();
+      d.setTime(d.getTime() + (days*24*60*60*1000));
+      const expires = "expires="+ d.toUTCString();
+      document.cookie = name + "=" + encodeURIComponent(value) + ";" + expires + ";path=/";
     }
 
     function getCookie(name) {
-        const cname = name + "=";
-        const decodedCookie = decodeURIComponent(document.cookie);
-        const ca = decodedCookie.split(';');
-        for(let i = 0; i < ca.length; i++) {
-            let c = ca[i].trim();
-            if (c.indexOf(cname) === 0) {
-                return c.substring(cname.length, c.length);
-            }
+      const cname = name + "=";
+      const decodedCookie = decodeURIComponent(document.cookie);
+      const ca = decodedCookie.split(';');
+      for(let i = 0; i < ca.length; i++) {
+        let c = ca[i].trim();
+        if (c.indexOf(cname) === 0) {
+          return c.substring(cname.length, c.length);
         }
-        return "";
+      }
+      return "";
     }
 
     async function fetchAllProducts() {
-        try {
-            const response = await fetch(`${API_BASE_URL}/products`);
-            if (!response.ok) throw new Error('Network response was not ok');
-            allProducts = await response.json();
-        } catch (error) {
-            console.error('Error fetching products:', error);
-            showToastMessage('Failed to load products. Please try again later.', 'error');
-        }
+      try {
+        const response = await fetch(`${API_BASE_URL}/products`);
+        if (!response.ok) throw new Error('Network response was not ok');
+        allProducts = await response.json();
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        showToastMessage('Failed to load products. Please try again later.', 'error');
+      }
     }
 
     function displayFilteredProducts() {
-        const searchTerm = productSearchInput.value.toLowerCase();
-        const filteredProducts = allProducts.filter(product => 
-            product.item_name.toLowerCase().includes(searchTerm)
-        );
+      const searchTerm = productSearchInput.value.toLowerCase();
+      const filteredProducts = allProducts.filter(product => 
+        product.item_name.toLowerCase().includes(searchTerm)
+      );
 
-        productList.innerHTML = '';
+      productList.innerHTML = '';
 
-        if (filteredProducts.length === 0 && searchTerm !== '') {
-            const li = document.createElement('li');
-            li.textContent = 'No products found';
-            li.style.cursor = 'default';
-            productList.appendChild(li);
-            return;
-        }
+      if (filteredProducts.length === 0 && searchTerm !== '') {
+        const li = document.createElement('li');
+        li.textContent = 'No products found';
+        li.style.cursor = 'default';
+        productList.appendChild(li);
+        return;
+      }
 
-        filteredProducts.forEach(product => {
-            const li = document.createElement('li');
-            li.textContent = `${product.item_name} - Stock: ${product.available_stock}`;
-            li.onclick = () => selectProduct(product);
-            productList.appendChild(li);
-        });
+      filteredProducts.forEach(product => {
+        const li = document.createElement('li');
+        li.textContent = `${product.item_name} - Stock: ${product.available_stock}`;
+        li.onclick = () => selectProduct(product);
+        productList.appendChild(li);
+      });
     }
 
     function selectProduct(product) {
-        productSearchInput.value = product.item_name;
-        productList.innerHTML = '';
-        document.getElementById('price').value = parseFloat(product.unit_retail_price).toFixed(2);
-        
-        roomInput.value = product.room_name;
-        roomInput.classList.remove('hidden');
-        roomLabel.classList.remove('hidden');
+      productSearchInput.value = product.item_name;
+      productList.innerHTML = '';
+      document.getElementById('price').value = parseFloat(product.unit_retail_price).toFixed(2);
+      roomInput.value = product.room_name;
+      roomInput.classList.remove('hidden');
+      roomLabel.classList.remove('hidden');
     }
 
     function addSelectedProduct() {
-        const productName = productSearchInput.value.trim();
-        const quantity = parseInt(document.getElementById('quantity').value);
-        const price = parseFloat(document.getElementById('price').value).toFixed(2);
-        const product = allProducts.find(p => p.item_name.toLowerCase() === productName.toLowerCase());
+      const productName = productSearchInput.value.trim();
+      const quantity = parseInt(document.getElementById('quantity').value);
+      const price = parseFloat(document.getElementById('price').value).toFixed(2);
+      const product = allProducts.find(p => p.item_name.toLowerCase() === productName.toLowerCase());
 
-        if (productName === '' || isNaN(quantity) || isNaN(price)) {
-            showToastMessage('Please enter valid product details.', 'error');
-            return;
-        }
+      if (productName === '' || isNaN(quantity) || isNaN(price)) {
+        showToastMessage('Please enter valid product details.', 'error');
+        return;
+      }
 
-        if (quantity <= 0) {
-            showToastMessage('Quantity must be at least 1.', 'error');
-            return;
-        }
+      if (quantity <= 0) {
+        showToastMessage('Quantity must be at least 1.', 'error');
+        return;
+      }
 
-        if (price < 0) {
-            showToastMessage('Price cannot be negative.', 'error');
-            return;
-        }
+      if (price < 0) {
+        showToastMessage('Price cannot be negative.', 'error');
+        return;
+      }
 
-        if (product && quantity > product.available_stock) {
-            showToastMessage(`Cannot add ${quantity} units. Only ${product.available_stock} available in stock.`, 'error');
-            return;
-        }
+      if (product && quantity > product.available_stock) {
+        showToastMessage(`Cannot add ${quantity} units. Only ${product.available_stock} available in stock.`, 'error');
+        return;
+      }
 
-        let taxPerProduct = 0.00;
-        if (taxCheckbox.checked) {
-            // Calculate the tax portion per product
-            taxPerProduct = parseFloat((price - (price / (1 + TAX_RATE))).toFixed(2));
-        }
+      let taxPerProduct = 0.00;
+      if (taxCheckbox.checked) {
+        // Calculate tax as 15% of the database (tax-inclusive) price
+        taxPerProduct = parseFloat((price * TAX_RATE).toFixed(2));
+      }
 
-        if (product) {
-            // Existing product
-            if (quantity > product.available_stock) {
-                showToastMessage(`Cannot add ${quantity} units. Only ${product.available_stock} available in stock.`, 'error');
-                return;
-            }
-            selectedProducts.push({ 
-                item_code: product.item_code,
-                name: productName, 
-                quantity: quantity, 
-                price: parseFloat(price),
-                tax_per_product: taxPerProduct,
-                is_new: false
-            });
-            // Update stock
-            product.available_stock -= quantity;
-        } else {
-            // New product
-            const item_code = `NEW-${newProductCounter++}`;
-            selectedProducts.push({ 
-                item_code: item_code,
-                name: productName, 
-                quantity: quantity, 
-                price: parseFloat(price),
-                tax_per_product: taxPerProduct,
-                is_new: true
-            });
-        }
-
-        updateSelectedProductsTable();
-        productSearchInput.value = '';
-        document.getElementById('quantity').value = '1';
-        document.getElementById('price').value = '0.00';
-        
-        roomInput.value = '';
-        roomInput.classList.add('hidden');
-        roomLabel.classList.add('hidden');
-    }
-
-    // Updated Calculation:
-    // If tax is checked:
-    //  - Subtotal = sum of (base_price_excl_tax * quantity) for all products
-    //    base_price_excl_tax = product.price - product.tax_per_product
-    //  - Tax = sum of (tax_per_product * quantity)
-    //  - Total = Subtotal + Tax
-    //
-    // If tax is not checked:
-    //  - Subtotal = sum of (price * quantity)
-    //  - Tax = 0
-    //  - Total = Subtotal
-    function calculateAndDisplayTotal() {
-        let subtotal = 0;
-        let tax = 0;
-
-        selectedProducts.forEach(product => {
-            const priceExclTax = product.price - product.tax_per_product;
-            if (taxCheckbox.checked) {
-                // With tax checked, use base price excluding tax for subtotal
-                subtotal += priceExclTax * product.quantity;
-                tax += product.tax_per_product * product.quantity;
-            } else {
-                // Without tax, use full price
-                subtotal += product.price * product.quantity;
-            }
+      if (product) {
+        selectedProducts.push({ 
+          item_code: product.item_code,
+          name: productName, 
+          quantity: quantity, 
+          price: parseFloat(price),
+          tax_per_product: taxPerProduct,
+          is_new: false
         });
+        // Update stock
+        product.available_stock -= quantity;
+      } else {
+        const item_code = `NEW-${newProductCounter++}`;
+        selectedProducts.push({ 
+          item_code: item_code,
+          name: productName, 
+          quantity: quantity, 
+          price: parseFloat(price),
+          tax_per_product: taxPerProduct,
+          is_new: true
+        });
+      }
 
-        if (!taxCheckbox.checked) {
-            tax = 0;
-        }
-
-        const total = subtotal + tax;
-
-        subtotalAmountSpan.textContent = subtotal.toFixed(2);
-        taxAmountSpan.textContent = tax.toFixed(2);
-        totalAmountSpan.textContent = total.toFixed(2);
+      updateSelectedProductsTable();
+      productSearchInput.value = '';
+      document.getElementById('quantity').value = '1';
+      document.getElementById('price').value = '0.00';
+      roomInput.value = '';
+      roomInput.classList.add('hidden');
+      roomLabel.classList.add('hidden');
     }
 
+    // When tax is applied, calculate backwards:
+    // Displayed Unit Price (net) = database price * (1 - TAX_RATE)
+    // Tax per Unit = database price * TAX_RATE
+    // Line Total = database price * quantity
     function updateSelectedProductsTable() {
-        const tbody = document.getElementById('selectedProductsBody');
-        tbody.innerHTML = '';
-        updateTableHeader();
+      const tbody = document.getElementById('selectedProductsBody');
+      tbody.innerHTML = '';
+      updateTableHeader();
 
-        selectedProducts.forEach((product, index) => {
-            const row = tbody.insertRow();
-            const priceExclTax = product.price - product.tax_per_product;
+      selectedProducts.forEach((product, index) => {
+        const row = tbody.insertRow();
+        let currentCellIndex = 0;
 
-            // Product
-            const nameCell = row.insertCell(0);
-            nameCell.textContent = product.name;
-            if (product.is_new) {
-                const newLabel = document.createElement('span');
-                newLabel.textContent = ' (New)';
-                newLabel.style.color = '#ff9900';
-                newLabel.style.fontWeight = 'bold';
-                nameCell.appendChild(newLabel);
-            }
+        // Product name cell
+        const nameCell = row.insertCell(currentCellIndex++);
+        nameCell.textContent = product.name;
+        if (product.is_new) {
+          const newLabel = document.createElement('span');
+          newLabel.textContent = ' (New)';
+          newLabel.style.color = '#ff9900';
+          newLabel.style.fontWeight = 'bold';
+          nameCell.appendChild(newLabel);
+        }
 
-            // Quantity
-            const quantityCell = row.insertCell(1);
-            quantityCell.textContent = product.quantity;
+        // Quantity cell
+        const quantityCell = row.insertCell(currentCellIndex++);
+        quantityCell.textContent = product.quantity;
 
-            // Unit Price
-            const unitPriceCell = row.insertCell(2);
-            if (taxCheckbox.checked) {
-                unitPriceCell.textContent = `${CURRENCY_SYMBOL}${priceExclTax.toFixed(2)}`;
-            } else {
-                unitPriceCell.textContent = `${CURRENCY_SYMBOL}${product.price.toFixed(2)}`;
-            }
+        // Unit Price cell
+        const unitPriceCell = row.insertCell(currentCellIndex++);
+        if (taxCheckbox.checked) {
+          // Display net price: database price minus tax
+          unitPriceCell.textContent = `${CURRENCY_SYMBOL}${(product.price * (1 - TAX_RATE)).toFixed(2)}`;
+          // Tax per unit cell
+          const taxPerUnitCell = row.insertCell(currentCellIndex++);
+          taxPerUnitCell.textContent = `${CURRENCY_SYMBOL}${(product.price * TAX_RATE).toFixed(2)}`;
+          // Line total remains the database price times quantity
+          const lineTotal = product.price * product.quantity;
+          const totalCell = row.insertCell(currentCellIndex++);
+          totalCell.textContent = `${CURRENCY_SYMBOL}${lineTotal.toFixed(2)}`;
+          // Action cell for remove button
+          const actionCell = row.insertCell(currentCellIndex++);
+          const removeBtn = document.createElement('button');
+          removeBtn.textContent = 'Remove';
+          removeBtn.classList.add('remove-button');
+          removeBtn.onclick = () => removeProduct(index);
+          actionCell.appendChild(removeBtn);
+        } else {
+          // Display normal price without tax breakdown
+          unitPriceCell.textContent = `${CURRENCY_SYMBOL}${product.price.toFixed(2)}`;
+          const lineTotal = product.price * product.quantity;
+          const totalCell = row.insertCell(currentCellIndex++);
+          totalCell.textContent = `${CURRENCY_SYMBOL}${lineTotal.toFixed(2)}`;
+          const actionCell = row.insertCell(currentCellIndex++);
+          const removeBtn = document.createElement('button');
+          removeBtn.textContent = 'Remove';
+          removeBtn.classList.add('remove-button');
+          removeBtn.onclick = () => removeProduct(index);
+          actionCell.appendChild(removeBtn);
+        }
+      });
+      calculateAndDisplayTotal();
+    }
 
-            let currentCellIndex = 3;
+    function calculateAndDisplayTotal() {
+      let subtotal = 0;
+      let tax = 0;
+      let total = 0;
 
-            if (taxCheckbox.checked) {
-                const taxPerUnitCell = row.insertCell(currentCellIndex++);
-                taxPerUnitCell.textContent = `${CURRENCY_SYMBOL}${product.tax_per_product.toFixed(2)}`;
+      selectedProducts.forEach(product => {
+        if (taxCheckbox.checked) {
+          // Net price = database price * (1 - TAX_RATE)
+          subtotal += product.price * (1 - TAX_RATE) * product.quantity;
+          // Tax amount = database price * TAX_RATE
+          tax += product.price * TAX_RATE * product.quantity;
+          // Total remains the original database price * quantity
+          total += product.price * product.quantity;
+        } else {
+          subtotal += product.price * product.quantity;
+          total += product.price * product.quantity;
+        }
+      });
 
-                const lineTotal = (priceExclTax + product.tax_per_product) * product.quantity;
-                const totalCell = row.insertCell(currentCellIndex++);
-                totalCell.textContent = `${CURRENCY_SYMBOL}${lineTotal.toFixed(2)}`;
+      if (!taxCheckbox.checked) {
+        tax = 0;
+      }
 
-                const actionCell = row.insertCell(currentCellIndex++);
-                const removeBtn = document.createElement('button');
-                removeBtn.textContent = 'Remove';
-                removeBtn.classList.add('remove-button');
-                removeBtn.onclick = () => removeProduct(index);
-                actionCell.appendChild(removeBtn);
-            } else {
-                const lineTotal = product.price * product.quantity;
-                const totalCell = row.insertCell(currentCellIndex++);
-                totalCell.textContent = `${CURRENCY_SYMBOL}${lineTotal.toFixed(2)}`;
-
-                const actionCell = row.insertCell(currentCellIndex++);
-                const removeBtn = document.createElement('button');
-                removeBtn.textContent = 'Remove';
-                removeBtn.classList.add('remove-button');
-                removeBtn.onclick = () => removeProduct(index);
-                actionCell.appendChild(removeBtn);
-            }
-        });
-
-        calculateAndDisplayTotal();
+      subtotalAmountSpan.textContent = subtotal.toFixed(2);
+      taxAmountSpan.textContent = tax.toFixed(2);
+      totalAmountSpan.textContent = total.toFixed(2);
     }
 
     function updateTableHeader() {
-        const thead = selectedProductsTable.querySelector('thead');
-        thead.innerHTML = '';
-        const headerRow = thead.insertRow();
-        headerRow.insertCell(0).textContent = 'Product';
-        headerRow.insertCell(1).textContent = 'Quantity';
-        headerRow.insertCell(2).textContent = 'Unit Price (R)';
-
-        if (taxCheckbox.checked) {
-            headerRow.insertCell(3).textContent = 'Tax per Unit (R)';
-            headerRow.insertCell(4).textContent = 'Total (R)';
-            headerRow.insertCell(5).textContent = 'Action';
-        } else {
-            headerRow.insertCell(3).textContent = 'Total (R)';
-            headerRow.insertCell(4).textContent = 'Action';
-        }
+      const thead = selectedProductsTable.querySelector('thead');
+      thead.innerHTML = '';
+      const headerRow = thead.insertRow();
+      headerRow.insertCell(0).textContent = 'Product';
+      headerRow.insertCell(1).textContent = 'Quantity';
+      headerRow.insertCell(2).textContent = 'Unit Price (R)';
+      if (taxCheckbox.checked) {
+        headerRow.insertCell(3).textContent = 'Tax per Unit (R)';
+        headerRow.insertCell(4).textContent = 'Total (R)';
+        headerRow.insertCell(5).textContent = 'Action';
+      } else {
+        headerRow.insertCell(3).textContent = 'Total (R)';
+        headerRow.insertCell(4).textContent = 'Action';
+      }
     }
 
     function removeProduct(index) {
-        const removedProduct = selectedProducts.splice(index, 1)[0];
-        updateSelectedProductsTable();
-
-        // Restore stock if it was an existing product
-        if (!removedProduct.is_new && removedProduct && allProducts.length > 0) {
-            const product = allProducts.find(p => p.item_code === removedProduct.item_code);
-            if (product) {
-                product.available_stock += removedProduct.quantity;
-            }
+      const removedProduct = selectedProducts.splice(index, 1)[0];
+      updateSelectedProductsTable();
+      if (!removedProduct.is_new && removedProduct && allProducts.length > 0) {
+        const product = allProducts.find(p => p.item_code === removedProduct.item_code);
+        if (product) {
+          product.available_stock += removedProduct.quantity;
         }
-
-        showToastMessage(`Removed ${removedProduct.name} from the selection.`, 'info');
+      }
+      showToastMessage(`Removed ${removedProduct.name} from the selection.`, 'info');
     }
 
     function generateReceipt() {
-        // Check if company is selected
-        const selectedCompanyCookie = getCookie('selectedCompany');
-        if (!selectedCompanyCookie) {
-            showToastMessage('Please select a company before generating a receipt.', 'error');
-            return;
-        }
+      const selectedCompanyCookie = getCookie('selectedCompany');
+      if (!selectedCompanyCookie) {
+        showToastMessage('Please select a company before generating a receipt.', 'error');
+        return;
+      }
+      const billingInfo = {
+        name: document.getElementById('customerName').value.trim(),
+        email: document.getElementById('customerEmail').value.trim(),
+        address: document.getElementById('customerAddress').value.trim(),
+        phone: document.getElementById('customerPhone').value.trim()
+      };
 
-        const billingInfo = {
-            name: document.getElementById('customerName').value.trim(),
-            email: document.getElementById('customerEmail').value.trim(),
-            address: document.getElementById('customerAddress').value.trim(),
-            phone: document.getElementById('customerPhone').value.trim()
+      let shippingInfo = null;
+      if (!sameAsBillingCheckbox.checked) {
+        shippingInfo = {
+          name: document.getElementById('shippingName').value.trim(),
+          email: document.getElementById('shippingEmail').value.trim(),
+          address: document.getElementById('shippingAddress').value.trim(),
+          phone: document.getElementById('shippingPhone').value.trim()
         };
-
-        let shippingInfo = null;
-        if (!sameAsBillingCheckbox.checked) {
-            shippingInfo = {
-                name: document.getElementById('shippingName').value.trim(),
-                email: document.getElementById('shippingEmail').value.trim(),
-                address: document.getElementById('shippingAddress').value.trim(),
-                phone: document.getElementById('shippingPhone').value.trim()
-            };
-
-            if (!shippingInfo.name || !shippingInfo.email || !shippingInfo.address || !shippingInfo.phone) {
-                showToastMessage('Please fill in all shipping information fields or select "Ship to the same address as billing".', 'error');
-                return;
-            }
+        if (!shippingInfo.name || !shippingInfo.email || !shippingInfo.address || !shippingInfo.phone) {
+          showToastMessage('Please fill in all shipping information fields or select "Ship to the same address as billing".', 'error');
+          return;
         }
+      }
 
-        if (!billingInfo.name || !billingInfo.email || !billingInfo.address || !billingInfo.phone) {
-            showToastMessage('Please fill in all customer information fields.', 'error');
-            return;
-        }
+      if (!billingInfo.name || !billingInfo.email || !billingInfo.address || !billingInfo.phone) {
+        showToastMessage('Please fill in all customer information fields.', 'error');
+        return;
+      }
 
-        if (selectedProducts.length === 0) {
-            showToastMessage('No products selected.', 'error');
-            return;
-        }
+      if (selectedProducts.length === 0) {
+        showToastMessage('No products selected.', 'error');
+        return;
+      }
 
-        const paymentMethod = paymentMethodSelect.value;
-        const comments = commentsTextarea.value.trim(); // Capture comments
+      const paymentMethod = paymentMethodSelect.value;
+      const comments = commentsTextarea.value.trim();
+      const customerInfo = {
+        billing: billingInfo,
+        shipping: sameAsBillingCheckbox.checked ? null : shippingInfo,
+        paymentMethod: paymentMethod,
+        comments: comments
+      };
 
-        const customerInfo = {
-            billing: billingInfo,
-            shipping: sameAsBillingCheckbox.checked ? null : shippingInfo,
-            paymentMethod: paymentMethod,
-            comments: comments // Include comments
-        };
-
-        // Retrieve selected company info
-        const selectedCompany = JSON.parse(selectedCompanyCookie);
-
-        // Store all necessary data in cookies
-        setCookie('customerInfo', JSON.stringify(customerInfo), 1);
-        setCookie('selectedProducts', JSON.stringify(selectedProducts), 1);
-        setCookie('subtotalAmount', JSON.stringify(subtotalAmountSpan.textContent), 1);
-        setCookie('taxAmount', JSON.stringify(taxAmountSpan.textContent), 1);
-        setCookie('totalAmount', JSON.stringify(totalAmountSpan.textContent), 1);
-        setCookie('selectedCompany', JSON.stringify(selectedCompany), 1);
-
-        window.location.href = 'receipt.html';
+      const selectedCompany = JSON.parse(selectedCompanyCookie);
+      setCookie('customerInfo', JSON.stringify(customerInfo), 1);
+      setCookie('selectedProducts', JSON.stringify(selectedProducts), 1);
+      setCookie('subtotalAmount', JSON.stringify(subtotalAmountSpan.textContent), 1);
+      setCookie('taxAmount', JSON.stringify(taxAmountSpan.textContent), 1);
+      setCookie('totalAmount', JSON.stringify(totalAmountSpan.textContent), 1);
+      setCookie('selectedCompany', JSON.stringify(selectedCompany), 1);
+      window.location.href = 'receipt.html';
     }
 
     function generateQuotation() {
-        // Check if company is selected
-        const selectedCompanyCookie = getCookie('selectedCompany');
-        if (!selectedCompanyCookie) {
-            showToastMessage('Please select a company before generating a quotation.', 'error');
-            return;
-        }
+      const selectedCompanyCookie = getCookie('selectedCompany');
+      if (!selectedCompanyCookie) {
+        showToastMessage('Please select a company before generating a quotation.', 'error');
+        return;
+      }
+      const billingInfo = {
+        name: document.getElementById('customerName').value.trim(),
+        email: document.getElementById('customerEmail').value.trim(),
+        address: document.getElementById('customerAddress').value.trim(),
+        phone: document.getElementById('customerPhone').value.trim()
+      };
 
-        const billingInfo = {
-            name: document.getElementById('customerName').value.trim(),
-            email: document.getElementById('customerEmail').value.trim(),
-            address: document.getElementById('customerAddress').value.trim(),
-            phone: document.getElementById('customerPhone').value.trim()
+      let shippingInfo = null;
+      if (!sameAsBillingCheckbox.checked) {
+        shippingInfo = {
+          name: document.getElementById('shippingName').value.trim(),
+          email: document.getElementById('shippingEmail').value.trim(),
+          address: document.getElementById('shippingAddress').value.trim(),
+          phone: document.getElementById('shippingPhone').value.trim()
         };
-
-        let shippingInfo = null;
-        if (!sameAsBillingCheckbox.checked) {
-            shippingInfo = {
-                name: document.getElementById('shippingName').value.trim(),
-                email: document.getElementById('shippingEmail').value.trim(),
-                address: document.getElementById('shippingAddress').value.trim(),
-                phone: document.getElementById('shippingPhone').value.trim()
-            };
-
-            if (!shippingInfo.name || !shippingInfo.email || !shippingInfo.address || !shippingInfo.phone) {
-                showToastMessage('Please fill in all shipping information fields or select "Ship to the same address as billing".', 'error');
-                return;
-            }
+        if (!shippingInfo.name || !shippingInfo.email || !shippingInfo.address || !shippingInfo.phone) {
+          showToastMessage('Please fill in all shipping information fields or select "Ship to the same address as billing".', 'error');
+          return;
         }
+      }
 
-        if (!billingInfo.name || !billingInfo.email || !billingInfo.address || !billingInfo.phone) {
-            showToastMessage('Please fill in all customer information fields.', 'error');
-            return;
-        }
+      if (!billingInfo.name || !billingInfo.email || !billingInfo.address || !billingInfo.phone) {
+        showToastMessage('Please fill in all customer information fields.', 'error');
+        return;
+      }
 
-        if (selectedProducts.length === 0) {
-            showToastMessage('No products selected.', 'error');
-            return;
-        }
+      if (selectedProducts.length === 0) {
+        showToastMessage('No products selected.', 'error');
+        return;
+      }
 
-        const comments = commentsTextarea.value.trim(); // Capture comments
+      const comments = commentsTextarea.value.trim();
+      const customerInfo = {
+        billing: billingInfo,
+        shipping: sameAsBillingCheckbox.checked ? null : shippingInfo,
+        paymentMethod: 'N/A',
+        comments: comments
+      };
 
-        const customerInfo = {
-            billing: billingInfo,
-            shipping: sameAsBillingCheckbox.checked ? null : shippingInfo,
-            paymentMethod: 'N/A', // not applicable for quotation
-            comments: comments
-        };
-
-        // Retrieve selected company info
-        const selectedCompany = JSON.parse(selectedCompanyCookie);
-
-        // Store all necessary data in cookies
-        setCookie('customerInfo', JSON.stringify(customerInfo), 1);
-        setCookie('selectedProducts', JSON.stringify(selectedProducts), 1);
-        setCookie('subtotalAmount', JSON.stringify(subtotalAmountSpan.textContent), 1);
-        setCookie('taxAmount', JSON.stringify(taxAmountSpan.textContent), 1);
-        setCookie('totalAmount', JSON.stringify(totalAmountSpan.textContent), 1);
-        setCookie('selectedCompany', JSON.stringify(selectedCompany), 1);
-
-        window.location.href = 'quotation.html';
+      const selectedCompany = JSON.parse(selectedCompanyCookie);
+      setCookie('customerInfo', JSON.stringify(customerInfo), 1);
+      setCookie('selectedProducts', JSON.stringify(selectedProducts), 1);
+      setCookie('subtotalAmount', JSON.stringify(subtotalAmountSpan.textContent), 1);
+      setCookie('taxAmount', JSON.stringify(taxAmountSpan.textContent), 1);
+      setCookie('totalAmount', JSON.stringify(totalAmountSpan.textContent), 1);
+      setCookie('selectedCompany', JSON.stringify(selectedCompany), 1);
+      window.location.href = 'quotation.html';
     }
 
     function generateInvoice() {
-        // Check if company is selected
-        const selectedCompanyCookie = getCookie('selectedCompany');
-        if (!selectedCompanyCookie) {
-            showToastMessage('Please select a company before generating an invoice.', 'error');
-            return;
-        }
+      const selectedCompanyCookie = getCookie('selectedCompany');
+      if (!selectedCompanyCookie) {
+        showToastMessage('Please select a company before generating an invoice.', 'error');
+        return;
+      }
+      const billingInfo = {
+        name: document.getElementById('customerName').value.trim(),
+        email: document.getElementById('customerEmail').value.trim(),
+        address: document.getElementById('customerAddress').value.trim(),
+        phone: document.getElementById('customerPhone').value.trim()
+      };
 
-        const billingInfo = {
-            name: document.getElementById('customerName').value.trim(),
-            email: document.getElementById('customerEmail').value.trim(),
-            address: document.getElementById('customerAddress').value.trim(),
-            phone: document.getElementById('customerPhone').value.trim()
+      let shippingInfo = null;
+      if (!sameAsBillingCheckbox.checked) {
+        shippingInfo = {
+          name: document.getElementById('shippingName').value.trim(),
+          email: document.getElementById('shippingEmail').value.trim(),
+          address: document.getElementById('shippingAddress').value.trim(),
+          phone: document.getElementById('shippingPhone').value.trim()
         };
-
-        let shippingInfo = null;
-        if (!sameAsBillingCheckbox.checked) {
-            shippingInfo = {
-                name: document.getElementById('shippingName').value.trim(),
-                email: document.getElementById('shippingEmail').value.trim(),
-                address: document.getElementById('shippingAddress').value.trim(),
-                phone: document.getElementById('shippingPhone').value.trim()
-            };
-
-            if (!shippingInfo.name || !shippingInfo.email || !shippingInfo.address || !shippingInfo.phone) {
-                showToastMessage('Please fill in all shipping information fields or select "Ship to the same address as billing".', 'error');
-                return;
-            }
+        if (!shippingInfo.name || !shippingInfo.email || !shippingInfo.address || !shippingInfo.phone) {
+          showToastMessage('Please fill in all shipping information fields or select "Ship to the same address as billing".', 'error');
+          return;
         }
+      }
 
-        if (!billingInfo.name || !billingInfo.email || !billingInfo.address || !billingInfo.phone) {
-            showToastMessage('Please fill in all customer information fields.', 'error');
-            return;
-        }
+      if (!billingInfo.name || !billingInfo.email || !billingInfo.address || !billingInfo.phone) {
+        showToastMessage('Please fill in all customer information fields.', 'error');
+        return;
+      }
 
-        if (selectedProducts.length === 0) {
-            showToastMessage('No products selected.', 'error');
-            return;
-        }
+      if (selectedProducts.length === 0) {
+        showToastMessage('No products selected.', 'error');
+        return;
+      }
 
-        const paymentMethod = paymentMethodSelect.value;
-        const comments = commentsTextarea.value.trim(); // Capture comments
+      const paymentMethod = paymentMethodSelect.value;
+      const comments = commentsTextarea.value.trim();
+      const customerInfo = {
+        billing: billingInfo,
+        shipping: sameAsBillingCheckbox.checked ? null : shippingInfo,
+        paymentMethod: paymentMethod,
+        comments: comments
+      };
 
-        const customerInfo = {
-            billing: billingInfo,
-            shipping: sameAsBillingCheckbox.checked ? null : shippingInfo,
-            paymentMethod: paymentMethod,
-            comments: comments
-        };
-
-        // Retrieve selected company info
-        const selectedCompany = JSON.parse(selectedCompanyCookie);
-
-        // Store all necessary data in cookies
-        setCookie('customerInfo', JSON.stringify(customerInfo), 1);
-        setCookie('selectedProducts', JSON.stringify(selectedProducts), 1);
-        setCookie('subtotalAmount', JSON.stringify(subtotalAmountSpan.textContent), 1);
-        setCookie('taxAmount', JSON.stringify(taxAmountSpan.textContent), 1);
-        setCookie('totalAmount', JSON.stringify(totalAmountSpan.textContent), 1);
-        setCookie('selectedCompany', JSON.stringify(selectedCompany), 1);
-
-        window.location.href = 'invoice.html';
+      const selectedCompany = JSON.parse(selectedCompanyCookie);
+      setCookie('customerInfo', JSON.stringify(customerInfo), 1);
+      setCookie('selectedProducts', JSON.stringify(selectedProducts), 1);
+      setCookie('subtotalAmount', JSON.stringify(subtotalAmountSpan.textContent), 1);
+      setCookie('taxAmount', JSON.stringify(taxAmountSpan.textContent), 1);
+      setCookie('totalAmount', JSON.stringify(totalAmountSpan.textContent), 1);
+      setCookie('selectedCompany', JSON.stringify(selectedCompany), 1);
+      window.location.href = 'invoice.html';
     }
 
     function toggleShippingInfo() {
-        if (sameAsBillingCheckbox.checked) {
-            shippingInfoDiv.classList.add('hidden');
-        } else {
-            shippingInfoDiv.classList.remove('hidden');
-        }
+      if (sameAsBillingCheckbox.checked) {
+        shippingInfoDiv.classList.add('hidden');
+      } else {
+        shippingInfoDiv.classList.remove('hidden');
+      }
     }
 
-    // Company Selection Handling
     function setCompanyInfo() {
-        const selectedCompanyKey = companySelect.value;
-        if (!selectedCompanyKey || !companies[selectedCompanyKey]) {
-            showToastMessage('Please select a valid company.', 'error');
-            return;
-        }
-        const selectedCompany = companies[selectedCompanyKey];
-        setCookie('selectedCompany', JSON.stringify({
-            key: selectedCompanyKey,
-            name: selectedCompany.name,
-            bankingInformation: selectedCompany.bankingInformation
-        }), 1);
+      const selectedCompanyKey = companySelect.value;
+      if (!selectedCompanyKey || !companies[selectedCompanyKey]) {
+        showToastMessage('Please select a valid company.', 'error');
+        return;
+      }
+      const selectedCompany = companies[selectedCompanyKey];
+      setCookie('selectedCompany', JSON.stringify({
+        key: selectedCompanyKey,
+        name: selectedCompany.name,
+        bankingInformation: selectedCompany.bankingInformation
+      }), 1);
     }
 
     companySelect.addEventListener('change', setCompanyInfo);
 
     productSearchInput.addEventListener('input', () => {
-        searchLoader.style.display = 'inline-block';
-        clearTimeout(window.searchTimeout);
-        window.searchTimeout = setTimeout(() => {
-            displayFilteredProducts();
-            searchLoader.style.display = 'none';
-        }, 300);
+      searchLoader.style.display = 'inline-block';
+      clearTimeout(window.searchTimeout);
+      window.searchTimeout = setTimeout(() => {
+        displayFilteredProducts();
+        searchLoader.style.display = 'none';
+      }, 300);
     });
 
     sameAsBillingCheckbox.addEventListener('change', toggleShippingInfo);
 
     taxCheckbox.addEventListener('change', () => {
-        selectedProducts = selectedProducts.map(product => {
-            if (taxCheckbox.checked) {
-                product.tax_per_product = parseFloat((product.price - (product.price / (1 + TAX_RATE))).toFixed(2));
-            } else {
-                product.tax_per_product = 0.00;
-            }
-            return product;
-        });
-        updateSelectedProductsTable();
+      selectedProducts = selectedProducts.map(product => {
+        if (taxCheckbox.checked) {
+          product.tax_per_product = parseFloat((product.price * TAX_RATE).toFixed(2));
+        } else {
+          product.tax_per_product = 0.00;
+        }
+        return product;
+      });
+      updateSelectedProductsTable();
     });
 
     window.onload = async function() {
-        try {
-            await fetchAllProducts();
-        } finally {
-            // Hide the loading screen regardless of success or failure
-            loadingScreen.style.display = 'none';
-        }
-        updateSelectedProductsTable();
-
-        // Optionally, load previously selected company
-        const selectedCompanyCookie = getCookie('selectedCompany');
-        if (selectedCompanyCookie) {
-            const selectedCompany = JSON.parse(selectedCompanyCookie);
-            companySelect.value = selectedCompany.key;
-        }
+      try {
+        await fetchAllProducts();
+      } finally {
+        loadingScreen.style.display = 'none';
+      }
+      updateSelectedProductsTable();
+      const selectedCompanyCookie = getCookie('selectedCompany');
+      if (selectedCompanyCookie) {
+        const selectedCompany = JSON.parse(selectedCompanyCookie);
+        companySelect.value = selectedCompany.key;
+      }
     };
-</script>
-
+  </script>
 </body>
 </html>
-
-</body>
