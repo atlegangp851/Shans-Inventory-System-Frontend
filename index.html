@@ -353,11 +353,11 @@
     let selectedProducts = [];
     let allProducts = []; // To store all fetched products
     let newProductCounter = 1; // Counter for new products
-
+  
     const API_BASE_URL = 'https://shans-backend-1.onrender.com/api';
     const CURRENCY_SYMBOL = 'R';
     const TAX_RATE = 0.15;
-
+  
     const productSearchInput = document.getElementById('productSearch');
     const productList = document.getElementById('productList');
     const searchLoader = document.getElementById('searchLoader');
@@ -374,7 +374,7 @@
     const companySelect = document.getElementById('companySelect');
     const commentsTextarea = document.getElementById('comments');
     const loadingScreen = document.getElementById('loadingScreen');
-
+  
     // Company Information
     const companies = {
       company1: {
@@ -395,11 +395,11 @@
         `
       }
     };
-
+  
     /**
-     * Toast message helper
+     * Display a non-blocking toast message in the top-right corner.
      * @param {string} message - The message to display
-     * @param {string} type - 'success', 'error', or 'info'
+     * @param {string} [type='info'] - 'success', 'error', or 'info'
      */
     function showToastMessage(message, type = 'info') {
       const toastContainer = document.getElementById('toastContainer');
@@ -411,14 +411,14 @@
         toast.remove();
       }, 3000);
     }
-
+  
     function setCookie(name, value, days) {
       const d = new Date();
       d.setTime(d.getTime() + (days*24*60*60*1000));
       const expires = "expires="+ d.toUTCString();
       document.cookie = name + "=" + encodeURIComponent(value) + ";" + expires + ";path=/";
     }
-
+  
     function getCookie(name) {
       const cname = name + "=";
       const decodedCookie = decodeURIComponent(document.cookie);
@@ -431,7 +431,7 @@
       }
       return "";
     }
-
+  
     async function fetchAllProducts() {
       try {
         const response = await fetch(`${API_BASE_URL}/products`);
@@ -442,15 +442,15 @@
         showToastMessage('Failed to load products. Please try again later.', 'error');
       }
     }
-
+  
     function displayFilteredProducts() {
       const searchTerm = productSearchInput.value.toLowerCase();
-      const filteredProducts = allProducts.filter(product => 
+      const filteredProducts = allProducts.filter(product =>
         product.item_name.toLowerCase().includes(searchTerm)
       );
-
+  
       productList.innerHTML = '';
-
+  
       if (filteredProducts.length === 0 && searchTerm !== '') {
         const li = document.createElement('li');
         li.textContent = 'No products found';
@@ -458,7 +458,7 @@
         productList.appendChild(li);
         return;
       }
-
+  
       filteredProducts.forEach(product => {
         const li = document.createElement('li');
         li.textContent = `${product.item_name} - Stock: ${product.available_stock}`;
@@ -466,7 +466,7 @@
         productList.appendChild(li);
       });
     }
-
+  
     function selectProduct(product) {
       productSearchInput.value = product.item_name;
       productList.innerHTML = '';
@@ -475,62 +475,59 @@
       roomInput.classList.remove('hidden');
       roomLabel.classList.remove('hidden');
     }
-
+  
     function addSelectedProduct() {
       const productName = productSearchInput.value.trim();
       const quantity = parseInt(document.getElementById('quantity').value);
       const price = parseFloat(document.getElementById('price').value).toFixed(2);
       const product = allProducts.find(p => p.item_name.toLowerCase() === productName.toLowerCase());
-
+  
       if (productName === '' || isNaN(quantity) || isNaN(price)) {
         showToastMessage('Please enter valid product details.', 'error');
         return;
       }
-
       if (quantity <= 0) {
         showToastMessage('Quantity must be at least 1.', 'error');
         return;
       }
-
       if (price < 0) {
         showToastMessage('Price cannot be negative.', 'error');
         return;
       }
-
       if (product && quantity > product.available_stock) {
         showToastMessage(`Cannot add ${quantity} units. Only ${product.available_stock} available in stock.`, 'error');
         return;
       }
-
+  
+      // We'll store the typed-in price in product.price
+      // Then let the table logic figure out net vs. tax if needed
       let taxPerProduct = 0.00;
       if (taxCheckbox.checked) {
-        // Calculate tax as 15% of the database (tax-inclusive) price
         taxPerProduct = parseFloat((price * TAX_RATE).toFixed(2));
       }
-
+  
       if (product) {
-        selectedProducts.push({ 
+        selectedProducts.push({
           item_code: product.item_code,
-          name: productName, 
-          quantity: quantity, 
+          name: productName,
+          quantity: quantity,
           price: parseFloat(price),
           tax_per_product: taxPerProduct,
           is_new: false
         });
-        // Update stock
-        product.available_stock -= quantity;
+        product.available_stock -= quantity; // update stock
       } else {
         const item_code = `NEW-${newProductCounter++}`;
-        selectedProducts.push({ 
+        selectedProducts.push({
           item_code: item_code,
-          name: productName, 
-          quantity: quantity, 
+          name: productName,
+          quantity: quantity,
           price: parseFloat(price),
           tax_per_product: taxPerProduct,
           is_new: true
         });
       }
-
+  
       updateSelectedProductsTable();
       productSearchInput.value = '';
       document.getElementById('quantity').value = '1';
@@ -539,22 +536,28 @@
       roomInput.classList.add('hidden');
       roomLabel.classList.add('hidden');
     }
-
-    // When tax is applied, calculate backwards:
-    // Displayed Unit Price (net) = database price * (1 - TAX_RATE)
-    // Tax per Unit = database price * TAX_RATE
-    // Line Total = database price * quantity
+  
+    /**
+     * If tax is checked:
+     *   - "Unit Price (R)" = price * 0.85
+     *   - "Tax per Unit (R)" = price * 0.15
+     *   - "Total (R)" = price * quantity
+     *
+     * If tax is NOT checked:
+     *   - "Unit Price (R)" = price (as typed)
+     *   - No separate tax column
+     *   - "Total (R)" = price * quantity
+     */
     function updateSelectedProductsTable() {
       const tbody = document.getElementById('selectedProductsBody');
       tbody.innerHTML = '';
       updateTableHeader();
-
+  
       selectedProducts.forEach((product, index) => {
         const row = tbody.insertRow();
-        let currentCellIndex = 0;
-
-        // Product name cell
-        const nameCell = row.insertCell(currentCellIndex++);
+  
+        // Product name
+        const nameCell = row.insertCell();
         nameCell.textContent = product.name;
         if (product.is_new) {
           const newLabel = document.createElement('span');
@@ -563,37 +566,50 @@
           newLabel.style.fontWeight = 'bold';
           nameCell.appendChild(newLabel);
         }
-
-        // Quantity cell
-        const quantityCell = row.insertCell(currentCellIndex++);
-        quantityCell.textContent = product.quantity;
-
-        // Unit Price cell
-        const unitPriceCell = row.insertCell(currentCellIndex++);
+  
+        // Quantity
+        const qtyCell = row.insertCell();
+        qtyCell.textContent = product.quantity;
+  
         if (taxCheckbox.checked) {
-          // Display net price: database price minus tax
-          unitPriceCell.textContent = `${CURRENCY_SYMBOL}${(product.price * (1 - TAX_RATE)).toFixed(2)}`;
-          // Tax per unit cell
-          const taxPerUnitCell = row.insertCell(currentCellIndex++);
-          taxPerUnitCell.textContent = `${CURRENCY_SYMBOL}${(product.price * TAX_RATE).toFixed(2)}`;
-          // Line total remains the database price times quantity
+          // net = price * 0.85, tax = price * 0.15, total = price * quantity
+          const netPrice = product.price * (1 - TAX_RATE);
+          const taxAmount = product.price * TAX_RATE;
           const lineTotal = product.price * product.quantity;
-          const totalCell = row.insertCell(currentCellIndex++);
+  
+          // Unit Price (net)
+          const unitPriceCell = row.insertCell();
+          unitPriceCell.textContent = `${CURRENCY_SYMBOL}${netPrice.toFixed(2)}`;
+  
+          // Tax per Unit
+          const taxCell = row.insertCell();
+          taxCell.textContent = `${CURRENCY_SYMBOL}${taxAmount.toFixed(2)}`;
+  
+          // Total
+          const totalCell = row.insertCell();
           totalCell.textContent = `${CURRENCY_SYMBOL}${lineTotal.toFixed(2)}`;
-          // Action cell for remove button
-          const actionCell = row.insertCell(currentCellIndex++);
+  
+          // Remove button
+          const actionCell = row.insertCell();
           const removeBtn = document.createElement('button');
           removeBtn.textContent = 'Remove';
           removeBtn.classList.add('remove-button');
           removeBtn.onclick = () => removeProduct(index);
           actionCell.appendChild(removeBtn);
         } else {
-          // Display normal price without tax breakdown
-          unitPriceCell.textContent = `${CURRENCY_SYMBOL}${product.price.toFixed(2)}`;
+          // No tax => unit price is the typed-in price, total = price * quantity
           const lineTotal = product.price * product.quantity;
-          const totalCell = row.insertCell(currentCellIndex++);
+  
+          // Unit Price
+          const unitPriceCell = row.insertCell();
+          unitPriceCell.textContent = `${CURRENCY_SYMBOL}${product.price.toFixed(2)}`;
+  
+          // Total
+          const totalCell = row.insertCell();
           totalCell.textContent = `${CURRENCY_SYMBOL}${lineTotal.toFixed(2)}`;
-          const actionCell = row.insertCell(currentCellIndex++);
+  
+          // Remove button
+          const actionCell = row.insertCell();
           const removeBtn = document.createElement('button');
           removeBtn.textContent = 'Remove';
           removeBtn.classList.add('remove-button');
@@ -601,66 +617,79 @@
           actionCell.appendChild(removeBtn);
         }
       });
+  
       calculateAndDisplayTotal();
     }
-
+  
+    /**
+     * If tax is checked:
+     *   - Subtotal = sum of (price * 0.85 * quantity)
+     *   - Tax = sum of (price * 0.15 * quantity)
+     *   - Total = sum of (price * quantity)
+     *
+     * If tax is NOT checked:
+     *   - Subtotal = sum of (price * quantity)
+     *   - Tax = 0
+     *   - Total = sum of (price * quantity)
+     */
     function calculateAndDisplayTotal() {
       let subtotal = 0;
       let tax = 0;
       let total = 0;
-
+  
       selectedProducts.forEach(product => {
         if (taxCheckbox.checked) {
-          // Net price = database price * (1 - TAX_RATE)
-          subtotal += product.price * (1 - TAX_RATE) * product.quantity;
-          // Tax amount = database price * TAX_RATE
-          tax += product.price * TAX_RATE * product.quantity;
-          // Total remains the original database price * quantity
-          total += product.price * product.quantity;
+          subtotal += (product.price * (1 - TAX_RATE)) * product.quantity;
+          tax += (product.price * TAX_RATE) * product.quantity;
+          total += (product.price * product.quantity);
         } else {
-          subtotal += product.price * product.quantity;
-          total += product.price * product.quantity;
+          subtotal += (product.price * product.quantity);
+          total += (product.price * product.quantity);
         }
       });
-
+  
       if (!taxCheckbox.checked) {
         tax = 0;
       }
-
+  
       subtotalAmountSpan.textContent = subtotal.toFixed(2);
       taxAmountSpan.textContent = tax.toFixed(2);
       totalAmountSpan.textContent = total.toFixed(2);
     }
-
+  
     function updateTableHeader() {
       const thead = selectedProductsTable.querySelector('thead');
       thead.innerHTML = '';
       const headerRow = thead.insertRow();
-      headerRow.insertCell(0).textContent = 'Product';
-      headerRow.insertCell(1).textContent = 'Quantity';
-      headerRow.insertCell(2).textContent = 'Unit Price (R)';
+      headerRow.insertCell().textContent = 'Product';
+      headerRow.insertCell().textContent = 'Quantity';
+      headerRow.insertCell().textContent = 'Unit Price (R)';
+  
       if (taxCheckbox.checked) {
-        headerRow.insertCell(3).textContent = 'Tax per Unit (R)';
-        headerRow.insertCell(4).textContent = 'Total (R)';
-        headerRow.insertCell(5).textContent = 'Action';
+        headerRow.insertCell().textContent = 'Tax per Unit (R)';
+        headerRow.insertCell().textContent = 'Total (R)';
+        headerRow.insertCell().textContent = 'Action';
       } else {
-        headerRow.insertCell(3).textContent = 'Total (R)';
-        headerRow.insertCell(4).textContent = 'Action';
+        headerRow.insertCell().textContent = 'Total (R)';
+        headerRow.insertCell().textContent = 'Action';
       }
     }
-
+  
     function removeProduct(index) {
       const removedProduct = selectedProducts.splice(index, 1)[0];
       updateSelectedProductsTable();
+  
+      // Restore stock if it was an existing product
       if (!removedProduct.is_new && removedProduct && allProducts.length > 0) {
         const product = allProducts.find(p => p.item_code === removedProduct.item_code);
         if (product) {
           product.available_stock += removedProduct.quantity;
         }
       }
+  
       showToastMessage(`Removed ${removedProduct.name} from the selection.`, 'info');
     }
-
+  
     function generateReceipt() {
       const selectedCompanyCookie = getCookie('selectedCompany');
       if (!selectedCompanyCookie) {
@@ -673,7 +702,7 @@
         address: document.getElementById('customerAddress').value.trim(),
         phone: document.getElementById('customerPhone').value.trim()
       };
-
+  
       let shippingInfo = null;
       if (!sameAsBillingCheckbox.checked) {
         shippingInfo = {
@@ -687,17 +716,17 @@
           return;
         }
       }
-
+  
       if (!billingInfo.name || !billingInfo.email || !billingInfo.address || !billingInfo.phone) {
         showToastMessage('Please fill in all customer information fields.', 'error');
         return;
       }
-
+  
       if (selectedProducts.length === 0) {
         showToastMessage('No products selected.', 'error');
         return;
       }
-
+  
       const paymentMethod = paymentMethodSelect.value;
       const comments = commentsTextarea.value.trim();
       const customerInfo = {
@@ -706,7 +735,7 @@
         paymentMethod: paymentMethod,
         comments: comments
       };
-
+  
       const selectedCompany = JSON.parse(selectedCompanyCookie);
       setCookie('customerInfo', JSON.stringify(customerInfo), 1);
       setCookie('selectedProducts', JSON.stringify(selectedProducts), 1);
@@ -714,22 +743,24 @@
       setCookie('taxAmount', JSON.stringify(taxAmountSpan.textContent), 1);
       setCookie('totalAmount', JSON.stringify(totalAmountSpan.textContent), 1);
       setCookie('selectedCompany', JSON.stringify(selectedCompany), 1);
+  
       window.location.href = 'receipt.html';
     }
-
+  
     function generateQuotation() {
       const selectedCompanyCookie = getCookie('selectedCompany');
       if (!selectedCompanyCookie) {
         showToastMessage('Please select a company before generating a quotation.', 'error');
         return;
       }
+  
       const billingInfo = {
         name: document.getElementById('customerName').value.trim(),
         email: document.getElementById('customerEmail').value.trim(),
         address: document.getElementById('customerAddress').value.trim(),
         phone: document.getElementById('customerPhone').value.trim()
       };
-
+  
       let shippingInfo = null;
       if (!sameAsBillingCheckbox.checked) {
         shippingInfo = {
@@ -743,17 +774,17 @@
           return;
         }
       }
-
+  
       if (!billingInfo.name || !billingInfo.email || !billingInfo.address || !billingInfo.phone) {
         showToastMessage('Please fill in all customer information fields.', 'error');
         return;
       }
-
+  
       if (selectedProducts.length === 0) {
         showToastMessage('No products selected.', 'error');
         return;
       }
-
+  
       const comments = commentsTextarea.value.trim();
       const customerInfo = {
         billing: billingInfo,
@@ -761,7 +792,7 @@
         paymentMethod: 'N/A',
         comments: comments
       };
-
+  
       const selectedCompany = JSON.parse(selectedCompanyCookie);
       setCookie('customerInfo', JSON.stringify(customerInfo), 1);
       setCookie('selectedProducts', JSON.stringify(selectedProducts), 1);
@@ -769,22 +800,24 @@
       setCookie('taxAmount', JSON.stringify(taxAmountSpan.textContent), 1);
       setCookie('totalAmount', JSON.stringify(totalAmountSpan.textContent), 1);
       setCookie('selectedCompany', JSON.stringify(selectedCompany), 1);
+  
       window.location.href = 'quotation.html';
     }
-
+  
     function generateInvoice() {
       const selectedCompanyCookie = getCookie('selectedCompany');
       if (!selectedCompanyCookie) {
         showToastMessage('Please select a company before generating an invoice.', 'error');
         return;
       }
+  
       const billingInfo = {
         name: document.getElementById('customerName').value.trim(),
         email: document.getElementById('customerEmail').value.trim(),
         address: document.getElementById('customerAddress').value.trim(),
         phone: document.getElementById('customerPhone').value.trim()
       };
-
+  
       let shippingInfo = null;
       if (!sameAsBillingCheckbox.checked) {
         shippingInfo = {
@@ -798,17 +831,17 @@
           return;
         }
       }
-
+  
       if (!billingInfo.name || !billingInfo.email || !billingInfo.address || !billingInfo.phone) {
         showToastMessage('Please fill in all customer information fields.', 'error');
         return;
       }
-
+  
       if (selectedProducts.length === 0) {
         showToastMessage('No products selected.', 'error');
         return;
       }
-
+  
       const paymentMethod = paymentMethodSelect.value;
       const comments = commentsTextarea.value.trim();
       const customerInfo = {
@@ -817,7 +850,7 @@
         paymentMethod: paymentMethod,
         comments: comments
       };
-
+  
       const selectedCompany = JSON.parse(selectedCompanyCookie);
       setCookie('customerInfo', JSON.stringify(customerInfo), 1);
       setCookie('selectedProducts', JSON.stringify(selectedProducts), 1);
@@ -825,9 +858,10 @@
       setCookie('taxAmount', JSON.stringify(taxAmountSpan.textContent), 1);
       setCookie('totalAmount', JSON.stringify(totalAmountSpan.textContent), 1);
       setCookie('selectedCompany', JSON.stringify(selectedCompany), 1);
+  
       window.location.href = 'invoice.html';
     }
-
+  
     function toggleShippingInfo() {
       if (sameAsBillingCheckbox.checked) {
         shippingInfoDiv.classList.add('hidden');
@@ -835,7 +869,7 @@
         shippingInfoDiv.classList.remove('hidden');
       }
     }
-
+  
     function setCompanyInfo() {
       const selectedCompanyKey = companySelect.value;
       if (!selectedCompanyKey || !companies[selectedCompanyKey]) {
@@ -849,9 +883,9 @@
         bankingInformation: selectedCompany.bankingInformation
       }), 1);
     }
-
+  
     companySelect.addEventListener('change', setCompanyInfo);
-
+  
     productSearchInput.addEventListener('input', () => {
       searchLoader.style.display = 'inline-block';
       clearTimeout(window.searchTimeout);
@@ -860,21 +894,14 @@
         searchLoader.style.display = 'none';
       }, 300);
     });
-
+  
     sameAsBillingCheckbox.addEventListener('change', toggleShippingInfo);
-
+  
+    // Recalculate net/tax for each product if the checkbox changes
     taxCheckbox.addEventListener('change', () => {
-      selectedProducts = selectedProducts.map(product => {
-        if (taxCheckbox.checked) {
-          product.tax_per_product = parseFloat((product.price * TAX_RATE).toFixed(2));
-        } else {
-          product.tax_per_product = 0.00;
-        }
-        return product;
-      });
       updateSelectedProductsTable();
     });
-
+  
     window.onload = async function() {
       try {
         await fetchAllProducts();
@@ -882,6 +909,8 @@
         loadingScreen.style.display = 'none';
       }
       updateSelectedProductsTable();
+  
+      // Optionally load previously selected company
       const selectedCompanyCookie = getCookie('selectedCompany');
       if (selectedCompanyCookie) {
         const selectedCompany = JSON.parse(selectedCompanyCookie);
@@ -889,5 +918,6 @@
       }
     };
   </script>
+  
 </body>
 </html>
