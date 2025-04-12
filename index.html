@@ -585,15 +585,15 @@
 
           // Unit Price (net)
           const unitPriceCell = row.insertCell();
-          unitPriceCell.textContent = `${CURRENCY_SYMBOL}${netPrice.toFixed(2)}`;
+          unitPriceCell.textContent = `${CURRENCY_SYMBOL}${netPrice.toFixed(0)}`;
 
           // Tax per Unit
           const taxCell = row.insertCell();
-          taxCell.textContent = `${CURRENCY_SYMBOL}${taxAmount.toFixed(2)}`;
+          taxCell.textContent = `${CURRENCY_SYMBOL}${taxAmount.toFixed(0)}`;
 
           // Total
           const totalCell = row.insertCell();
-          totalCell.textContent = `${CURRENCY_SYMBOL}${lineTotal.toFixed(2)}`;
+          totalCell.textContent = `${CURRENCY_SYMBOL}${lineTotal.toFixed(0)}`;
 
           // Remove button
           const actionCell = row.insertCell();
@@ -608,11 +608,11 @@
 
           // Unit Price
           const unitPriceCell = row.insertCell();
-          unitPriceCell.textContent = `${CURRENCY_SYMBOL}${product.price.toFixed(2)}`;
+          unitPriceCell.textContent = `${CURRENCY_SYMBOL}${product.price.toFixed(0)}`;
 
           // Total
           const totalCell = row.insertCell();
-          totalCell.textContent = `${CURRENCY_SYMBOL}${lineTotal.toFixed(2)}`;
+          totalCell.textContent = `${CURRENCY_SYMBOL}${lineTotal.toFixed(0)}`;
 
           // Remove button
           const actionCell = row.insertCell();
@@ -658,9 +658,9 @@
         tax = 0;
       }
 
-      subtotalAmountSpan.textContent = subtotal.toFixed(2);
-      taxAmountSpan.textContent = tax.toFixed(2);
-      totalAmountSpan.textContent = total.toFixed(2);
+      subtotalAmountSpan.textContent = subtotal.toFixed(0);
+      taxAmountSpan.textContent = tax.toFixed(0);
+      totalAmountSpan.textContent = total.toFixed(0);
     }
 
     function updateTableHeader() {

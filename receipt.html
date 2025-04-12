@@ -368,7 +368,7 @@
   <div class="toast-container" id="toastContainer"></div>
 
   <a href="index.html" style="text-decoration: none; color: #007BFF; font-size: 16px; margin-right: 20px;">&larr; Back to Home</a>
-  <div class="container">
+  <div id="pdf-1" class="container">
     <div id="receipt">
       <div class="header">
         <p id="receipt-date">Date: <!-- Dynamic Date --></p>
@@ -444,12 +444,16 @@
 
   <div class="button-container">
     <button id="confirm-button" class="action-button">Confirm</button>
+    <!-- Screenshot Button -->
+    <button id="screenshot-button" class="action-button">Download Image</button>
     <div id="loading-spinner" class="spinner" style="display: none;"></div>
   </div>
 
   <div id="pdf-preview"></div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <!-- Include html2canvas for image capturing -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
   <script>
     /**
@@ -482,11 +486,11 @@
       return "";
     }
 
-    // Function to format currency in ZAR
+    // Function to format currency in ZAR (no decimals)
     function formatCurrency(amount) {
       return 'R' + parseFloat(amount).toLocaleString('en-ZA', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
       });
     }
 
@@ -659,9 +663,9 @@
       }
 
       // Fill in the Subtotal, Tax, and Total
-      document.getElementById('subtotalAmount').textContent = formatCurrency(subtotalAmount.toFixed(2));
-      document.getElementById('taxAmount').textContent = formatCurrency(taxAmount.toFixed(2));
-      document.getElementById('totalAmount').textContent = formatCurrency(totalAmount.toFixed(2));
+      document.getElementById('subtotalAmount').textContent = formatCurrency(subtotalAmount.toFixed(0));
+      document.getElementById('taxAmount').textContent = formatCurrency(taxAmount.toFixed(0));
+      document.getElementById('totalAmount').textContent = formatCurrency(totalAmount.toFixed(0));
 
       // Payment Method
       const paymentMethodSpan = document.getElementById('paymentMethod');
@@ -796,6 +800,54 @@
 
     document.addEventListener('DOMContentLoaded', populateReceipt);
     document.getElementById('confirm-button').addEventListener('click', confirmReceipt);
+
+    // Screenshot functionality
+    document.getElementById('screenshot-button').addEventListener('click', () => {
+      const loadingSpinner = document.getElementById('loading-spinner');
+      loadingSpinner.style.display = 'inline-block';
+      const element = document.getElementById('pdf-1');
+
+      // Get client name and reference number for the filename
+      const customerInfoCookie = getCookie('customerInfo');
+      let clientName = 'client';
+      if (customerInfoCookie) {
+        const customerInfo = JSON.parse(customerInfoCookie);
+        if (customerInfo.billing && customerInfo.billing.name) {
+          // Replace spaces with underscores and remove special characters
+          clientName = customerInfo.billing.name.replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_');
+        }
+      }
+
+      // Get reference number
+      const referenceElement = document.getElementById('reference-number');
+      let referenceNumber = 'ref';
+      if (referenceElement) {
+        const refText = referenceElement.textContent;
+        const match = refText.match(/Reference Number:\s*([\w-]+)/);
+        if (match && match[1]) {
+          referenceNumber = match[1];
+        }
+      }
+
+      // Create dynamic filename
+      const filename = `receipt-${clientName}-${referenceNumber}.png`;
+
+      html2canvas(element, { scale: 2 })
+        .then(canvas => {
+          const imgData = canvas.toDataURL('image/png');
+          const link = document.createElement('a');
+          link.href = imgData;
+          link.download = filename;
+          link.click();
+          loadingSpinner.style.display = 'none';
+          showToastMessage(`Image saved as ${filename}`, 'success');
+        })
+        .catch(err => {
+          console.error('Error capturing image:', err);
+          showToastMessage('Failed to capture image.', 'error');
+          loadingSpinner.style.display = 'none';
+        });
+    });
   </script>
 </body>
 </html>

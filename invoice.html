@@ -681,32 +681,32 @@
                     salespersonName: customerInfo.salespersonName || "",
                     products: selectedProducts.map(product => {
                         if (isTaxAdded) {
-                            const netPrice = parseFloat((product.price * 0.85).toFixed(2));
-                            const taxPerUnit = parseFloat((product.price * 0.15).toFixed(2));
-                            const lineTotal = parseFloat((product.price * product.quantity).toFixed(2));
+                            const netPrice = Math.round(parseFloat(product.price * 0.85));
+                            const taxPerUnit = Math.round(parseFloat(product.price * 0.15));
+                            const lineTotal = Math.round(parseFloat(product.price * product.quantity));
                             return {
                                 item_code: product.item_code,
                                 name: product.name,
                                 quantity: product.quantity,
                                 unitPriceExcludingTax: netPrice,
-                                taxPerProduct: taxPerUnit,
+                                taxPerUnit: taxPerUnit,
                                 totalPrice: lineTotal
                             };
                         } else {
-                            const lineTotal = parseFloat((product.price * product.quantity).toFixed(2));
+                            const lineTotal = Math.round(parseFloat(product.price * product.quantity));
                             return {
                                 item_code: product.item_code,
                                 name: product.name,
                                 quantity: product.quantity,
-                                unitPriceExcludingTax: parseFloat(product.price.toFixed(2)),
-                                taxPerProduct: 0.00,
+                                unitPriceExcludingTax: Math.round(parseFloat(product.price)),
+                                taxPerUnit: 0,
                                 totalPrice: lineTotal
                             };
                         }
                     }),
-                    subtotal: parseFloat(subtotalAmount.toFixed(2)),
-                    tax: parseFloat(taxAmount.toFixed(2)),
-                    total: parseFloat(totalAmount.toFixed(2))
+                    subtotal: Math.round(parseFloat(subtotalAmount)),
+                    tax: Math.round(parseFloat(taxAmount)),
+                    total: Math.round(parseFloat(totalAmount))
                 };
 
                 console.log('Sending invoice data to backend:', invoiceData);
@@ -753,14 +753,41 @@
             const loadingSpinner = document.getElementById('loading-spinner');
             loadingSpinner.style.display = 'inline-block';
             const element = document.getElementById('pdf-1');
+
+            // Get client name and reference number for the filename
+            const customerInfoCookie = getCookie('customerInfo');
+            let clientName = 'client';
+            if (customerInfoCookie) {
+                const customerInfo = JSON.parse(customerInfoCookie);
+                if (customerInfo.billing && customerInfo.billing.name) {
+                    // Replace spaces with underscores and remove special characters
+                    clientName = customerInfo.billing.name.replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_');
+                }
+            }
+
+            // Get reference number
+            const referenceElement = document.querySelector('.reference-number');
+            let referenceNumber = 'ref';
+            if (referenceElement) {
+                const refText = referenceElement.textContent;
+                const match = refText.match(/Reference Number:\s*([\w-]+)/);
+                if (match && match[1]) {
+                    referenceNumber = match[1];
+                }
+            }
+
+            // Create dynamic filename
+            const filename = `invoice-${clientName}-${referenceNumber}.png`;
+
             html2canvas(element, { scale: 2 })
                 .then(canvas => {
                     const imgData = canvas.toDataURL('image/png');
                     const link = document.createElement('a');
                     link.href = imgData;
-                    link.download = 'invoice.png';
+                    link.download = filename;
                     link.click();
                     loadingSpinner.style.display = 'none';
+                    showToastMessage(`Image saved as ${filename}`, 'success');
                 })
                 .catch(err => {
                     console.error('Error capturing image:', err);
