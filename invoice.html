@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <!-- One viewport meta tag is enough -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Shans System - Quotation</title>
+    <title>Shans System - Invoice</title>
     <style>
         /* Basic Reset */
         * {
@@ -117,9 +117,9 @@
             background-color: #f9f9f9;
         }
 
-        /* Ensure all table headers and data cells within #quotation are left-aligned */
-        #quotation table th,
-        #quotation table td {
+        /* Ensure all table headers and data cells within #invoice are left-aligned */
+        #invoice table th,
+        #invoice table td {
             text-align: left;
         }
 
@@ -338,10 +338,10 @@
     <a href="index.html" style="text-decoration: none; color: #007BFF; font-size: 16px; margin-right: 20px;">&larr; Back to Home</a>
 
     <div id="pdf-1" class="container">
-        <div id="quotation">
+        <div id="invoice">
             <div class="header">
-                <p id="quotation-date">Date: <!-- Dynamic Date --></p>
-                <h1>QUOTATION</h1>
+                <p id="invoice-date">Date: <!-- Dynamic Date --></p>
+                <h1>INVOICE</h1>
                 <div class="logo"></div>
             </div>
 
@@ -480,12 +480,12 @@
         }
 
         /**
-         * Populate the quotation with data from cookies, applying the same
+         * Populate the invoice with data from cookies, applying the same
          * "tax = 15% of final price" rule as the receipt page:
          *   - If tax is added, net = 85% of product.price, tax = 15% of product.price
          *   - If no tax, net = product.price, tax = 0
          */
-        function populateQuotation() {
+        function populateInvoice() {
             const customerInfoCookie = getCookie('customerInfo');
             const selectedProductsCookie = getCookie('selectedProducts');
             const subtotalAmountCookie = getCookie('subtotalAmount');
@@ -499,7 +499,7 @@
                 !taxAmountCookie ||
                 !totalAmountCookie ||
                 !selectedCompanyCookie) {
-                showToastMessage('No quotation data found. Please generate a quotation first.', 'error');
+                showToastMessage('No invoice data found. Please generate an invoice first.', 'error');
                 window.location.href = 'index.html';
                 return;
             }
@@ -625,12 +625,12 @@
             document.getElementById('totalAmount').textContent = formatCurrency(totalAmount.toFixed(0));
 
             // Date
-            const dateElement = document.getElementById('quotation-date');
+            const dateElement = document.getElementById('invoice-date');
             dateElement.textContent = 'Date: ' + formatDate(new Date());
         }
 
-        // Confirm and send the quotation
-        async function confirmQuotation() {
+        // Confirm and send the invoice
+        async function confirmInvoice() {
             const confirmButton = document.getElementById('confirm-button');
             const loadingSpinner = document.getElementById('loading-spinner');
             const pdfPreview = document.getElementById('pdf-preview');
@@ -653,7 +653,7 @@
                     !taxAmountCookie ||
                     !totalAmountCookie ||
                     !selectedCompanyCookie) {
-                    throw new Error('No quotation data found.');
+                    throw new Error('No invoice data found.');
                 }
 
                 const customerInfo = JSON.parse(customerInfoCookie);
@@ -667,7 +667,7 @@
                 const isTaxAdded = (taxAmount > 0);
 
                 // Build data for the backend, applying the same net=85% / tax=15% logic
-                const quotationData = {
+                const invoiceData = {
                     date: new Date().toISOString().slice(0,10),
                     referenceNumber: customerInfo.referenceNumber || generateReferenceNumber(),
                     company: {
@@ -709,15 +709,15 @@
                     total: parseFloat(totalAmount.toFixed(2))
                 };
 
-                console.log('Sending quotation data to backend:', quotationData);
+                console.log('Sending invoice data to backend:', invoiceData);
 
                 // POST request to your PDF generation endpoint
-                const response = await fetch('http://localhost:8000/api/generate-invoice', {
+                const response = await fetch('https://shans-backend-1.onrender.com/api/generate-invoice', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(quotationData)
+                    body: JSON.stringify(invoiceData)
                 });
 
                 if (!response.ok) {
@@ -734,19 +734,19 @@
                 const successData = await response.json();
                 console.log('Backend response:', successData);
 
-                showToastMessage('Quotation successfully sent, thanks!', 'success');
+                showToastMessage('Invoice successfully sent, thanks!', 'success');
 
             } catch (error) {
                 console.error('Error generating PDF:', error);
-                showToastMessage('An error occurred while sending the quotation. Please try again.', 'error');
+                showToastMessage('An error occurred while sending the invoice. Please try again.', 'error');
             } finally {
                 confirmButton.disabled = false;
                 loadingSpinner.style.display = 'none';
             }
         }
 
-        document.addEventListener('DOMContentLoaded', populateQuotation);
-        document.getElementById('confirm-button').addEventListener('click', confirmQuotation);
+        document.addEventListener('DOMContentLoaded', populateInvoice);
+        document.getElementById('confirm-button').addEventListener('click', confirmInvoice);
 
         // Screenshot functionality
         document.getElementById('screenshot-button').addEventListener('click', () => {
@@ -758,7 +758,7 @@
                     const imgData = canvas.toDataURL('image/png');
                     const link = document.createElement('a');
                     link.href = imgData;
-                    link.download = 'quotation.png';
+                    link.download = 'invoice.png';
                     link.click();
                     loadingSpinner.style.display = 'none';
                 })

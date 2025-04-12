@@ -2,7 +2,7 @@
 
 document.addEventListener('DOMContentLoaded', function() {
     // Define the base URL for the API
-    const API_URL = 'https://shans-backend.onrender.com/api';
+    const API_URL = 'https://shans-backend-1.onrender.com/api';
 
     // **Element References**
     // Add Product Modal Elements
