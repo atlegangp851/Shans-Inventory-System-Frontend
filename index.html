@@ -262,7 +262,7 @@
       <label for="customerName">Name:</label>
       <input type="text" id="customerName" required>
 
-      <label for="customerEmail">Email:</label>
+      <label for="customerEmail">Email: (optional)</label>
       <input type="email" id="customerEmail">
 
       <label for="customerAddress">Address:</label>
@@ -270,6 +270,9 @@
 
       <label for="customerPhone">Phone:</label>
       <input type="tel" id="customerPhone">
+
+      <label for="salespersonName">Salesperson Name:</label>
+      <input type="text" id="salespersonName" placeholder="Enter your name..." required>
     </div>
 
     <!-- Shipping Information Section -->
@@ -284,7 +287,7 @@
         <label for="shippingName">Name:</label>
         <input type="text" id="shippingName">
 
-        <label for="shippingEmail">Email:</label>
+        <label for="shippingEmail">Email: (optional)</label>
         <input type="email" id="shippingEmail">
 
         <label for="shippingAddress">Address:</label>
@@ -346,12 +349,6 @@
         </select>
       </div>
 
-      <!-- Salesperson Name Field -->
-      <div class="section" style="border:none; padding:0;">
-        <label for="salespersonName">Salesperson Name:</label>
-        <input type="text" id="salespersonName" placeholder="Enter your name..." required>
-      </div>
-
       <!-- Added Comments Box -->
       <div class="section" style="border:none; padding:0;">
         <label for="comments">Additional Comments:</label>
@@ -371,7 +368,7 @@
     let allProducts = []; // To store all fetched products
     let newProductCounter = 1; // Counter for new products
 
-    const API_BASE_URL = 'https://shans-backend-1.onrender.com/api';
+    const API_BASE_URL = 'http://localhost:8000/api';
     const CURRENCY_SYMBOL = 'R';
     const TAX_RATE = 0.15;
 
@@ -728,7 +725,7 @@
       }
       const billingInfo = {
         name: document.getElementById('customerName').value.trim(),
-        email: document.getElementById('customerEmail').value.trim(),
+        email: document.getElementById('customerEmail').value.trim() || 'invoicesshans@outlook.com',
         address: document.getElementById('customerAddress').value.trim(),
         phone: document.getElementById('customerPhone').value.trim()
       };
@@ -737,18 +734,18 @@
       if (!sameAsBillingCheckbox.checked) {
         shippingInfo = {
           name: document.getElementById('shippingName').value.trim(),
-          email: document.getElementById('shippingEmail').value.trim(),
+          email: document.getElementById('shippingEmail').value.trim() || 'invoicesshans@outlook.com',
           address: document.getElementById('shippingAddress').value.trim(),
           phone: document.getElementById('shippingPhone').value.trim()
         };
-        if (!shippingInfo.name || !shippingInfo.email || !shippingInfo.address || !shippingInfo.phone) {
-          showToastMessage('Please fill in all shipping information fields or select "Ship to the same address as billing".', 'error');
+        if (!shippingInfo.name || !shippingInfo.address || !shippingInfo.phone) {
+          showToastMessage('Please fill in all required shipping information fields or select "Ship to the same address as billing".', 'error');
           return;
         }
       }
 
-      if (!billingInfo.name || !billingInfo.email || !billingInfo.address || !billingInfo.phone) {
-        showToastMessage('Please fill in all customer information fields.', 'error');
+      if (!billingInfo.name || !billingInfo.address || !billingInfo.phone) {
+        showToastMessage('Please fill in all required customer information fields.', 'error');
         return;
       }
 
@@ -793,7 +790,7 @@
 
       const billingInfo = {
         name: document.getElementById('customerName').value.trim(),
-        email: document.getElementById('customerEmail').value.trim(),
+        email: document.getElementById('customerEmail').value.trim() || 'invoicesshans@outlook.com',
         address: document.getElementById('customerAddress').value.trim(),
         phone: document.getElementById('customerPhone').value.trim()
       };
@@ -802,18 +799,18 @@
       if (!sameAsBillingCheckbox.checked) {
         shippingInfo = {
           name: document.getElementById('shippingName').value.trim(),
-          email: document.getElementById('shippingEmail').value.trim(),
+          email: document.getElementById('shippingEmail').value.trim() || 'invoicesshans@outlook.com',
           address: document.getElementById('shippingAddress').value.trim(),
           phone: document.getElementById('shippingPhone').value.trim()
         };
-        if (!shippingInfo.name || !shippingInfo.email || !shippingInfo.address || !shippingInfo.phone) {
-          showToastMessage('Please fill in all shipping information fields or select "Ship to the same address as billing".', 'error');
+        if (!shippingInfo.name || !shippingInfo.address || !shippingInfo.phone) {
+          showToastMessage('Please fill in all required shipping information fields or select "Ship to the same address as billing".', 'error');
           return;
         }
       }
 
-      if (!billingInfo.name || !billingInfo.email || !billingInfo.address || !billingInfo.phone) {
-        showToastMessage('Please fill in all customer information fields.', 'error');
+      if (!billingInfo.name || !billingInfo.address || !billingInfo.phone) {
+        showToastMessage('Please fill in all required customer information fields.', 'error');
         return;
       }
 
@@ -857,7 +854,7 @@
 
       const billingInfo = {
         name: document.getElementById('customerName').value.trim(),
-        email: document.getElementById('customerEmail').value.trim(),
+        email: document.getElementById('customerEmail').value.trim() || 'invoicesshans@outlook.com',
         address: document.getElementById('customerAddress').value.trim(),
         phone: document.getElementById('customerPhone').value.trim()
       };
@@ -866,18 +863,18 @@
       if (!sameAsBillingCheckbox.checked) {
         shippingInfo = {
           name: document.getElementById('shippingName').value.trim(),
-          email: document.getElementById('shippingEmail').value.trim(),
+          email: document.getElementById('shippingEmail').value.trim() || 'invoicesshans@outlook.com',
           address: document.getElementById('shippingAddress').value.trim(),
           phone: document.getElementById('shippingPhone').value.trim()
         };
-        if (!shippingInfo.name || !shippingInfo.email || !shippingInfo.address || !shippingInfo.phone) {
-          showToastMessage('Please fill in all shipping information fields or select "Ship to the same address as billing".', 'error');
+        if (!shippingInfo.name || !shippingInfo.address || !shippingInfo.phone) {
+          showToastMessage('Please fill in all required shipping information fields or select "Ship to the same address as billing".', 'error');
           return;
         }
       }
 
-      if (!billingInfo.name || !billingInfo.email || !billingInfo.address || !billingInfo.phone) {
-        showToastMessage('Please fill in all customer information fields.', 'error');
+      if (!billingInfo.name || !billingInfo.address || !billingInfo.phone) {
+        showToastMessage('Please fill in all required customer information fields.', 'error');
         return;
       }
 
