@@ -350,6 +350,11 @@
             <button id="manageCategoriesBtn" class="category-btn">
                 <span style="margin-right: 5px;">⚙️</span> Manage Categories
             </button>
+
+            <!-- Manage Car Brands Button -->
+            <button id="manageCarBrandsBtn" class="category-btn" style="margin-left: 10px;">
+                <span style="margin-right: 5px;">🚗</span> Manage Car Brands
+            </button>
         </div>
 
         <!-- Filter Menu -->
@@ -415,7 +420,10 @@
                     </div>
                     <div class="form-group">
                         <label for="carBrand">Car Brand</label>
-                        <input type="text" id="carBrand" name="carBrand">
+                        <select id="carBrand" name="carBrand">
+                            <option value="">Select a brand</option>
+                            <!-- Options will be populated dynamically -->
+                        </select>
                     </div>
                     <div class="form-group">
                         <label for="carModel">Car Model</label>
@@ -510,7 +518,10 @@
                     </div>
                     <div class="form-group">
                         <label for="editCarBrand">Car Brand</label>
-                        <input type="text" id="editCarBrand" name="editCarBrand">
+                        <select id="editCarBrand" name="editCarBrand">
+                            <option value="">Select a brand</option>
+                            <!-- Options will be populated dynamically -->
+                        </select>
                     </div>
                     <div class="form-group">
                         <label for="editCarModel">Car Model</label>
@@ -670,6 +681,48 @@
             </div>
         </div>
 
+        <!-- Car Brands Modal -->
+        <div id="carBrandsOverlay" class="popup-overlay" aria-hidden="true" role="dialog" aria-labelledby="carBrandsModalTitle">
+            <div class="popup-content">
+                <button id="closeCarBrandsPopup" class="close-popup" aria-label="Close popup">&times;</button>
+                <h2 id="carBrandsModalTitle">Manage Car Brands</h2>
+
+                <!-- Add Car Brand Form -->
+                <form id="addCarBrandForm" style="margin-bottom: 20px;">
+                    <div style="display: flex; gap: 10px;">
+                        <div class="form-group" style="flex-grow: 1;">
+                            <label for="brandName">New Brand Name</label>
+                            <input type="text" id="brandName" name="brandName" required placeholder="Enter brand name">
+                        </div>
+                        <div style="display: flex; align-items: flex-end;">
+                            <button type="submit" class="category-btn">
+                                <span style="margin-right: 5px;">+</span> Add Brand
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Car Brands List -->
+                <div style="margin-top: 20px;">
+                    <h3>Existing Car Brands</h3>
+                    <div class="table-responsive">
+                        <table id="carBrandsTable">
+                            <thead>
+                                <tr>
+                                    <th>Brand Name</th>
+                                    <th>Value</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="carBrandsTableBody">
+                                <!-- Car brands will be populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <script>
             /**
              * Capitalize words helper (used in both table & cards)
@@ -753,7 +806,7 @@
         <script>
             document.addEventListener('DOMContentLoaded', function() {
                 // Define the base URL for the API
-                const API_URL = 'https://shans-backend-1.onrender.com/api';
+                const API_URL = 'http://localhost:8000/api';
 
                 // **Element References**
                 // Add Product Modal Elements
@@ -770,6 +823,13 @@
                 const closeCategoriesPopup = document.getElementById('closeCategoriesPopup');
                 const addCategoryForm = document.getElementById('addCategoryForm');
                 const categoriesTableBody = document.getElementById('categoriesTableBody');
+
+                // Car Brands Modal Elements
+                const manageCarBrandsBtn = document.getElementById('manageCarBrandsBtn');
+                const carBrandsOverlay = document.getElementById('carBrandsOverlay');
+                const closeCarBrandsPopup = document.getElementById('closeCarBrandsPopup');
+                const addCarBrandForm = document.getElementById('addCarBrandForm');
+                const carBrandsTableBody = document.getElementById('carBrandsTableBody');
 
                 // Edit Product Modal Elements
                 const editProductOverlay = document.getElementById('editProductOverlay');
@@ -798,6 +858,9 @@
 
                 // Store categories data
                 let categories = [];
+
+                // Store car brands data
+                let carBrands = [];
 
                 // **Helper Functions**
 
@@ -1440,6 +1503,54 @@
                     }
                 }
 
+                /**
+                 * Handle adding a new car brand
+                 */
+                async function handleAddCarBrand(e) {
+                    e.preventDefault();
+                    const brandName = document.getElementById('brandName').value.trim();
+
+                    if (!brandName) {
+                        showStatusMessage('Please enter a brand name.', 'error');
+                        return;
+                    }
+
+                    // Generate an ID from the name (lowercase with underscores)
+                    const brandId = brandName.toLowerCase().replace(/\s+/g, '_');
+
+                    // Check if brand already exists
+                    if (carBrands.some(brand => brand.id === brandId)) {
+                        showStatusMessage('A car brand with this name already exists.', 'error');
+                        return;
+                    }
+
+                    try {
+                        // Save the new brand to the backend
+                        await fetch(`${API_URL}/car-brands`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                brand_id: brandId,
+                                name: brandName
+                            })
+                        });
+
+                        // Refresh brands from the backend
+                        await fetchCarBrands();
+
+                        // Update the table
+                        renderCarBrandsTable();
+
+                        // Clear the form
+                        addCarBrandForm.reset();
+
+                        showStatusMessage('Car brand added successfully!', 'success');
+                    } catch (error) {
+                        console.error('Error adding car brand:', error);
+                        showStatusMessage(`Failed to add car brand: ${error.message}`, 'error');
+                    }
+                }
+
                 async function editCategory(index) {
                     const category = categories[index];
                     const newName = prompt('Enter new name for category:', category.name);
@@ -1463,6 +1574,36 @@
                         } catch (error) {
                             console.error('Error updating category:', error);
                             showStatusMessage(`Failed to update category: ${error.message}`, 'error');
+                        }
+                    }
+                }
+
+                /**
+                 * Edit a car brand
+                 */
+                async function editCarBrand(index) {
+                    const brand = carBrands[index];
+                    const newName = prompt('Enter new name for car brand:', brand.name);
+
+                    if (newName && newName.trim() !== '') {
+                        try {
+                            // Update the brand in the backend
+                            await fetch(`${API_URL}/car-brands/${brand.id}`, {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ name: newName.trim() })
+                            });
+
+                            // Refresh brands from the backend
+                            await fetchCarBrands();
+
+                            // Update the table
+                            renderCarBrandsTable();
+
+                            showStatusMessage('Car brand updated successfully!', 'success');
+                        } catch (error) {
+                            console.error('Error updating car brand:', error);
+                            showStatusMessage(`Failed to update car brand: ${error.message}`, 'error');
                         }
                     }
                 }
@@ -1502,6 +1643,43 @@
                 }
 
                 /**
+                 * Delete a car brand
+                 */
+                async function deleteCarBrand(index) {
+                    const brand = carBrands[index];
+
+                    // Check if any products are using this brand
+                    const productsUsingBrand = allProducts.filter(product =>
+                        product.car_brand === brand.name
+                    );
+
+                    if (productsUsingBrand.length > 0) {
+                        showStatusMessage(`Cannot delete car brand. It is used by ${productsUsingBrand.length} product(s).`, 'error');
+                        return;
+                    }
+
+                    if (confirm(`Are you sure you want to delete the car brand "${brand.name}"?`)) {
+                        try {
+                            // Delete the brand from the backend
+                            await fetch(`${API_URL}/car-brands/${brand.id}`, {
+                                method: 'DELETE'
+                            });
+
+                            // Refresh brands from the backend
+                            await fetchCarBrands();
+
+                            // Update the table
+                            renderCarBrandsTable();
+
+                            showStatusMessage('Car brand deleted successfully!', 'success');
+                        } catch (error) {
+                            console.error('Error deleting car brand:', error);
+                            showStatusMessage(`Failed to delete car brand: ${error.message}`, 'error');
+                        }
+                    }
+                }
+
+                /**
                  * Fetch all categories from the backend
                  */
                 async function fetchCategories() {
@@ -1526,6 +1704,135 @@
                     }
                 }
 
+                /**
+                 * Fetch all car brands from the backend
+                 */
+                async function fetchCarBrands() {
+                    try {
+                        const response = await fetch(`${API_URL}/car-brands`);
+                        if (!response.ok) {
+                            throw new Error('Failed to fetch car brands');
+                        }
+                        const fetchedBrands = await response.json();
+
+                        // Map the backend brand structure to our frontend structure
+                        carBrands = fetchedBrands.map(brand => ({
+                            id: brand.brand_id,
+                            name: brand.name
+                        }));
+
+                        // Update car brand dropdowns
+                        updateCarBrandDropdowns();
+                    } catch (error) {
+                        console.error('Error fetching car brands:', error);
+                        showStatusMessage('Failed to load car brands. Please try again later.', 'error');
+                    }
+                }
+
+                /**
+                 * Render the categories table
+                 */
+                function renderCategoriesTable() {
+                    // Clear existing table rows
+                    categoriesTableBody.innerHTML = '';
+
+                    // Sort categories alphabetically by name
+                    const sortedCategories = [...categories].sort((a, b) => a.name.localeCompare(b.name));
+
+                    // Populate table with categories
+                    sortedCategories.forEach((category, index) => {
+                        const row = document.createElement('tr');
+
+                        // Create cells
+                        const nameCell = document.createElement('td');
+                        nameCell.textContent = category.name;
+
+                        const idCell = document.createElement('td');
+                        idCell.textContent = category.id;
+
+                        const actionsCell = document.createElement('td');
+
+                        // Create edit button
+                        const editButton = document.createElement('button');
+                        editButton.className = 'edit-button';
+                        editButton.innerHTML = '&#9998;';
+                        editButton.setAttribute('aria-label', 'Edit Category');
+                        editButton.onclick = function() { editCategory(index); };
+
+                        // Create delete button
+                        const deleteButton = document.createElement('button');
+                        deleteButton.className = 'delete-button';
+                        deleteButton.innerHTML = '&#10006;';
+                        deleteButton.setAttribute('aria-label', 'Delete Category');
+                        deleteButton.onclick = function() { deleteCategory(index); };
+
+                        // Add buttons to actions cell
+                        actionsCell.appendChild(editButton);
+                        actionsCell.appendChild(deleteButton);
+
+                        // Add cells to row
+                        row.appendChild(nameCell);
+                        row.appendChild(idCell);
+                        row.appendChild(actionsCell);
+
+                        // Add row to table body
+                        categoriesTableBody.appendChild(row);
+                    });
+                }
+                /**
+                 * Render the car brands table
+                 */
+                function renderCarBrandsTable() {
+                    // Clear existing table rows
+                    carBrandsTableBody.innerHTML = '';
+
+                    // Sort brands alphabetically by name
+                    const sortedBrands = [...carBrands].sort((a, b) => a.name.localeCompare(b.name));
+
+                    // Populate table with brands
+                    sortedBrands.forEach((brand, index) => {
+                        const row = document.createElement('tr');
+
+                        // Create cells
+                        const nameCell = document.createElement('td');
+                        nameCell.textContent = brand.name;
+
+                        const idCell = document.createElement('td');
+                        idCell.textContent = brand.id;
+
+                        const actionsCell = document.createElement('td');
+
+                        // Create edit button
+                        const editButton = document.createElement('button');
+                        editButton.className = 'edit-button';
+                        editButton.innerHTML = '&#9998;';
+                        editButton.setAttribute('aria-label', 'Edit Car Brand');
+                        editButton.onclick = function() { editCarBrand(index); };
+
+                        // Create delete button
+                        const deleteButton = document.createElement('button');
+                        deleteButton.className = 'delete-button';
+                        deleteButton.innerHTML = '&#10006;';
+                        deleteButton.setAttribute('aria-label', 'Delete Car Brand');
+                        deleteButton.onclick = function() { deleteCarBrand(index); };
+
+                        // Add buttons to actions cell
+                        actionsCell.appendChild(editButton);
+                        actionsCell.appendChild(deleteButton);
+
+                        // Add cells to row
+                        row.appendChild(nameCell);
+                        row.appendChild(idCell);
+                        row.appendChild(actionsCell);
+
+                        // Add row to table body
+                        carBrandsTableBody.appendChild(row);
+                    });
+                }
+
+                /**
+                 * Update the category dropdowns in the add and edit forms
+                 */
                 function updateCategoryDropdowns() {
                     // Update the category dropdowns in the add and edit forms
                     const productCategorySelect = document.getElementById('productCategory');
@@ -1550,13 +1857,110 @@
                     });
                 }
 
+                /**
+                 * Update the car brand dropdowns in the add and edit forms
+                 */
+                function updateCarBrandDropdowns() {
+                    try {
+                        // Update the car brand dropdowns in the add and edit forms
+                        const carBrandSelect = document.getElementById('carBrand');
+                        const editCarBrandSelect = document.getElementById('editCarBrand');
+
+                        if (!carBrandSelect || !editCarBrandSelect) {
+                            console.error('Car brand select elements not found');
+                            return;
+                        }
+
+                        // Store current values to restore them after updating options
+                        const currentValue = carBrandSelect.value;
+                        const currentEditValue = editCarBrandSelect.value;
+
+                        // Clear existing options except the first one
+                        while (carBrandSelect.options.length > 1) {
+                            carBrandSelect.remove(1);
+                        }
+
+                        while (editCarBrandSelect.options.length > 1) {
+                            editCarBrandSelect.remove(1);
+                        }
+
+                        // Add options for each brand
+                        carBrands.forEach(brand => {
+                            const option = document.createElement('option');
+                            option.value = brand.name;
+                            option.textContent = brand.name;
+
+                            const editOption = document.createElement('option');
+                            editOption.value = brand.name;
+                            editOption.textContent = brand.name;
+
+                            carBrandSelect.appendChild(option);
+                            editCarBrandSelect.appendChild(editOption);
+                        });
+
+                        // Restore previously selected values if they still exist
+                        if (currentValue) {
+                            carBrandSelect.value = currentValue;
+                        }
+                        if (currentEditValue) {
+                            editCarBrandSelect.value = currentEditValue;
+                        }
+
+                        console.log('Car brand dropdowns updated with', carBrands.length, 'brands');
+                    } catch (error) {
+                        console.error('Error updating car brand dropdowns:', error);
+                    }
+                }
+
+                /**
+                 * Open the categories modal
+                 */
+                function openCategoriesModal() {
+                    categoriesOverlay.style.display = 'flex';
+                    categoriesOverlay.setAttribute('aria-hidden', 'false');
+                    renderCategoriesTable();
+                }
+
+                /**
+                 * Close the categories modal
+                 */
+                function closeCategoriesModal() {
+                    categoriesOverlay.style.display = 'none';
+                    categoriesOverlay.setAttribute('aria-hidden', 'true');
+                    addCategoryForm.reset();
+                }
+
+                /**
+                 * Open the car brands modal
+                 */
+                function openCarBrandsModal() {
+                    carBrandsOverlay.style.display = 'flex';
+                    carBrandsOverlay.setAttribute('aria-hidden', 'false');
+                    renderCarBrandsTable();
+                }
+
+                /**
+                 * Close the car brands modal
+                 */
+                function closeCarBrandsModal() {
+                    carBrandsOverlay.style.display = 'none';
+                    carBrandsOverlay.setAttribute('aria-hidden', 'true');
+                    addCarBrandForm.reset();
+                }
+
                 // Event listeners for categories
                 manageCategoriesBtn.addEventListener('click', openCategoriesModal);
                 closeCategoriesPopup.addEventListener('click', closeCategoriesModal);
                 addCategoryForm.addEventListener('submit', handleAddCategory);
 
+                // Event listeners for car brands
+                manageCarBrandsBtn.addEventListener('click', openCarBrandsModal);
+                closeCarBrandsPopup.addEventListener('click', closeCarBrandsModal);
+                addCarBrandForm.addEventListener('submit', handleAddCarBrand);
+
                 // Initial load
                 fetchCategories(); // Load categories from the backend
+                fetchCarBrands(); // Load car brands from the backend
                 fetchRooms();
                 fetchProducts();
             });
