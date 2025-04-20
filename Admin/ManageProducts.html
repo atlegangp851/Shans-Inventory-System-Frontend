@@ -797,24 +797,7 @@
                 let allProducts = []; // To store all fetched products
 
                 // Store categories data
-                let categories = [
-                    { id: 'lips', name: 'Lips' },
-                    { id: 'boot_spoilers', name: 'Boot spoilers' },
-                    { id: 'roof_spoilers', name: 'Roof spoilers' },
-                    { id: 'diffusers', name: 'Diffusers' },
-                    { id: 'sills_extensions', name: 'Sills extensions' },
-                    { id: 'eyelids', name: 'Eyelids' },
-                    { id: 'mirrors_covers', name: 'Mirrors covers' },
-                    { id: 'grills', name: 'Grills' },
-                    { id: 'canards', name: 'Canards' },
-                    { id: 'bumper_spats', name: 'Bumper spats' },
-                    { id: 'arches', name: 'Arches' },
-                    { id: 'step_bars', name: 'Step bars' },
-                    { id: 'bonnet_scoops', name: 'Bonnet scoops' },
-                    { id: 'roll_bars', name: 'Roll bars' },
-                    { id: 'fog_grills', name: 'Fog grills' },
-                    { id: 'vinyl', name: 'Vinyl' }
-                ];
+                let categories = [];
 
                 // **Helper Functions**
 
@@ -1412,7 +1395,7 @@
                     updateCategoryDropdowns();
                 }
 
-                function handleAddCategory(e) {
+                async function handleAddCategory(e) {
                     e.preventDefault();
                     const categoryName = document.getElementById('categoryName').value.trim();
 
@@ -1430,43 +1413,61 @@
                         return;
                     }
 
-                    // Add the new category
-                    categories.push({
-                        id: categoryId,
-                        name: categoryName
-                    });
+                    try {
+                        // Save the new category to the backend
+                        await fetch(`${API_URL}/categories`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                category_id: categoryId,
+                                name: categoryName
+                            })
+                        });
 
-                    // Save categories to localStorage
-                    saveCategories();
-
-                    // Update the table
-                    renderCategoriesTable();
-
-                    // Clear the form
-                    addCategoryForm.reset();
-
-                    showStatusMessage('Category added successfully!', 'success');
-                }
-
-                function editCategory(index) {
-                    const category = categories[index];
-                    const newName = prompt('Enter new name for category:', category.name);
-
-                    if (newName && newName.trim() !== '') {
-                        // Update the category name but keep the same ID
-                        categories[index].name = newName.trim();
-
-                        // Save categories to localStorage
-                        saveCategories();
+                        // Refresh categories from the backend
+                        await fetchCategories();
 
                         // Update the table
                         renderCategoriesTable();
 
-                        showStatusMessage('Category updated successfully!', 'success');
+                        // Clear the form
+                        addCategoryForm.reset();
+
+                        showStatusMessage('Category added successfully!', 'success');
+                    } catch (error) {
+                        console.error('Error adding category:', error);
+                        showStatusMessage(`Failed to add category: ${error.message}`, 'error');
                     }
                 }
 
-                function deleteCategory(index) {
+                async function editCategory(index) {
+                    const category = categories[index];
+                    const newName = prompt('Enter new name for category:', category.name);
+
+                    if (newName && newName.trim() !== '') {
+                        try {
+                            // Update the category in the backend
+                            await fetch(`${API_URL}/categories/${category.id}`, {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ name: newName.trim() })
+                            });
+
+                            // Refresh categories from the backend
+                            await fetchCategories();
+
+                            // Update the table
+                            renderCategoriesTable();
+
+                            showStatusMessage('Category updated successfully!', 'success');
+                        } catch (error) {
+                            console.error('Error updating category:', error);
+                            showStatusMessage(`Failed to update category: ${error.message}`, 'error');
+                        }
+                    }
+                }
+
+                async function deleteCategory(index) {
                     const category = categories[index];
 
                     // Check if any products are using this category
@@ -1480,27 +1481,48 @@
                     }
 
                     if (confirm(`Are you sure you want to delete the category "${category.name}"?`)) {
-                        // Remove the category
-                        categories.splice(index, 1);
+                        try {
+                            // Delete the category from the backend
+                            await fetch(`${API_URL}/categories/${category.id}`, {
+                                method: 'DELETE'
+                            });
 
-                        // Save categories to localStorage
-                        saveCategories();
+                            // Refresh categories from the backend
+                            await fetchCategories();
 
-                        // Update the table
-                        renderCategoriesTable();
+                            // Update the table
+                            renderCategoriesTable();
 
-                        showStatusMessage('Category deleted successfully!', 'success');
+                            showStatusMessage('Category deleted successfully!', 'success');
+                        } catch (error) {
+                            console.error('Error deleting category:', error);
+                            showStatusMessage(`Failed to delete category: ${error.message}`, 'error');
+                        }
                     }
                 }
 
-                function saveCategories() {
-                    localStorage.setItem('productCategories', JSON.stringify(categories));
-                }
+                /**
+                 * Fetch all categories from the backend
+                 */
+                async function fetchCategories() {
+                    try {
+                        const response = await fetch(`${API_URL}/categories`);
+                        if (!response.ok) {
+                            throw new Error('Failed to fetch categories');
+                        }
+                        const fetchedCategories = await response.json();
 
-                function loadCategories() {
-                    const savedCategories = localStorage.getItem('productCategories');
-                    if (savedCategories) {
-                        categories = JSON.parse(savedCategories);
+                        // Map the backend category structure to our frontend structure
+                        categories = fetchedCategories.map(cat => ({
+                            id: cat.category_id,
+                            name: cat.name
+                        }));
+
+                        // Update category dropdowns
+                        updateCategoryDropdowns();
+                    } catch (error) {
+                        console.error('Error fetching categories:', error);
+                        showStatusMessage('Failed to load categories. Please try again later.', 'error');
                     }
                 }
 
@@ -1534,7 +1556,7 @@
                 addCategoryForm.addEventListener('submit', handleAddCategory);
 
                 // Initial load
-                loadCategories(); // Load categories from localStorage
+                fetchCategories(); // Load categories from the backend
                 fetchRooms();
                 fetchProducts();
             });
