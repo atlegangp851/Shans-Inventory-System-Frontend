@@ -55,6 +55,10 @@
 
         .products-section {
             overflow-x: auto;
+            max-width: 100%;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
         /* Search Bar */
@@ -78,19 +82,127 @@
             outline: none;
         }
 
-        #productsTable {
+        /* Excel-like table styling */
+        .products-section {
+            overflow-x: auto;
+            max-width: 100%;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        /* Excel-style table class for all tables */
+        .excel-style-table {
             width: 100%;
             border-collapse: collapse;
+            background-color: white;
+            font-size: 14px;
+            border: 1px solid #e0e0e0;
+            margin-bottom: 0;
         }
 
-        #productsTable th, #productsTable td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: center;
+        .excel-style-table th, .excel-style-table td {
+            text-align: left;
+            padding: 8px 10px;
+            border: 1px solid #e0e0e0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 200px;
         }
 
-        #productsTable th {
+        .excel-style-table th {
+            position: sticky;
+            top: 0;
             background-color: #f2f2f2;
+            color: #333;
+            font-weight: bold;
+            border-bottom: 2px solid #d0d0d0;
+            z-index: 10;
+        }
+
+        .excel-style-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .excel-style-table tr:hover {
+            background-color: #f0f7ff;
+        }
+
+        /* Table container styling */
+        .table-container {
+            overflow-x: auto;
+            max-width: 100%;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        /* Tooltip styling */
+        .tooltip-cell {
+            position: relative;
+            cursor: help;
+        }
+
+        /* Custom tooltip styling for better visibility */
+        [title] {
+            position: relative;
+            cursor: help;
+        }
+
+        [title]:hover::after {
+            content: attr(title);
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: normal;
+            z-index: 100;
+            max-width: 300px;
+            word-wrap: break-word;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            pointer-events: none;
+            margin-bottom: 5px;
+        }
+
+        /* Adjust tooltip position for table cells */
+        table [title]:hover::after {
+            white-space: pre-wrap;
+            width: auto;
+            min-width: 200px;
+            max-width: 400px;
+        }
+
+        /* Column specific styling */
+        #productsTable td:nth-child(1), #productsTable th:nth-child(1) { /* Item Code */
+            min-width: 100px;
+            font-weight: 500;
+        }
+
+        #productsTable td:nth-child(2), #productsTable th:nth-child(2) { /* Room */
+            min-width: 100px;
+        }
+
+        #productsTable td:nth-child(3), #productsTable th:nth-child(3) { /* Item Name */
+            min-width: 150px;
+            font-weight: 500;
+        }
+
+        #productsTable td:nth-child(7), #productsTable th:nth-child(7) { /* Available Stock */
+            text-align: right;
+            min-width: 80px;
+        }
+
+        #productsTable td:nth-child(10), #productsTable th:nth-child(10), /* Unit Retail Price */
+        #productsTable td:nth-child(11), #productsTable th:nth-child(11), /* Wholesale Price */
+        #productsTable td:nth-child(12), #productsTable th:nth-child(12), /* Unit Cost */
+        #productsTable td:nth-child(13), #productsTable th:nth-child(13) { /* Profit */
+            text-align: right;
+            min-width: 100px;
         }
 
         .actions-button {
@@ -246,7 +358,11 @@
             #productsTable th,
             #productsTable td {
                 padding: 6px;
-                font-size: 14px;
+                font-size: 13px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 150px;
             }
 
             .form-group {
@@ -294,42 +410,66 @@
             .products-cards {
                 display: block;
             }
-            /* Basic card layout styling */
+            /* Excel-like card layout styling */
             .product-card {
-                border: 1px solid #ddd;
+                border: 1px solid #e0e0e0;
                 border-radius: 6px;
                 padding: 16px;
                 margin-bottom: 16px;
                 background-color: #fff;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             }
             .product-card .card-header {
                 font-weight: bold;
-                margin-bottom: 8px;
+                margin-bottom: 12px;
+                padding-bottom: 8px;
+                border-bottom: 1px solid #eee;
+                color: #333;
             }
             .product-card .card-body {
                 font-size: 14px;
-                line-height: 1.4;
+                line-height: 1.5;
+            }
+            .product-card .card-body p {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 8px;
+                border-bottom: 1px solid #f5f5f5;
+                padding-bottom: 4px;
+            }
+            .product-card .card-body p strong {
+                font-weight: 600;
+                color: #555;
             }
             .product-card .card-actions {
-                margin-top: 12px;
+                margin-top: 15px;
                 display: flex;
-                gap: 8px;
+                gap: 10px;
+                padding-top: 10px;
+                border-top: 1px solid #eee;
             }
             .product-card .edit-button,
             .product-card .delete-button {
-                padding: 6px 12px;
+                padding: 8px 14px;
                 font-size: 14px;
                 border-radius: 4px;
                 border: none;
                 cursor: pointer;
+                transition: all 0.2s ease;
             }
             .product-card .edit-button {
                 background-color: #ffc107;
                 color: #fff;
             }
+            .product-card .edit-button:hover {
+                background-color: #e0a800;
+            }
             .product-card .delete-button {
                 background-color: #dc3545;
                 color: #fff;
+            }
+            .product-card .delete-button:hover {
+                background-color: #c82333;
             }
         }
     </style>
@@ -615,7 +755,7 @@
                 <input type="text" id="searchInput" placeholder="Search products by name..." aria-label="Search Products">
             </div>
 
-            <table id="productsTable">
+            <table id="productsTable" class="excel-style-table">
                 <thead>
                     <tr>
                         <th>Item Code</th>
@@ -674,8 +814,8 @@
                 <!-- Categories List -->
                 <div style="margin-top: 20px;">
                     <h3>Existing Categories</h3>
-                    <div class="table-responsive">
-                        <table id="categoriesTable">
+                    <div class="table-container">
+                        <table id="categoriesTable" class="excel-style-table">
                             <thead>
                                 <tr>
                                     <th>Category Name</th>
@@ -716,8 +856,8 @@
                 <!-- Car Brands List -->
                 <div style="margin-top: 20px;">
                     <h3>Existing Car Brands</h3>
-                    <div class="table-responsive">
-                        <table id="carBrandsTable">
+                    <div class="table-container">
+                        <table id="carBrandsTable" class="excel-style-table">
                             <thead>
                                 <tr>
                                     <th>Brand Name</th>
@@ -774,8 +914,8 @@
                             <!-- Options will be populated dynamically -->
                         </select>
                     </div>
-                    <div class="table-responsive">
-                        <table id="carModelsTable">
+                    <div class="table-container">
+                        <table id="carModelsTable" class="excel-style-table">
                             <thead>
                                 <tr>
                                     <th>Model Name</th>
@@ -820,6 +960,7 @@
                     const cardHeader = document.createElement('div');
                     cardHeader.classList.add('card-header');
                     cardHeader.textContent = product.item_name || 'No Name';
+                    cardHeader.title = product.item_name || 'No Name'; // Add tooltip
                     card.appendChild(cardHeader);
 
                     // Card body (details)
@@ -828,22 +969,22 @@
 
                     // Build the textual info
                     cardBody.innerHTML = `
-                        <p><strong>Item Code:</strong> ${product.item_code}</p>
-                        <p><strong>Room:</strong> ${product.room_name}</p>
-                        <p><strong>Car Brand:</strong> ${product.car_brand}</p>
-                        <p><strong>Car Model:</strong> ${product.car_model}</p>
-                        <p><strong>Category:</strong> ${capitalizeWords(product.product_category.replace(/_/g, ' '))}</p>
-                        <p><strong>Available Stock:</strong> ${product.available_stock}</p>
+                        <p><strong>Item Code:</strong> <span>${product.item_code}</span></p>
+                        <p><strong>Room:</strong> <span>${product.room_name}</span></p>
+                        <p><strong>Car Brand:</strong> <span>${product.car_brand || 'N/A'}</span></p>
+                        <p><strong>Car Model:</strong> <span>${product.car_model || 'N/A'}</span></p>
+                        <p><strong>Category:</strong> <span>${capitalizeWords(product.product_category.replace(/_/g, ' '))}</span></p>
+                        <p><strong>Available Stock:</strong> <span>${product.available_stock}</span></p>
                         <p><strong>Colour Tape:</strong>
-                            <span style="display:inline-block;width:20px;height:20px;background-color:${product.colour_tape};border-radius:50%;"></span>
+                            <span style="display:inline-block;width:20px;height:20px;background-color:${product.colour_tape};border-radius:50%;border:1px solid #ddd;"></span>
                         </p>
-                        <p><strong>Location:</strong> ${product.location}</p>
-                        <p><strong>Unit Retail Price:</strong> R${parseFloat(product.unit_retail_price).toFixed(2)}</p>
-                        <p><strong>Wholesale Price:</strong> R${parseFloat(product.wholesale_price).toFixed(2)}</p>
-                        <p><strong>Unit Cost:</strong> R${parseFloat(product.unit_cost).toFixed(2)}</p>
-                        <p><strong>Profit:</strong> R${parseFloat(product.profit).toFixed(2)}</p>
-                        <p><strong>Supplier Code:</strong> ${product.supplier_code}</p>
-                        <p><strong>Comments:</strong> ${product.additional_comments || ''}</p>
+                        <p><strong>Location:</strong> <span>${product.location || 'N/A'}</span></p>
+                        <p><strong>Unit Retail Price:</strong> <span>R${Math.round(parseFloat(product.unit_retail_price)).toLocaleString()}</span></p>
+                        <p><strong>Wholesale Price:</strong> <span>R${Math.round(parseFloat(product.wholesale_price)).toLocaleString()}</span></p>
+                        <p><strong>Unit Cost:</strong> <span>R${Math.round(parseFloat(product.unit_cost)).toLocaleString()}</span></p>
+                        <p><strong>Profit:</strong> <span>R${Math.round(parseFloat(product.profit)).toLocaleString()}</span></p>
+                        <p><strong>Supplier Code:</strong> <span>${product.supplier_code || 'N/A'}</span></p>
+                        <p><strong>Comments:</strong> <span>${product.additional_comments || 'None'}</span></p>
                     `;
                     card.appendChild(cardBody);
 
@@ -1101,22 +1242,22 @@
                         row.innerHTML = `
                             <td>${product.item_code}</td>
                             <td>${product.room_name}</td>
-                            <td>${product.item_name}</td>
-                            <td>${product.car_brand}</td>
-                            <td>${product.car_model}</td>
+                            <td title="${product.item_name}" class="tooltip-cell">${product.item_name}</td>
+                            <td>${product.car_brand || 'N/A'}</td>
+                            <td>${product.car_model || 'N/A'}</td>
                             <td>${capitalizeWords(product.product_category.replace(/_/g, ' '))}</td>
                             <td>${product.available_stock}</td>
                             <td>
-                                <span style="display:inline-block;width:20px;height:20px;background-color:${product.colour_tape};border-radius:50%;">
+                                <span style="display:inline-block;width:20px;height:20px;background-color:${product.colour_tape};border-radius:50%;border:1px solid #ddd;">
                                 </span>
                             </td>
-                            <td>${product.location}</td>
-                            <td>${parseFloat(product.unit_retail_price).toFixed(2)}</td>
-                            <td>${parseFloat(product.wholesale_price).toFixed(2)}</td>
-                            <td>${parseFloat(product.unit_cost).toFixed(2)}</td>
-                            <td>${parseFloat(product.profit).toFixed(2)}</td>
-                            <td>${product.supplier_code}</td>
-                            <td>${product.additional_comments || ''}</td>
+                            <td>${product.location || 'N/A'}</td>
+                            <td>R ${Math.round(parseFloat(product.unit_retail_price)).toLocaleString()}</td>
+                            <td>R ${Math.round(parseFloat(product.wholesale_price)).toLocaleString()}</td>
+                            <td>R ${Math.round(parseFloat(product.unit_cost)).toLocaleString()}</td>
+                            <td>R ${Math.round(parseFloat(product.profit)).toLocaleString()}</td>
+                            <td>${product.supplier_code || 'N/A'}</td>
+                            <td title="${product.additional_comments || 'None'}" class="tooltip-cell">${product.additional_comments || 'None'}</td>
                             <td class="actions-button">
                                 <button class="edit-button" data-item-code="${product.item_code}" aria-label="Edit Product">&#9998;</button>
                                 <button class="delete-button" data-item-code="${product.item_code}" aria-label="Delete Product">&#10006;</button>
@@ -2538,6 +2679,23 @@
                 closeCarBrandsPopup.addEventListener('click', closeCarBrandsModal);
                 addCarBrandForm.addEventListener('submit', handleAddCarBrand);
 
+                // Event listeners for edit car brand
+                if (typeof closeEditCarBrandPopup !== 'undefined' && closeEditCarBrandPopup !== null) {
+                    closeEditCarBrandPopup.addEventListener('click', closeEditCarBrandModal);
+                }
+                if (typeof editCarBrandForm !== 'undefined' && editCarBrandForm !== null) {
+                    editCarBrandForm.addEventListener('submit', handleEditCarBrand);
+                }
+
+                // Close edit car brand modal when clicking outside
+                if (typeof editCarBrandOverlay !== 'undefined' && editCarBrandOverlay !== null) {
+                    editCarBrandOverlay.addEventListener('click', function(e) {
+                        if (e.target === editCarBrandOverlay) {
+                            closeEditCarBrandModal();
+                        }
+                    });
+                }
+
                 // Event listeners for car models
                 manageCarModelsBtn.addEventListener('click', openCarModelsModal);
                 closeCarModelsPopup.addEventListener('click', closeCarModelsModal);
@@ -2546,12 +2704,41 @@
                 // Add event listener for filter brand dropdown
                 filterModelBrand.addEventListener('change', renderCarModelsTable);
 
-                // Initial load
+                // Initial load - first fetch data
                 fetchCategories(); // Load categories from the backend
                 fetchCarBrands(); // Load car brands from the backend
                 fetchCarModels(); // Load car models from the backend
                 fetchRooms();
                 fetchProducts();
+
+                // Wait a bit to make sure all DOM elements are properly loaded and initialized
+                setTimeout(() => {
+                    // Re-check for the edit car brand elements
+                    const editCarBrandPopupClose = document.getElementById('closeEditCarBrandPopup');
+                    if (editCarBrandPopupClose) {
+                        editCarBrandPopupClose.addEventListener('click', closeEditCarBrandModal);
+                    } else {
+                        console.warn('Edit car brand close button not found');
+                    }
+
+                    const editBrandForm = document.getElementById('editCarBrandForm');
+                    if (editBrandForm) {
+                        editBrandForm.addEventListener('submit', handleEditCarBrand);
+                    } else {
+                        console.warn('Edit car brand form not found');
+                    }
+
+                    const editBrandOverlay = document.getElementById('editCarBrandOverlay');
+                    if (editBrandOverlay) {
+                        editBrandOverlay.addEventListener('click', function(e) {
+                            if (e.target === editBrandOverlay) {
+                                closeEditCarBrandModal();
+                            }
+                        });
+                    } else {
+                        console.warn('Edit car brand overlay not found');
+                    }
+                }, 500);
             });
         </script>
     </div>
