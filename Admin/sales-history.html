@@ -101,12 +101,15 @@
         }
 
         .month-header {
-            background-color: var(--primary-color);
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 10px;
-            font-size: 1.2em;
+            background-color: #f8f9fa;
+            color: #333;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            font-weight: 600;
+            border-left: 4px solid var(--primary-color);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
 
         /* Excel-like table styling */
@@ -198,18 +201,52 @@
             min-width: 100px;
         }
 
-        tfoot td {
-            padding: 10px;
-            border-top: 2px solid #d0d0d0;
+        /* Month Summary Section */
+        .month-summary {
+            background-color: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            margin-top: 15px;
+            margin-bottom: 30px;
+            padding: 15px 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .summary-label {
+            font-weight: 600;
+            color: #555;
+        }
+
+        .summary-value {
             font-weight: bold;
-            background-color: #f2f2f2;
             color: #333;
         }
 
-        tfoot tr:last-child td {
+        .grand-total {
             background-color: #e6f2ff;
+            border-left: 4px solid #0066cc;
+        }
+
+        .grand-total .summary-label {
+            font-size: 16px;
+            color: #333;
+        }
+
+        .grand-total .summary-value {
+            font-size: 18px;
             color: #0066cc;
-            font-size: 15px;
         }
 
         .card-view {
@@ -285,6 +322,23 @@
             .card {
                 margin-bottom: 15px;
             }
+
+            .month-summary {
+                margin-top: 10px;
+                margin-bottom: 20px;
+            }
+
+            .summary-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+
+            .summary-value {
+                align-self: flex-end;
+                width: 100%;
+                text-align: right;
+            }
         }
 
         /* Print button styling */
@@ -338,9 +392,12 @@
         .month-header {
             background-color: #f2f2f2 !important;
             color: black !important;
-            padding: 5px !important;
-            margin-bottom: 5px !important;
+            padding: 10px !important;
+            margin-bottom: 10px !important;
             page-break-before: always;
+            border-left: 3px solid #333 !important;
+            font-size: 16px !important;
+            font-weight: bold !important;
         }
 
         table {
@@ -361,10 +418,23 @@
             padding: 4px !important;
         }
 
-        tfoot td {
+        .month-summary {
+            margin-top: 10px !important;
+            margin-bottom: 20px !important;
+            padding: 10px !important;
+            border: 1px solid #ddd !important;
+            page-break-inside: avoid;
+        }
+
+        .summary-item {
+            padding: 5px 10px !important;
+            margin-bottom: 5px !important;
+            border: 1px solid #eee !important;
+        }
+
+        .grand-total {
             background-color: #f2f2f2 !important;
-            color: black !important;
-            font-weight: bold !important;
+            border-left: 3px solid #333 !important;
         }
 
         .card-view {
@@ -520,22 +590,24 @@
 
                 table.appendChild(tbody);
 
-                const tfoot = document.createElement('tfoot');
-                tfoot.innerHTML = `
-                    <tr>
-                        <td colspan="13" style="text-align: right;"><strong>Total Tax for ${monthYear}:</strong></td>
-                        <td colspan="2">R ${Math.round(monthTotalTax).toLocaleString()}</td>
-                    </tr>
-                    <tr>
-                        <td colspan="13" style="text-align: right;"><strong>Grand Total for ${monthYear}:</strong></td>
-                        <td colspan="2">R ${Math.round(monthTotal).toLocaleString()}</td>
-                    </tr>
-                `;
-                table.appendChild(tfoot);
-
-                // Add table to table container, then add container to month section
+                // Add table to table container
                 tableContainer.appendChild(table);
                 monthSection.appendChild(tableContainer);
+
+                // Create a summary section outside the table
+                const summarySection = document.createElement('div');
+                summarySection.className = 'month-summary';
+                summarySection.innerHTML = `
+                    <div class="summary-item">
+                        <span class="summary-label">Total Tax for ${monthYear}:</span>
+                        <span class="summary-value">R ${Math.round(monthTotalTax).toLocaleString()}</span>
+                    </div>
+                    <div class="summary-item grand-total">
+                        <span class="summary-label">Grand Total for ${monthYear}:</span>
+                        <span class="summary-value">R ${Math.round(monthTotal).toLocaleString()}</span>
+                    </div>
+                `;
+                monthSection.appendChild(summarySection);
                 tablesContainer.appendChild(monthSection);
             }
         }
