@@ -41,34 +41,59 @@
             display: flex;
             justify-content: space-between;
             margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
-        .view-toggle, .search-bar {
+        .controls-left, .controls-right {
+            display: flex;
+            gap: 10px;
+        }
+
+        .view-toggle, .search-bar, .action-button {
             padding: 10px;
             border: 1px solid var(--border-color);
             border-radius: 5px;
         }
 
-        .view-toggle {
+        .view-toggle, .action-button {
             background-color: var(--primary-color);
             color: white;
             cursor: pointer;
             transition: background-color 0.3s ease;
+            white-space: nowrap;
         }
 
-        .view-toggle:hover {
+        .view-toggle:hover, .action-button:hover {
             background-color: #357ab8;
         }
 
+        .print-button {
+            background-color: #28a745;
+        }
+
+        .print-button:hover {
+            background-color: #218838;
+        }
+
+        .excel-button {
+            background-color: #217346;
+        }
+
+        .excel-button:hover {
+            background-color: #1e6e41;
+        }
+
         .search-bar {
-            width: 60%;
-            transition: width 0.3s ease;
+            width: 300px;
+            transition: all 0.3s ease;
+            flex-grow: 1;
         }
 
         .search-bar:focus {
             outline: none;
             border-color: var(--primary-color);
-            width: 65%;
+            box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
         }
 
         .month-section {
@@ -84,35 +109,107 @@
             font-size: 1.2em;
         }
 
+        /* Excel-like table styling */
+        .table-container {
+            overflow-x: auto;
+            max-width: 100%;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
             background-color: white;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
-            margin-bottom: 10px;
+            font-size: 14px;
+            border: 1px solid #e0e0e0;
+            margin-bottom: 0;
         }
 
         th, td {
             text-align: left;
-            padding: 12px;
-            border-bottom: 1px solid var(--border-color);
+            padding: 8px 10px;
+            border: 1px solid #e0e0e0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 200px;
         }
 
         th {
-            background-color: var(--primary-color);
-            color: white;
+            position: sticky;
+            top: 0;
+            background-color: #f2f2f2;
+            color: #333;
+            font-weight: bold;
+            border-bottom: 2px solid #d0d0d0;
+            z-index: 10;
         }
 
         tr:nth-child(even) {
-            background-color: var(--secondary-color);
+            background-color: #f9f9f9;
+        }
+
+        tr:hover {
+            background-color: #f0f7ff;
+        }
+
+        /* Column specific styling */
+        td:nth-child(1), th:nth-child(1) { /* Reference Number */
+            min-width: 120px;
+            font-weight: 500;
+        }
+
+        td:nth-child(2), th:nth-child(2) { /* Date */
+            min-width: 100px;
+        }
+
+        td:nth-child(3), th:nth-child(3) { /* Client Name */
+            min-width: 150px;
+            font-weight: 500;
+        }
+
+        td:nth-child(4), th:nth-child(4) { /* Billing Address */
+            min-width: 200px;
+        }
+
+        td:nth-child(5), th:nth-child(5) { /* Billing Email */
+            min-width: 180px;
+        }
+
+        td:nth-child(7), th:nth-child(7) { /* Salesperson */
+            min-width: 120px;
+        }
+
+        td:nth-child(8), th:nth-child(8) { /* Company */
+            min-width: 150px;
+        }
+
+        td:nth-child(9), th:nth-child(9) { /* Item Purchase */
+            min-width: 180px;
+        }
+
+        td:nth-child(11), th:nth-child(11), /* Quantity */
+        td:nth-child(12), th:nth-child(12), /* Tax per Unit */
+        td:nth-child(13), th:nth-child(13), /* Unit Price */
+        td:nth-child(15), th:nth-child(15) { /* Total */
+            text-align: right;
+            min-width: 100px;
         }
 
         tfoot td {
-            padding: 12px;
-            border-top: 2px solid var(--border-color);
+            padding: 10px;
+            border-top: 2px solid #d0d0d0;
             font-weight: bold;
-            background-color: var(--primary-color);
-            color: white;
+            background-color: #f2f2f2;
+            color: #333;
+        }
+
+        tfoot tr:last-child td {
+            background-color: #e6f2ff;
+            color: #0066cc;
+            font-size: 15px;
         }
 
         .card-view {
@@ -123,42 +220,77 @@
 
         .card {
             background-color: white;
-            border-radius: 5px;
+            border-radius: 8px;
             padding: 20px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
-            transition: transform 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border: 1px solid #e0e0e0;
         }
 
         .card:hover {
             transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
 
         .card h3 {
             color: var(--primary-color);
-            margin-bottom: 10px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            font-size: 18px;
         }
 
         .card p {
-            margin-bottom: 5px;
-            font-size: 16px;
+            margin-bottom: 8px;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .card p strong {
+            font-weight: 600;
+            color: #555;
+            margin-right: 10px;
         }
 
         @media (max-width: 768px) {
-            table, .month-header {
-                display: none;
+            .controls-left, .controls-right {
+                width: 100%;
             }
 
-            .card-view {
+            .controls-left {
                 display: grid;
-            }
-
-            .controls {
-                flex-direction: column;
+                grid-template-columns: 1fr 1fr;
             }
 
             .search-bar {
                 width: 100%;
-                margin-top: 10px;
+            }
+
+            .table-container {
+                overflow-x: auto;
+                max-width: 100%;
+            }
+
+            /* Auto-switch to card view on mobile */
+            #tables-container {
+                display: none !important;
+            }
+
+            .card-view {
+                display: grid !important;
+                grid-template-columns: 1fr;
+            }
+
+            .card {
+                margin-bottom: 15px;
+            }
+        }
+
+        /* Print button styling */
+        @media print {
+            body * {
+                visibility: visible;
             }
         }
     </style>
@@ -168,8 +300,14 @@
         <a href="index.html" style="text-decoration: none; color: #007BFF; font-size: 16px; margin-right: 20px;">&larr; Back to Home</a>
         <h1>Sales Dashboard</h1>
         <div class="controls">
-            <button class="view-toggle">Toggle View</button>
-            <input type="text" class="search-bar" placeholder="Search sales...">
+            <div class="controls-left">
+                <button class="view-toggle">Toggle View</button>
+                <button class="action-button print-button" id="print-button">Print</button>
+                <button class="action-button excel-button" id="save-to-excel">Export to Excel</button>
+            </div>
+            <div class="controls-right">
+                <input type="text" class="search-bar" placeholder="Search sales by any field...">
+            </div>
         </div>
         <div id="tables-container">
             <!-- Monthly Tables Will Be Dynamically Added Here -->
@@ -177,13 +315,67 @@
         <div class="card-view" id="card-view">
             <!-- Cards Will Be Dynamically Added Here -->
         </div>
-
-        <button class="view-toggle" id="save-to-excel">Save to Excel</button>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <style media="print">
+        /* Print-specific styles */
+        body {
+            font-size: 12px;
+            background-color: white;
+        }
+
+        .container {
+            max-width: 100%;
+            padding: 0;
+            margin: 0;
+        }
+
+        .controls, .view-toggle, #print-button, #save-to-excel, a[href="index.html"] {
+            display: none !important;
+        }
+
+        .month-header {
+            background-color: #f2f2f2 !important;
+            color: black !important;
+            padding: 5px !important;
+            margin-bottom: 5px !important;
+            page-break-before: always;
+        }
+
+        table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            page-break-inside: avoid;
+            font-size: 10px !important;
+        }
+
+        th {
+            background-color: #f2f2f2 !important;
+            color: black !important;
+            font-weight: bold !important;
+        }
+
+        th, td {
+            border: 1px solid #ddd !important;
+            padding: 4px !important;
+        }
+
+        tfoot td {
+            background-color: #f2f2f2 !important;
+            color: black !important;
+            font-weight: bold !important;
+        }
+
+        .card-view {
+            display: none !important;
+        }
+    </style>
+
     <script>
         document.getElementById('save-to-excel').addEventListener('click', saveToExcel);
+        document.getElementById('print-button').addEventListener('click', printSalesData);
+
         const tablesContainer = document.getElementById('tables-container');
         const cardView = document.getElementById('card-view');
         const viewToggle = document.querySelector('.view-toggle');
@@ -200,6 +392,27 @@
                 }
                 const data = await response.json();
                 console.log('Raw data from API:', data);
+
+                // Fetch all products to get room information
+                const productsResponse = await fetch('https://shans-backend-1.onrender.com/api/products');
+                if (!productsResponse.ok) {
+                    throw new Error('Failed to fetch products data.');
+                }
+                const productsData = await productsResponse.json();
+
+                // Create a map of item_code to room_name for quick lookup
+                const productRoomMap = {};
+                productsData.forEach(product => {
+                    productRoomMap[product.item_code] = product.room_name;
+                });
+
+                // Add room information to each sale item
+                data.forEach(sale => {
+                    sale.items.forEach(item => {
+                        item.room_name = productRoomMap[item.item_code] || 'N/A';
+                    });
+                });
+
                 allSalesData = data;
                 groupDataByMonth(allSalesData);
                 renderTables(groupedSalesData);
@@ -239,6 +452,10 @@
                 monthHeader.textContent = monthYear;
                 monthSection.appendChild(monthHeader);
 
+                // Create table container for horizontal scrolling
+                const tableContainer = document.createElement('div');
+                tableContainer.className = 'table-container';
+
                 const table = document.createElement('table');
                 const thead = document.createElement('thead');
                 thead.innerHTML = `
@@ -249,7 +466,10 @@
                         <th>Billing Address</th>
                         <th>Billing Email</th>
                         <th>Billing Phone</th>
+                        <th>Salesperson</th>
+                        <th>Company</th>
                         <th>Item Purchase</th>
+                        <th>Room</th>
                         <th>Quantity</th>
                         <th>Tax per Unit (R)</th>
                         <th>Unit Price (R)</th>
@@ -266,11 +486,14 @@
                 sales.forEach(sale => {
                     sale.items.forEach(item => {
                         const row = document.createElement('tr');
-                        
+
                         const quantity = parseFloat(item.quantity) || 0;
                         const taxPerProduct = parseFloat(item.tax_per_product) || 0;
                         const totalPrice = parseFloat(item.total_price) || 0;
-                        
+
+                        // Fetch room information for this item
+                        const roomInfo = item.item_code ? `${item.room_name || 'N/A'}` : 'N/A';
+
                         row.innerHTML = `
                             <td>${sanitizeHTML(sale.reference_number)}</td>
                             <td>${sanitizeHTML(formatDate(sale.date))}</td>
@@ -278,15 +501,18 @@
                             <td>${sanitizeHTML(sale.billing_address)}</td>
                             <td>${sanitizeHTML(sale.billing_email)}</td>
                             <td>${sanitizeHTML(sale.billing_phone || 'N/A')}</td>
+                            <td>${sanitizeHTML(sale.salesperson_name || 'N/A')}</td>
+                            <td>${sanitizeHTML(sale.company_name || 'Shans Accessories PTY LTD')}</td>
                             <td>${sanitizeHTML(item.item_name)}</td>
-                            <td>${quantity}</td>
-                            <td>R${taxPerProduct.toFixed(2)}</td>
-                            <td>R${(totalPrice / quantity).toFixed(2)}</td>
+                            <td>${sanitizeHTML(item.room_name || 'N/A')}</td>
+                            <td>${quantity.toLocaleString()}</td>
+                            <td>R ${Math.round(taxPerProduct).toLocaleString()}</td>
+                            <td>R ${Math.round(totalPrice / quantity).toLocaleString()}</td>
                             <td>${sanitizeHTML(sale.payment_method)}</td>
-                            <td>R${totalPrice.toFixed(2)}</td>
+                            <td>R ${Math.round(totalPrice).toLocaleString()}</td>
                         `;
                         tbody.appendChild(row);
-                        
+
                         monthTotal += totalPrice;
                         monthTotalTax += taxPerProduct * quantity;
                     });
@@ -297,17 +523,19 @@
                 const tfoot = document.createElement('tfoot');
                 tfoot.innerHTML = `
                     <tr>
-                        <td colspan="10" style="text-align: right;"><strong>Total Tax for ${monthYear}:</strong></td>
-                        <td colspan="2">R${monthTotalTax.toFixed(2)}</td>
+                        <td colspan="13" style="text-align: right;"><strong>Total Tax for ${monthYear}:</strong></td>
+                        <td colspan="2">R ${Math.round(monthTotalTax).toLocaleString()}</td>
                     </tr>
                     <tr>
-                        <td colspan="10" style="text-align: right;"><strong>Grand Total for ${monthYear}:</strong></td>
-                        <td colspan="2">R${monthTotal.toFixed(2)}</td>
+                        <td colspan="13" style="text-align: right;"><strong>Grand Total for ${monthYear}:</strong></td>
+                        <td colspan="2">R ${Math.round(monthTotal).toLocaleString()}</td>
                     </tr>
                 `;
                 table.appendChild(tfoot);
 
-                monthSection.appendChild(table);
+                // Add table to table container, then add container to month section
+                tableContainer.appendChild(table);
+                monthSection.appendChild(tableContainer);
                 tablesContainer.appendChild(monthSection);
             }
         }
@@ -341,19 +569,21 @@
                         const card = document.createElement('div');
                         card.className = 'card';
                         card.innerHTML = `
-                            <h3>${sanitizeHTML(formatDate(sale.date))}</h3>
-                            <p><strong>Reference Number:</strong> ${sanitizeHTML(sale.reference_number)}</p>
-                            <p><strong>Client Name:</strong> ${sanitizeHTML(sale.billing_name)}</p>
-                            <p><strong>Billing Address:</strong> ${sanitizeHTML(sale.billing_address)}</p>
-                            <p><strong>Billing Email:</strong> ${sanitizeHTML(sale.billing_email)}</p>
-                            <p><strong>Billing Phone:</strong> ${sanitizeHTML(sale.billing_phone || 'N/A')}</p>
-                            <p><strong>Item:</strong> ${sanitizeHTML(item.item_name)}</p>
-                            <p><strong>Quantity:</strong> ${quantity}</p>
-                            <p><strong>Tax per Unit:</strong> R${taxPerProduct.toFixed(2)}</p>
-                            <p><strong>Unit Price:</strong> R${unitPrice.toFixed(2)}</p>
-                            <p><strong>Total Tax:</strong> R${(taxPerProduct * quantity).toFixed(2)}</p>
-                            <p><strong>Payment Method:</strong> ${sanitizeHTML(sale.payment_method)}</p>
-                            <p><strong>Total Price:</strong> R${totalPrice.toFixed(2)}</p>
+                            <h3>${sanitizeHTML(formatDate(sale.date))} - ${sanitizeHTML(sale.reference_number)}</h3>
+                            <p><strong>Client Name:</strong> <span>${sanitizeHTML(sale.billing_name)}</span></p>
+                            <p><strong>Billing Address:</strong> <span>${sanitizeHTML(sale.billing_address)}</span></p>
+                            <p><strong>Billing Email:</strong> <span>${sanitizeHTML(sale.billing_email)}</span></p>
+                            <p><strong>Billing Phone:</strong> <span>${sanitizeHTML(sale.billing_phone || 'N/A')}</span></p>
+                            <p><strong>Salesperson:</strong> <span>${sanitizeHTML(sale.salesperson_name || 'N/A')}</span></p>
+                            <p><strong>Company:</strong> <span>${sanitizeHTML(sale.company_name || 'Shans Accessories PTY LTD')}</span></p>
+                            <p><strong>Item:</strong> <span>${sanitizeHTML(item.item_name)}</span></p>
+                            <p><strong>Room:</strong> <span>${sanitizeHTML(item.room_name || 'N/A')}</span></p>
+                            <p><strong>Quantity:</strong> <span>${quantity.toLocaleString()}</span></p>
+                            <p><strong>Tax per Unit:</strong> <span>R ${Math.round(taxPerProduct).toLocaleString()}</span></p>
+                            <p><strong>Unit Price:</strong> <span>R ${Math.round(unitPrice).toLocaleString()}</span></p>
+                            <p><strong>Total Tax:</strong> <span>R ${Math.round(taxPerProduct * quantity).toLocaleString()}</span></p>
+                            <p><strong>Payment Method:</strong> <span>${sanitizeHTML(sale.payment_method)}</span></p>
+                            <p><strong>Total Price:</strong> <span style="font-weight: bold; color: #0066cc;">R ${Math.round(totalPrice).toLocaleString()}</span></p>
                         `;
                         cardView.appendChild(card);
                     });
@@ -377,9 +607,10 @@
                 totalCard.className = 'card';
                 totalCard.innerHTML = `
                     <h3>Monthly Totals for ${monthYear}</h3>
-                    <p><strong>Total Tax:</strong> R${monthlyTaxTotal.toFixed(2)}</p>
-                    <p><strong>Total Sales:</strong> R${monthlyTotal.toFixed(2)}</p>
+                    <p><strong>Total Tax:</strong> <span>R ${Math.round(monthlyTaxTotal).toLocaleString()}</span></p>
+                    <p><strong>Total Sales:</strong> <span style="font-weight: bold; color: #0066cc; font-size: 16px;">R ${Math.round(monthlyTotal).toLocaleString()}</span></p>
                 `;
+                totalCard.style.backgroundColor = '#f8f9fa';
                 cardView.appendChild(totalCard);
             }
         }
@@ -390,7 +621,7 @@
                 return;
             }
 
-            const flattenedData = allSalesData.flatMap(sale => 
+            const flattenedData = allSalesData.flatMap(sale =>
                 sale.items.map(item => ({
                     "Reference Number": sale.reference_number,
                     "Date": formatDate(sale.date),
@@ -398,12 +629,15 @@
                     "Billing Address": sale.billing_address,
                     "Billing Email": sale.billing_email,
                     "Billing Phone": sale.billing_phone || 'N/A',
+                    "Salesperson": sale.salesperson_name || 'N/A',
+                    "Company": sale.company_name || 'Shans Accessories PTY LTD',
                     "Item Purchased": item.item_name,
+                    "Room": item.room_name || 'N/A',
                     "Quantity": parseFloat(item.quantity) || 0,
-                    "Tax per Unit (R)": (parseFloat(item.tax_per_product) || 0).toFixed(2),
-                    "Unit Price (R)": ((parseFloat(item.total_price) || 0) / (parseFloat(item.quantity) || 1)).toFixed(2),
+                    "Tax per Unit (R)": Math.round(parseFloat(item.tax_per_product) || 0),
+                    "Unit Price (R)": Math.round((parseFloat(item.total_price) || 0) / (parseFloat(item.quantity) || 1)),
                     "Payment Method": sale.payment_method,
-                    "Total Price (R)": (parseFloat(item.total_price) || 0).toFixed(2)
+                    "Total Price (R)": Math.round(parseFloat(item.total_price) || 0)
                 }))
             );
 
@@ -424,23 +658,37 @@
             }
         }
 
+        function printSalesData() {
+            // Make sure we're in table view before printing
+            if (tablesContainer.style.display === 'none') {
+                tablesContainer.style.display = 'block';
+                cardView.style.display = 'none';
+            }
+
+            // Print the page
+            window.print();
+        }
+
         function filterAndRender(query) {
-            const filteredData = allSalesData.filter(sale => 
+            const filteredData = allSalesData.filter(sale =>
                 sale.reference_number.toLowerCase().includes(query.toLowerCase()) ||
                 sale.date.toLowerCase().includes(query.toLowerCase()) ||
                 sale.billing_name.toLowerCase().includes(query.toLowerCase()) ||
                 sale.billing_address.toLowerCase().includes(query.toLowerCase()) ||
                 sale.billing_email.toLowerCase().includes(query.toLowerCase()) ||
                 (sale.billing_phone && sale.billing_phone.toLowerCase().includes(query.toLowerCase())) ||
+                (sale.salesperson_name && sale.salesperson_name.toLowerCase().includes(query.toLowerCase())) ||
+                (sale.company_name && sale.company_name.toLowerCase().includes(query.toLowerCase())) ||
                 sale.payment_method.toLowerCase().includes(query.toLowerCase()) ||
-                sale.items.some(item => 
+                sale.items.some(item =>
                     item.item_name.toLowerCase().includes(query.toLowerCase()) ||
+                    (item.room_name && item.room_name.toLowerCase().includes(query.toLowerCase())) ||
                     String(item.quantity).includes(query) ||
                     String(item.tax_per_product).includes(query) ||
                     String(item.total_price).includes(query)
                 )
             );
-            
+
             groupDataByMonth(filteredData);
             renderTables(groupedSalesData);
             renderCards(filteredData);
