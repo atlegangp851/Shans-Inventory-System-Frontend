@@ -249,6 +249,21 @@
             color: #0066cc;
         }
 
+        .profit-total {
+            background-color: #e6ffe6;
+            border-left: 4px solid #28a745;
+        }
+
+        .profit-total .summary-label {
+            font-size: 15px;
+            color: #333;
+        }
+
+        .profit-total .summary-value {
+            font-size: 16px;
+            color: #28a745;
+        }
+
         .card-view {
             display: none;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -437,6 +452,11 @@
             border-left: 3px solid #333 !important;
         }
 
+        .profit-total {
+            background-color: #f2f2f2 !important;
+            border-left: 3px solid #28a745 !important;
+        }
+
         .card-view {
             display: none !important;
         }
@@ -470,16 +490,48 @@
                 }
                 const productsData = await productsResponse.json();
 
-                // Create a map of item_code to room_name for quick lookup
+                // Create maps for product information lookup
                 const productRoomMap = {};
+                const productCostMap = {};
                 productsData.forEach(product => {
                     productRoomMap[product.item_code] = product.room_name;
+                    productCostMap[product.item_code] = {
+                        unit_cost: parseFloat(product.unit_cost) || 0,
+                        unit_retail_price: parseFloat(product.unit_retail_price) || 0
+                    };
                 });
 
-                // Add room information to each sale item
+                // Add room and profit information to each sale item
                 data.forEach(sale => {
                     sale.items.forEach(item => {
                         item.room_name = productRoomMap[item.item_code] || 'N/A';
+
+                        // Calculate profit for this item
+                        const quantity = parseFloat(item.quantity) || 0;
+                        const totalPrice = parseFloat(item.total_price) || 0;
+
+                        // Get cost information from product data if available
+                        if (productCostMap[item.item_code]) {
+                            // Get the retail price and cost from the product data
+                            const unitRetailPrice = productCostMap[item.item_code].unit_retail_price;
+                            const unitCost = productCostMap[item.item_code].unit_cost;
+
+                            // Calculate total retail value and total cost
+                            const totalRetailValue = unitRetailPrice * quantity;
+                            const totalCost = unitCost * quantity;
+
+                            // Calculate profit
+                            item.unit_retail_price = unitRetailPrice;
+                            item.unit_cost = unitCost;
+                            item.profit_per_unit = unitRetailPrice - unitCost;
+                            item.total_profit = totalRetailValue - totalCost;
+                        } else {
+                            // If product not found (might be a custom item or deleted product)
+                            item.unit_retail_price = 0;
+                            item.unit_cost = 0;
+                            item.profit_per_unit = 0;
+                            item.total_profit = 0;
+                        }
                     });
                 });
 
@@ -552,6 +604,7 @@
                 const tbody = document.createElement('tbody');
                 let monthTotal = 0;
                 let monthTotalTax = 0;
+                let monthTotalProfit = 0;
 
                 sales.forEach(sale => {
                     sale.items.forEach(item => {
@@ -585,6 +638,7 @@
 
                         monthTotal += totalPrice;
                         monthTotalTax += taxPerProduct * quantity;
+                        monthTotalProfit += (item.total_profit || 0);
                     });
                 });
 
@@ -601,6 +655,10 @@
                     <div class="summary-item">
                         <span class="summary-label">Total Tax for ${monthYear}:</span>
                         <span class="summary-value">R ${Math.round(monthTotalTax).toLocaleString()}</span>
+                    </div>
+                    <div class="summary-item profit-total">
+                        <span class="summary-label">Total Profit for ${monthYear}:</span>
+                        <span class="summary-value">R ${Math.round(monthTotalProfit).toLocaleString()}</span>
                     </div>
                     <div class="summary-item grand-total">
                         <span class="summary-label">Grand Total for ${monthYear}:</span>
@@ -640,6 +698,12 @@
 
                         const card = document.createElement('div');
                         card.className = 'card';
+                        // Get values for display
+                        const unitRetailPrice = parseFloat(item.unit_retail_price) || 0;
+                        const unitCost = parseFloat(item.unit_cost) || 0;
+                        const profitPerUnit = parseFloat(item.profit_per_unit) || 0;
+                        const totalProfit = parseFloat(item.total_profit) || 0;
+
                         card.innerHTML = `
                             <h3>${sanitizeHTML(formatDate(sale.date))} - ${sanitizeHTML(sale.reference_number)}</h3>
                             <p><strong>Client Name:</strong> <span>${sanitizeHTML(sale.billing_name)}</span></p>
@@ -651,8 +715,13 @@
                             <p><strong>Item:</strong> <span>${sanitizeHTML(item.item_name)}</span></p>
                             <p><strong>Room:</strong> <span>${sanitizeHTML(item.room_name || 'N/A')}</span></p>
                             <p><strong>Quantity:</strong> <span>${quantity.toLocaleString()}</span></p>
+                            <p><strong>Unit Retail Price:</strong> <span>R ${Math.round(unitRetailPrice).toLocaleString()}</span></p>
+                            <p><strong>Unit Cost:</strong> <span>R ${Math.round(unitCost).toLocaleString()}</span></p>
+                            <p><strong>Profit per Unit:</strong> <span style="color: #28a745;">R ${Math.round(profitPerUnit).toLocaleString()}</span></p>
                             <p><strong>Tax per Unit:</strong> <span>R ${Math.round(taxPerProduct).toLocaleString()}</span></p>
-                            <p><strong>Unit Price:</strong> <span>R ${Math.round(unitPrice).toLocaleString()}</span></p>
+                            <p><strong>Total Retail Value:</strong> <span>R ${Math.round(unitRetailPrice * quantity).toLocaleString()}</span></p>
+                            <p><strong>Total Cost:</strong> <span>R ${Math.round(unitCost * quantity).toLocaleString()}</span></p>
+                            <p><strong>Total Profit:</strong> <span style="color: #28a745;">R ${Math.round(totalProfit).toLocaleString()}</span></p>
                             <p><strong>Total Tax:</strong> <span>R ${Math.round(taxPerProduct * quantity).toLocaleString()}</span></p>
                             <p><strong>Payment Method:</strong> <span>${sanitizeHTML(sale.payment_method)}</span></p>
                             <p><strong>Total Price:</strong> <span style="font-weight: bold; color: #0066cc;">R ${Math.round(totalPrice).toLocaleString()}</span></p>
@@ -675,11 +744,21 @@
                     }, 0);
                 }, 0);
 
+                const monthlyProfitTotal = sales.reduce((total, sale) => {
+                    return total + sale.items.reduce((itemTotal, item) => {
+                        return itemTotal + (parseFloat(item.total_profit) || 0);
+                    }, 0);
+                }, 0);
+
                 const totalCard = document.createElement('div');
                 totalCard.className = 'card';
                 totalCard.innerHTML = `
                     <h3>Monthly Totals for ${monthYear}</h3>
                     <p><strong>Total Tax:</strong> <span>R ${Math.round(monthlyTaxTotal).toLocaleString()}</span></p>
+                    <p style="padding: 8px; background-color: #e6ffe6; border-left: 4px solid #28a745; border-radius: 4px; margin: 10px 0;">
+                        <strong>Total Profit:</strong>
+                        <span style="font-weight: bold; color: #28a745; font-size: 16px;">R ${Math.round(monthlyProfitTotal).toLocaleString()}</span>
+                    </p>
                     <p><strong>Total Sales:</strong> <span style="font-weight: bold; color: #0066cc; font-size: 16px;">R ${Math.round(monthlyTotal).toLocaleString()}</span></p>
                 `;
                 totalCard.style.backgroundColor = '#f8f9fa';
@@ -694,23 +773,41 @@
             }
 
             const flattenedData = allSalesData.flatMap(sale =>
-                sale.items.map(item => ({
-                    "Reference Number": sale.reference_number,
-                    "Date": formatDate(sale.date),
-                    "Client Name": sale.billing_name,
-                    "Billing Address": sale.billing_address,
-                    "Billing Email": sale.billing_email,
-                    "Billing Phone": sale.billing_phone || 'N/A',
-                    "Salesperson": sale.salesperson_name || 'N/A',
-                    "Company": sale.company_name || 'Shans Accessories PTY LTD',
-                    "Item Purchased": item.item_name,
-                    "Room": item.room_name || 'N/A',
-                    "Quantity": parseFloat(item.quantity) || 0,
-                    "Tax per Unit (R)": Math.round(parseFloat(item.tax_per_product) || 0),
-                    "Unit Price (R)": Math.round((parseFloat(item.total_price) || 0) / (parseFloat(item.quantity) || 1)),
-                    "Payment Method": sale.payment_method,
-                    "Total Price (R)": Math.round(parseFloat(item.total_price) || 0)
-                }))
+                sale.items.map(item => {
+                    const quantity = parseFloat(item.quantity) || 0;
+                    const totalPrice = parseFloat(item.total_price) || 0;
+                    const unitPrice = quantity > 0 ? totalPrice / quantity : 0;
+                    const unitRetailPrice = parseFloat(item.unit_retail_price) || 0;
+                    const unitCost = parseFloat(item.unit_cost) || 0;
+                    const profitPerUnit = parseFloat(item.profit_per_unit) || 0;
+                    const totalRetailValue = unitRetailPrice * quantity;
+                    const totalCost = unitCost * quantity;
+                    const totalProfit = parseFloat(item.total_profit) || 0;
+
+                    return {
+                        "Reference Number": sale.reference_number,
+                        "Date": formatDate(sale.date),
+                        "Client Name": sale.billing_name,
+                        "Billing Address": sale.billing_address,
+                        "Billing Email": sale.billing_email,
+                        "Billing Phone": sale.billing_phone || 'N/A',
+                        "Salesperson": sale.salesperson_name || 'N/A',
+                        "Company": sale.company_name || 'Shans Accessories PTY LTD',
+                        "Item Purchased": item.item_name,
+                        "Room": item.room_name || 'N/A',
+                        "Quantity": quantity,
+                        "Unit Retail Price (R)": Math.round(unitRetailPrice),
+                        "Unit Cost (R)": Math.round(unitCost),
+                        "Profit per Unit (R)": Math.round(profitPerUnit),
+                        "Tax per Unit (R)": Math.round(parseFloat(item.tax_per_product) || 0),
+                        "Total Retail Value (R)": Math.round(totalRetailValue),
+                        "Total Cost (R)": Math.round(totalCost),
+                        "Total Profit (R)": Math.round(totalProfit),
+                        "Total Tax (R)": Math.round(parseFloat(item.tax_per_product || 0) * quantity),
+                        "Payment Method": sale.payment_method,
+                        "Total Price (R)": Math.round(totalPrice)
+                    };
+                })
             );
 
             const worksheet = XLSX.utils.json_to_sheet(flattenedData);
