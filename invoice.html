@@ -453,6 +453,14 @@
             return "";
         }
 
+        // Function to set a cookie
+        function setCookie(name, value, days = 1) {
+            const date = new Date();
+            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+            const expires = `expires=${date.toUTCString()}`;
+            document.cookie = `${name}=${value};${expires};path=/`;
+        }
+
         // Format currency in ZAR, no decimals
         function formatCurrency(amount) {
             return 'R' + parseFloat(amount).toLocaleString('en-ZA', {
@@ -492,6 +500,29 @@
             const taxAmountCookie = getCookie('taxAmount');
             const totalAmountCookie = getCookie('totalAmount');
             const selectedCompanyCookie = getCookie('selectedCompany');
+            const invoiceConfirmedCookie = getCookie('invoiceConfirmed');
+
+            // Check if invoice has already been confirmed
+            if (invoiceConfirmedCookie === 'true') {
+                // Hide the confirm button
+                const confirmButton = document.getElementById('confirm-button');
+                confirmButton.style.display = 'none';
+
+                // Show a message that the invoice has been processed
+                const successMessage = document.createElement('div');
+                successMessage.style.textAlign = 'center';
+                successMessage.style.margin = '20px 0';
+                successMessage.style.padding = '15px';
+                successMessage.style.backgroundColor = '#d4edda';
+                successMessage.style.color = '#155724';
+                successMessage.style.borderRadius = '5px';
+                successMessage.style.fontWeight = 'bold';
+                successMessage.innerHTML = 'Invoice has already been processed.<br>You can download the image or return to the home page.';
+
+                // Insert the message after the button container
+                const buttonContainer = document.querySelector('.button-container');
+                buttonContainer.parentNode.insertBefore(successMessage, buttonContainer.nextSibling);
+            }
 
             if (!customerInfoCookie ||
                 !selectedProductsCookie ||
@@ -734,7 +765,29 @@
                 const successData = await response.json();
                 console.log('Backend response:', successData);
 
-                showToastMessage('Invoice successfully sent, thanks!', 'success');
+                // Set a cookie to remember that this invoice has been confirmed
+                setCookie('invoiceConfirmed', 'true', 7); // Keep for 7 days
+
+                // Now that the request is successful, hide the confirm button
+                confirmButton.style.display = 'none';
+
+                // Show a success message
+                showToastMessage('Invoice successfully sent!', 'success');
+
+                // Add a more visible success message
+                const successMessage = document.createElement('div');
+                successMessage.style.textAlign = 'center';
+                successMessage.style.margin = '20px 0';
+                successMessage.style.padding = '15px';
+                successMessage.style.backgroundColor = '#d4edda';
+                successMessage.style.color = '#155724';
+                successMessage.style.borderRadius = '5px';
+                successMessage.style.fontWeight = 'bold';
+                successMessage.innerHTML = 'Invoice has been successfully processed.<br>You can now download the image or return to the home page.';
+
+                // Insert the message after the button container
+                const buttonContainer = document.querySelector('.button-container');
+                buttonContainer.parentNode.insertBefore(successMessage, buttonContainer.nextSibling);
 
             } catch (error) {
                 console.error('Error generating PDF:', error);

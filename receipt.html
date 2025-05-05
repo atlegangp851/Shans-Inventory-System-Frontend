@@ -486,6 +486,14 @@
       return "";
     }
 
+    // Function to set a cookie
+    function setCookie(name, value, days = 1) {
+      const date = new Date();
+      date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+      const expires = `expires=${date.toUTCString()}`;
+      document.cookie = `${name}=${value};${expires};path=/`;
+    }
+
     // Function to format currency in ZAR (no decimals)
     function formatCurrency(amount) {
       return 'R' + parseFloat(amount).toLocaleString('en-ZA', {
@@ -527,6 +535,29 @@
       const taxAmountCookie = getCookie('taxAmount');
       const totalAmountCookie = getCookie('totalAmount');
       const selectedCompanyCookie = getCookie('selectedCompany');
+      const receiptConfirmedCookie = getCookie('receiptConfirmed');
+
+      // Check if receipt has already been confirmed
+      if (receiptConfirmedCookie === 'true') {
+        // Hide the confirm button
+        const confirmButton = document.getElementById('confirm-button');
+        confirmButton.style.display = 'none';
+
+        // Show a message that the receipt has been processed
+        const successMessage = document.createElement('div');
+        successMessage.style.textAlign = 'center';
+        successMessage.style.margin = '20px 0';
+        successMessage.style.padding = '15px';
+        successMessage.style.backgroundColor = '#d4edda';
+        successMessage.style.color = '#155724';
+        successMessage.style.borderRadius = '5px';
+        successMessage.style.fontWeight = 'bold';
+        successMessage.innerHTML = 'Receipt has already been processed.<br>You can download the image or return to the home page.';
+
+        // Insert the message after the button container
+        const buttonContainer = document.querySelector('.button-container');
+        buttonContainer.parentNode.insertBefore(successMessage, buttonContainer.nextSibling);
+      }
 
       if (!customerInfoCookie ||
           !selectedProductsCookie ||
@@ -682,6 +713,7 @@
       const loadingSpinner = document.getElementById('loading-spinner');
       const pdfPreview = document.getElementById('pdf-preview');
 
+      // Disable the button but don't hide it yet
       confirmButton.disabled = true;
       loadingSpinner.style.display = 'inline-block';
       pdfPreview.innerHTML = '';
@@ -788,12 +820,35 @@
         const successData = await response.json();
         console.log('Backend response:', successData);
 
-        showToastMessage('Successfully sent, thanks!', 'success');
+        // Set a cookie to remember that this receipt has been confirmed
+        setCookie('receiptConfirmed', 'true', 7); // Keep for 7 days
+
+        // Now that the request is successful, hide the confirm button
+        confirmButton.style.display = 'none';
+
+        showToastMessage('Receipt successfully processed and sent!', 'success');
+        // Add a more visible success message
+        const successMessage = document.createElement('div');
+        successMessage.style.textAlign = 'center';
+        successMessage.style.margin = '20px 0';
+        successMessage.style.padding = '15px';
+        successMessage.style.backgroundColor = '#d4edda';
+        successMessage.style.color = '#155724';
+        successMessage.style.borderRadius = '5px';
+        successMessage.style.fontWeight = 'bold';
+        successMessage.innerHTML = 'Receipt has been successfully processed.<br>You can now download the image or return to the home page.';
+
+        // Insert the message after the button container
+        const buttonContainer = document.querySelector('.button-container');
+        buttonContainer.parentNode.insertBefore(successMessage, buttonContainer.nextSibling);
       } catch (error) {
         console.error('Error generating PDF:', error);
         showToastMessage(`Error: ${error.message}`, 'error');
-      } finally {
+
+        // Re-enable the button so the user can try again
         confirmButton.disabled = false;
+      } finally {
+        // Stop the spinner
         loadingSpinner.style.display = 'none';
       }
     }
