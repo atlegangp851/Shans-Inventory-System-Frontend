@@ -456,6 +456,40 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
   <script>
+    // Main initialization function
+    function initializeReceiptPage() {
+      // Clear any existing receipt cookies when the page loads
+      // We don't want to clear these cookies if they were just set
+      // This is just a safeguard for when users navigate back to this page
+      // after having already processed a receipt
+      const urlParams = new URLSearchParams(window.location.search);
+      const skipClearCookies = urlParams.get('skipClearCookies');
+
+      if (skipClearCookies !== 'true') {
+        // Only clear the receiptConfirmed cookie, not the actual receipt data
+        document.cookie = 'receiptConfirmed=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      }
+
+      // Populate the receipt with data
+      populateReceipt();
+
+      // Set up event listeners
+      const confirmButton = document.getElementById('confirm-button');
+      if (confirmButton) {
+        confirmButton.removeEventListener('click', confirmReceipt);
+        confirmButton.addEventListener('click', confirmReceipt);
+      }
+
+      const screenshotButton = document.getElementById('screenshot-button');
+      if (screenshotButton) {
+        screenshotButton.removeEventListener('click', captureScreenshot);
+        screenshotButton.addEventListener('click', captureScreenshot);
+      }
+    }
+
+    // Initialize everything when the DOM is ready
+    document.addEventListener('DOMContentLoaded', initializeReceiptPage);
+
     /**
      * Display a non-blocking toast message in the top-right corner.
      * @param {string} message - The message to display
@@ -535,29 +569,6 @@
       const taxAmountCookie = getCookie('taxAmount');
       const totalAmountCookie = getCookie('totalAmount');
       const selectedCompanyCookie = getCookie('selectedCompany');
-      const receiptConfirmedCookie = getCookie('receiptConfirmed');
-
-      // Check if receipt has already been confirmed
-      if (receiptConfirmedCookie === 'true') {
-        // Hide the confirm button
-        const confirmButton = document.getElementById('confirm-button');
-        confirmButton.style.display = 'none';
-
-        // Show a message that the receipt has been processed
-        const successMessage = document.createElement('div');
-        successMessage.style.textAlign = 'center';
-        successMessage.style.margin = '20px 0';
-        successMessage.style.padding = '15px';
-        successMessage.style.backgroundColor = '#d4edda';
-        successMessage.style.color = '#155724';
-        successMessage.style.borderRadius = '5px';
-        successMessage.style.fontWeight = 'bold';
-        successMessage.innerHTML = 'Receipt has already been processed.<br>You can download the image or return to the home page.';
-
-        // Insert the message after the button container
-        const buttonContainer = document.querySelector('.button-container');
-        buttonContainer.parentNode.insertBefore(successMessage, buttonContainer.nextSibling);
-      }
 
       if (!customerInfoCookie ||
           !selectedProductsCookie ||
@@ -713,6 +724,13 @@
       const loadingSpinner = document.getElementById('loading-spinner');
       const pdfPreview = document.getElementById('pdf-preview');
 
+      // Check if there's already a success message displayed (indicating a previous successful submission)
+      const existingSuccessMessage = document.querySelector('.success-message');
+      if (existingSuccessMessage) {
+        showToastMessage('This receipt has already been processed.', 'info');
+        return;
+      }
+
       // Disable the button but don't hide it yet
       confirmButton.disabled = true;
       loadingSpinner.style.display = 'inline-block';
@@ -764,27 +782,43 @@
           comments: customerInfo.comments || "",
           salespersonName: customerInfo.salespersonName || "",
           products: selectedProducts.map(product => {
+            // Get unit cost from product if available
+            const unitCost = product.unit_cost || 0;
+
             if (isTaxAdded) {
               // net = price * 0.85, tax = price * 0.15, total = price * quantity
               const netPrice = parseFloat((product.price * 0.85).toFixed(2));
               const taxPerUnit = parseFloat((product.price * 0.15).toFixed(2));
               const lineTotal = parseFloat((product.price * product.quantity).toFixed(2));
+              const profitPerUnit = netPrice - unitCost;
+              const totalProfit = profitPerUnit * product.quantity;
+
               return {
                 item_code: product.item_code,
                 name: product.name,
                 quantity: product.quantity,
                 unitPriceExcludingTax: netPrice,
+                unit_cost: unitCost,
+                profit_per_unit: profitPerUnit,
+                total_profit: totalProfit,
                 taxPerProduct: taxPerUnit,
                 totalPrice: lineTotal
               };
             } else {
               // no tax
+              const unitPrice = parseFloat(product.price.toFixed(2));
               const lineTotal = parseFloat((product.price * product.quantity).toFixed(2));
+              const profitPerUnit = unitPrice - unitCost;
+              const totalProfit = profitPerUnit * product.quantity;
+
               return {
                 item_code: product.item_code,
                 name: product.name,
                 quantity: product.quantity,
-                unitPriceExcludingTax: parseFloat(product.price.toFixed(2)),
+                unitPriceExcludingTax: unitPrice,
+                unit_cost: unitCost,
+                profit_per_unit: profitPerUnit,
+                total_profit: totalProfit,
                 taxPerProduct: 0.00,
                 totalPrice: lineTotal
               };
@@ -820,15 +854,13 @@
         const successData = await response.json();
         console.log('Backend response:', successData);
 
-        // Set a cookie to remember that this receipt has been confirmed
-        setCookie('receiptConfirmed', 'true', 7); // Keep for 7 days
-
         // Now that the request is successful, hide the confirm button
         confirmButton.style.display = 'none';
 
         showToastMessage('Receipt successfully processed and sent!', 'success');
         // Add a more visible success message
         const successMessage = document.createElement('div');
+        successMessage.className = 'success-message'; // Add a class for identification
         successMessage.style.textAlign = 'center';
         successMessage.style.margin = '20px 0';
         successMessage.style.padding = '15px';
@@ -853,11 +885,8 @@
       }
     }
 
-    document.addEventListener('DOMContentLoaded', populateReceipt);
-    document.getElementById('confirm-button').addEventListener('click', confirmReceipt);
-
-    // Screenshot functionality
-    document.getElementById('screenshot-button').addEventListener('click', () => {
+    // Define screenshot function
+    function captureScreenshot() {
       const loadingSpinner = document.getElementById('loading-spinner');
       loadingSpinner.style.display = 'inline-block';
       const element = document.getElementById('pdf-1');
@@ -902,7 +931,9 @@
           showToastMessage('Failed to capture image.', 'error');
           loadingSpinner.style.display = 'none';
         });
-    });
+    }
+
+    // End of script
   </script>
 </body>
 </html>

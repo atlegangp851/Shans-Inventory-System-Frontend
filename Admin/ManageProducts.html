@@ -18,12 +18,20 @@
             padding: 20px;
         }
 
-        /* Custom button style for category management */
-        .category-btn {
+        /* Action buttons container */
+        .action-buttons-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        /* Unified button style for all action buttons */
+        .action-btn {
             background-color: #007bff;
             color: white;
             border: none;
-            padding: 8px 12px;
+            padding: 8px 15px;
             height: 40px;
             border-radius: 20px;
             cursor: pointer;
@@ -31,7 +39,46 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             display: flex;
             align-items: center;
+            justify-content: center;
             transition: background-color 0.3s, transform 0.2s;
+            text-align: center;
+            min-width: 120px;
+        }
+
+        /* Add margin to all buttons except the first one */
+        .action-btn:not(:first-of-type) {
+            margin-left: 10px;
+        }
+
+        .action-btn:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+
+        /* Button icon styling */
+        .button-icon, .plus-icon {
+            margin-right: 5px;
+            font-size: 16px;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        /* Legacy class names for backward compatibility */
+        .category-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            height: 40px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s, transform 0.2s;
+            text-align: center;
         }
 
         .category-btn:hover {
@@ -40,17 +87,25 @@
         }
 
         .add-product-block {
-            width: 50px;
-            height: 50px;
             background-color: #007bff;
             color: white;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            border: none;
+            padding: 8px 15px;
+            height: 40px;
+            border-radius: 20px;
             cursor: pointer;
-            font-size: 30px;
-            margin-bottom: 20px;
+            font-size: 14px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s, transform 0.2s;
+            text-align: center;
+        }
+
+        .add-product-block:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
         }
 
         .products-section {
@@ -332,17 +387,26 @@
         }
 
         /* Button Styles */
-        button[type="submit"] {
+        button[type="submit"]:not(.action-btn):not(.category-btn) {
             background-color: #28a745;
             color: white;
             padding: 10px 15px;
             border: none;
-            border-radius: 4px;
+            border-radius: 20px;
             cursor: pointer;
+            font-size: 14px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s, transform 0.2s;
+            text-align: center;
+            height: 40px;
         }
 
-        button[type="submit"]:hover {
+        button[type="submit"]:not(.action-btn):not(.category-btn):hover {
             background-color: #218838;
+            transform: scale(1.05);
         }
 
         /* Responsive Design */
@@ -353,6 +417,43 @@
 
             .products-section {
                 padding: 10px;
+            }
+
+            /* Action buttons mobile styling */
+            .action-buttons-container {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 10px !important;
+            }
+
+            .action-btn,
+            .category-btn,
+            .add-product-block {
+                padding: 6px 10px;
+                font-size: 13px;
+                margin-left: 0 !important;
+                min-width: 0;
+                flex: 1 1 auto;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 150px;
+                height: 36px;
+            }
+
+            /* For very small screens, stack buttons vertically */
+            @media (max-width: 480px) {
+                .action-buttons-container {
+                    flex-direction: column;
+                    align-items: stretch;
+                }
+
+                .action-btn,
+                .category-btn,
+                .add-product-block {
+                    max-width: 100%;
+                    margin-bottom: 5px;
+                }
             }
 
             #productsTable th,
@@ -480,25 +581,25 @@
             <a href="index.html" style="text-decoration: none; color: #007BFF; font-size: 16px; margin-right: 20px;">&larr; Back to Home</a>
         </div>
         <!-- Action Buttons -->
-        <div style="display: flex; gap: 15px; margin-bottom: 20px;">
-            <!-- Add Product Block -->
-            <div id="addProductBlock" class="add-product-block" aria-label="Add new product" title="Add New Product">
-                <span class="plus-icon">+</span>
-            </div>
+        <div class="action-buttons-container">
+            <!-- Add Product Button -->
+            <button id="addProductBlock" class="action-btn add-product-block" aria-label="Add new product" title="Add New Product">
+                <span class="plus-icon">+</span> Add Product
+            </button>
 
             <!-- Manage Categories Button -->
-            <button id="manageCategoriesBtn" class="category-btn">
-                <span style="margin-right: 5px;">⚙️</span> Manage Categories
+            <button id="manageCategoriesBtn" class="action-btn category-btn">
+                <span class="button-icon">⚙️</span> Manage Categories
             </button>
 
             <!-- Manage Car Brands Button -->
-            <button id="manageCarBrandsBtn" class="category-btn" style="margin-left: 10px;">
-                <span style="margin-right: 5px;">🚗</span> Manage Car Brands
+            <button id="manageCarBrandsBtn" class="action-btn category-btn">
+                <span class="button-icon">🚗</span> Manage Car Brands
             </button>
 
             <!-- Manage Car Models Button -->
-            <button id="manageCarModelsBtn" class="category-btn" style="margin-left: 10px;">
-                <span style="margin-right: 5px;">🚘</span> Manage Car Models
+            <button id="manageCarModelsBtn" class="action-btn category-btn">
+                <span class="button-icon">🚘</span> Manage Car Models
             </button>
         </div>
 
@@ -640,7 +741,7 @@
                         <label for="additionalComments">Additional Comments</label>
                         <textarea id="additionalComments" name="additionalComments"></textarea>
                     </div>
-                    <button type="submit">Add Product</button>
+                    <button type="submit" class="action-btn">Add Product</button>
                 </form>
             </div>
         </div>
@@ -740,7 +841,7 @@
                         <label for="editAdditionalComments">Additional Comments</label>
                         <textarea id="editAdditionalComments" name="editAdditionalComments"></textarea>
                     </div>
-                    <button type="submit">Update Product</button>
+                    <button type="submit" class="action-btn">Update Product</button>
                 </form>
             </div>
         </div>
@@ -804,8 +905,8 @@
                             <input type="text" id="categoryName" name="categoryName" required placeholder="Enter category name">
                         </div>
                         <div style="display: flex; align-items: flex-end;">
-                            <button type="submit" class="category-btn">
-                                <span style="margin-right: 5px;">+</span> Add Category
+                            <button type="submit" class="action-btn category-btn">
+                                <span class="button-icon">+</span> Add Category
                             </button>
                         </div>
                     </div>
@@ -846,8 +947,8 @@
                             <input type="text" id="brandName" name="brandName" required placeholder="Enter brand name">
                         </div>
                         <div style="display: flex; align-items: flex-end;">
-                            <button type="submit" class="category-btn">
-                                <span style="margin-right: 5px;">+</span> Add Brand
+                            <button type="submit" class="action-btn category-btn">
+                                <span class="button-icon">+</span> Add Brand
                             </button>
                         </div>
                     </div>
@@ -896,8 +997,8 @@
                                 <input type="text" id="modelName" name="modelName" required placeholder="Enter model name">
                             </div>
                             <div style="display: flex; align-items: flex-end;">
-                                <button type="submit" class="category-btn">
-                                    <span style="margin-right: 5px;">+</span> Add Model
+                                <button type="submit" class="action-btn category-btn">
+                                    <span class="button-icon">+</span> Add Model
                                 </button>
                             </div>
                         </div>

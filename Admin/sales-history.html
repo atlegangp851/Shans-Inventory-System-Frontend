@@ -194,11 +194,19 @@
         }
 
         td:nth-child(11), th:nth-child(11), /* Quantity */
-        td:nth-child(12), th:nth-child(12), /* Tax per Unit */
+        td:nth-child(12), th:nth-child(12), /* Unit Cost */
         td:nth-child(13), th:nth-child(13), /* Unit Price */
-        td:nth-child(15), th:nth-child(15) { /* Total */
+        td:nth-child(14), th:nth-child(14), /* Profit per Unit */
+        td:nth-child(15), th:nth-child(15), /* Tax per Unit */
+        td:nth-child(17), th:nth-child(17), /* Total */
+        td:nth-child(18), th:nth-child(18) { /* Total Profit */
             text-align: right;
             min-width: 100px;
+        }
+
+        /* Profit columns styling */
+        td:nth-child(14), td:nth-child(18) {
+            background-color: #f0fff0;
         }
 
         /* Month Summary Section */
@@ -593,10 +601,13 @@
                         <th>Item Purchase</th>
                         <th>Room</th>
                         <th>Quantity</th>
-                        <th>Tax per Unit (R)</th>
+                        <th>Unit Cost (R)</th>
                         <th>Unit Price (R)</th>
+                        <th>Profit/Unit (R)</th>
+                        <th>Tax per Unit (R)</th>
                         <th>Payment Method</th>
                         <th>Total (R)</th>
+                        <th>Total Profit (R)</th>
                     </tr>
                 `;
                 table.appendChild(thead);
@@ -613,6 +624,10 @@
                         const quantity = parseFloat(item.quantity) || 0;
                         const taxPerProduct = parseFloat(item.tax_per_product) || 0;
                         const totalPrice = parseFloat(item.total_price) || 0;
+                        const unitCost = parseFloat(item.unit_cost) || 0;
+                        const unitPrice = parseFloat(item.unit_price_excluding_tax) || (quantity > 0 ? totalPrice / quantity : 0);
+                        const profitPerUnit = parseFloat(item.profit_per_unit) || (unitPrice - unitCost);
+                        const totalProfit = parseFloat(item.total_profit) || (profitPerUnit * quantity);
 
                         // Fetch room information for this item
                         const roomInfo = item.item_code ? `${item.room_name || 'N/A'}` : 'N/A';
@@ -629,10 +644,13 @@
                             <td>${sanitizeHTML(item.item_name)}</td>
                             <td>${sanitizeHTML(item.room_name || 'N/A')}</td>
                             <td>${quantity.toLocaleString()}</td>
+                            <td>R ${Math.round(unitCost).toLocaleString()}</td>
+                            <td>R ${Math.round(unitPrice).toLocaleString()}</td>
+                            <td style="color: #28a745; font-weight: bold;">R ${Math.round(profitPerUnit).toLocaleString()}</td>
                             <td>R ${Math.round(taxPerProduct).toLocaleString()}</td>
-                            <td>R ${Math.round(totalPrice / quantity).toLocaleString()}</td>
                             <td>${sanitizeHTML(sale.payment_method)}</td>
                             <td>R ${Math.round(totalPrice).toLocaleString()}</td>
+                            <td style="color: #28a745; font-weight: bold;">R ${Math.round(totalProfit).toLocaleString()}</td>
                         `;
                         tbody.appendChild(row);
 
