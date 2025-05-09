@@ -509,36 +509,19 @@
                     };
                 });
 
-                // Add room and profit information to each sale item
+                // Add room information to each sale item
                 data.forEach(sale => {
                     sale.items.forEach(item => {
+                        // Add room information
                         item.room_name = productRoomMap[item.item_code] || 'N/A';
-
-                        // Calculate profit for this item
-                        const quantity = parseFloat(item.quantity) || 0;
-                        const totalPrice = parseFloat(item.total_price) || 0;
 
                         // Get cost information from product data if available
                         if (productCostMap[item.item_code]) {
-                            // Get the retail price and cost from the product data
-                            const unitRetailPrice = productCostMap[item.item_code].unit_retail_price;
-                            const unitCost = productCostMap[item.item_code].unit_cost;
-
-                            // Calculate total retail value and total cost
-                            const totalRetailValue = unitRetailPrice * quantity;
-                            const totalCost = unitCost * quantity;
-
-                            // Calculate profit
-                            item.unit_retail_price = unitRetailPrice;
-                            item.unit_cost = unitCost;
-                            item.profit_per_unit = unitRetailPrice - unitCost;
-                            item.total_profit = totalRetailValue - totalCost;
+                            // Store the unit cost from the product data for profit calculations
+                            item.unit_cost = productCostMap[item.item_code].unit_cost;
                         } else {
-                            // If product not found (might be a custom item or deleted product)
-                            item.unit_retail_price = 0;
+                            // If product not found, ensure unit_cost is set to 0 to avoid NaN in calculations
                             item.unit_cost = 0;
-                            item.profit_per_unit = 0;
-                            item.total_profit = 0;
                         }
                     });
                 });
@@ -621,13 +604,18 @@
                     sale.items.forEach(item => {
                         const row = document.createElement('tr');
 
+                        // Get basic values from the item
                         const quantity = parseFloat(item.quantity) || 0;
                         const taxPerProduct = parseFloat(item.tax_per_product) || 0;
                         const totalPrice = parseFloat(item.total_price) || 0;
                         const unitCost = parseFloat(item.unit_cost) || 0;
+
+                        // Use the actual unit price from the sale (negotiated/discounted price)
                         const unitPrice = parseFloat(item.unit_price_excluding_tax) || (quantity > 0 ? totalPrice / quantity : 0);
-                        const profitPerUnit = parseFloat(item.profit_per_unit) || (unitPrice - unitCost);
-                        const totalProfit = parseFloat(item.total_profit) || (profitPerUnit * quantity);
+
+                        // Calculate profit entirely on the frontend
+                        const profitPerUnit = unitPrice - unitCost;
+                        const totalProfit = profitPerUnit * quantity;
 
                         // Fetch room information for this item
                         const roomInfo = item.item_code ? `${item.room_name || 'N/A'}` : 'N/A';
@@ -656,7 +644,7 @@
 
                         monthTotal += totalPrice;
                         monthTotalTax += taxPerProduct * quantity;
-                        monthTotalProfit += (item.total_profit || 0);
+                        monthTotalProfit += totalProfit; // Use the frontend-calculated profit
                     });
                 });
 
@@ -712,15 +700,19 @@
                         const quantity = parseFloat(item.quantity) || 0;
                         const taxPerProduct = parseFloat(item.tax_per_product) || 0;
                         const totalPrice = parseFloat(item.total_price) || 0;
-                        const unitPrice = quantity > 0 ? totalPrice / quantity : 0;
+
+                        // Use the actual unit price from the sale (negotiated/discounted price)
+                        const unitPrice = parseFloat(item.unit_price_excluding_tax) || (quantity > 0 ? totalPrice / quantity : 0);
 
                         const card = document.createElement('div');
                         card.className = 'card';
-                        // Get values for display
-                        const unitRetailPrice = parseFloat(item.unit_retail_price) || 0;
+
+                        // Get the unit cost from the product data
                         const unitCost = parseFloat(item.unit_cost) || 0;
-                        const profitPerUnit = parseFloat(item.profit_per_unit) || 0;
-                        const totalProfit = parseFloat(item.total_profit) || 0;
+
+                        // Calculate profit entirely on the frontend
+                        const profitPerUnit = unitPrice - unitCost;
+                        const totalProfit = profitPerUnit * quantity;
 
                         card.innerHTML = `
                             <h3>${sanitizeHTML(formatDate(sale.date))} - ${sanitizeHTML(sale.reference_number)}</h3>
@@ -733,11 +725,11 @@
                             <p><strong>Item:</strong> <span>${sanitizeHTML(item.item_name)}</span></p>
                             <p><strong>Room:</strong> <span>${sanitizeHTML(item.room_name || 'N/A')}</span></p>
                             <p><strong>Quantity:</strong> <span>${quantity.toLocaleString()}</span></p>
-                            <p><strong>Unit Retail Price:</strong> <span>R ${Math.round(unitRetailPrice).toLocaleString()}</span></p>
+                            <p><strong>Unit Price:</strong> <span>R ${Math.round(unitPrice).toLocaleString()}</span></p>
                             <p><strong>Unit Cost:</strong> <span>R ${Math.round(unitCost).toLocaleString()}</span></p>
                             <p><strong>Profit per Unit:</strong> <span style="color: #28a745;">R ${Math.round(profitPerUnit).toLocaleString()}</span></p>
                             <p><strong>Tax per Unit:</strong> <span>R ${Math.round(taxPerProduct).toLocaleString()}</span></p>
-                            <p><strong>Total Retail Value:</strong> <span>R ${Math.round(unitRetailPrice * quantity).toLocaleString()}</span></p>
+                            <p><strong>Total Value:</strong> <span>R ${Math.round(unitPrice * quantity).toLocaleString()}</span></p>
                             <p><strong>Total Cost:</strong> <span>R ${Math.round(unitCost * quantity).toLocaleString()}</span></p>
                             <p><strong>Total Profit:</strong> <span style="color: #28a745;">R ${Math.round(totalProfit).toLocaleString()}</span></p>
                             <p><strong>Total Tax:</strong> <span>R ${Math.round(taxPerProduct * quantity).toLocaleString()}</span></p>
@@ -764,7 +756,13 @@
 
                 const monthlyProfitTotal = sales.reduce((total, sale) => {
                     return total + sale.items.reduce((itemTotal, item) => {
-                        return itemTotal + (parseFloat(item.total_profit) || 0);
+                        // Calculate profit on the frontend for each item
+                        const quantity = parseFloat(item.quantity) || 0;
+                        const unitPrice = parseFloat(item.unit_price_excluding_tax) || 0;
+                        const unitCost = parseFloat(item.unit_cost) || 0;
+                        const profitPerUnit = unitPrice - unitCost;
+                        const itemProfit = profitPerUnit * quantity;
+                        return itemTotal + itemProfit;
                     }, 0);
                 }, 0);
 
@@ -794,13 +792,20 @@
                 sale.items.map(item => {
                     const quantity = parseFloat(item.quantity) || 0;
                     const totalPrice = parseFloat(item.total_price) || 0;
-                    const unitPrice = quantity > 0 ? totalPrice / quantity : 0;
-                    const unitRetailPrice = parseFloat(item.unit_retail_price) || 0;
+
+                    // Use the actual unit price from the sale (negotiated/discounted price)
+                    const unitPrice = parseFloat(item.unit_price_excluding_tax) || (quantity > 0 ? totalPrice / quantity : 0);
+
+                    // Get the unit cost from the product data
                     const unitCost = parseFloat(item.unit_cost) || 0;
-                    const profitPerUnit = parseFloat(item.profit_per_unit) || 0;
-                    const totalRetailValue = unitRetailPrice * quantity;
+
+                    // Calculate profit entirely on the frontend
+                    const profitPerUnit = unitPrice - unitCost;
+                    const totalProfit = profitPerUnit * quantity;
+
+                    // Calculate total values
+                    const totalRetailValue = unitPrice * quantity;
                     const totalCost = unitCost * quantity;
-                    const totalProfit = parseFloat(item.total_profit) || 0;
 
                     return {
                         "Reference Number": sale.reference_number,
@@ -814,11 +819,11 @@
                         "Item Purchased": item.item_name,
                         "Room": item.room_name || 'N/A',
                         "Quantity": quantity,
-                        "Unit Retail Price (R)": Math.round(unitRetailPrice),
+                        "Unit Price (R)": Math.round(unitPrice),
                         "Unit Cost (R)": Math.round(unitCost),
                         "Profit per Unit (R)": Math.round(profitPerUnit),
                         "Tax per Unit (R)": Math.round(parseFloat(item.tax_per_product) || 0),
-                        "Total Retail Value (R)": Math.round(totalRetailValue),
+                        "Total Value (R)": Math.round(totalRetailValue),
                         "Total Cost (R)": Math.round(totalCost),
                         "Total Profit (R)": Math.round(totalProfit),
                         "Total Tax (R)": Math.round(parseFloat(item.tax_per_product || 0) * quantity),

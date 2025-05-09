@@ -497,6 +497,8 @@
     function selectProduct(product) {
       productSearchInput.value = product.item_name;
       productList.innerHTML = '';
+      // Set the default price from the database, but this can be modified by the user
+      // for negotiated prices or discounts before adding to the order
       document.getElementById('price').value = Math.round(parseFloat(product.unit_retail_price));
       roomInput.value = product.room_name;
       roomInput.classList.remove('hidden');
@@ -506,6 +508,8 @@
     function addSelectedProduct() {
       const productName = productSearchInput.value.trim();
       const quantity = parseInt(document.getElementById('quantity').value);
+      // Get the price from the input field - this may be the original retail price
+      // or a negotiated/discounted price entered by the user
       const price = Math.round(parseFloat(document.getElementById('price').value));
       const product = allProducts.find(p => p.item_name.toLowerCase() === productName.toLowerCase());
 
