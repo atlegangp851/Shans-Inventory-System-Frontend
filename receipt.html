@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <!-- A single viewport meta tag -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Fixed viewport meta tag to prevent mobile scaling issues -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Shans System - Receipt</title>
   <style>
     /* Basic Reset */
@@ -22,14 +22,18 @@
       padding: 20px;
     }
 
-    /* Fluid Container */
+    /* A4 Fixed Container */
     .container {
       width: 100%;
-      max-width: 800px;
+      max-width: 800px; /* Approximately A4 width */
       margin: auto;
       background: white;
       padding: 20px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      /* A4 aspect ratio is 1:1.414 (width:height) */
+      position: relative;
+      /* Set a min-height to approximate A4 proportions */
+      min-height: calc(800px * 1.414);
     }
 
     /* Header */
@@ -306,59 +310,67 @@
       100% { opacity: 0; }
     }
 
-    /* Responsive Adjustments */
-    @media (max-width: 768px) {
-      .billing, .shipping {
-        flex-basis: 100%;
+    /* A4 Paper Simulation */
+    .a4-container {
+      /* A4 dimensions in pixels at 96 DPI: 794px × 1123px */
+      width: 794px;
+      height: 1123px;
+      margin: 0 auto;
+      background: white;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Responsive Scaling for A4 Format */
+    @media (max-width: 830px) {
+      /* Container wrapper for scaling */
+      .container-wrapper {
+        width: 100%;
+        overflow-x: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
       }
-      h1 {
-        font-size: 28px;
+
+      /* Scale the container to fit the screen width while maintaining A4 proportions */
+      .container {
+        transform-origin: top center;
+        transform: scale(calc(100vw / 830));
+        width: 794px; /* Fixed A4 width */
+        margin: 0 auto;
+        height: auto;
+        min-height: 1123px; /* A4 height */
+        padding: 40px; /* Larger padding for better appearance */
       }
-      .company-details h2 {
-        font-size: 22px;
+
+      /* Adjust the wrapper height to account for the scaled content */
+      body {
+        padding: 0;
+        margin: 0;
       }
-      .billing h3, .shipping h3 {
-        font-size: 18px;
-      }
-      .additional-comments h3 {
-        font-size: 18px;
-      }
-      .additional-comments p {
-        font-size: 14px;
-      }
-      .terms h3 {
-        font-size: 14px;
-      }
-      .terms p {
-        font-size: 12px;
-      }
-      .totals {
-        padding: 15px;
-      }
-      .totals p {
-        font-size: 14px;
-      }
-      table, th, td {
-        font-size: 14px;
+
+      /* Ensure the button container is below the scaled receipt */
+      .button-container {
+        margin-top: calc(1123px * (100vw / 830) - 1123px + 40px);
+        padding: 20px;
       }
     }
 
+    /* Specific adjustments for very small screens */
     @media (max-width: 480px) {
-      h1 {
-        font-size: 24px;
+      .container {
+        padding: 30px;
       }
-      .company-details h2 {
-        font-size: 20px;
+
+      /* Ensure the button container is properly positioned */
+      .button-container {
+        margin-top: calc(1123px * (100vw / 830) - 1123px + 30px);
+        flex-direction: column;
+        gap: 15px;
       }
-      .billing h3, .shipping h3 {
-        font-size: 16px;
-      }
-      .totals p {
-        font-size: 12px;
-      }
-      table, th, td {
-        font-size: 12px;
-        padding: 8px 10px;
+
+      .action-button {
+        width: 100%;
       }
     }
   </style>
@@ -367,14 +379,17 @@
   <!-- Toast Container -->
   <div class="toast-container" id="toastContainer"></div>
 
-  <a href="index.html" style="text-decoration: none; color: #007BFF; font-size: 16px; margin-right: 20px;">&larr; Back to Home</a>
-  <div id="pdf-1" class="container">
-    <div id="receipt">
-      <div class="header">
-        <p id="receipt-date">Date: <!-- Dynamic Date --></p>
-        <h1>RECEIPT</h1>
-        <div class="logo"></div>
-      </div>
+  <a href="index.html" style="text-decoration: none; color: #007BFF; font-size: 16px; margin: 20px; display: inline-block;">&larr; Back to Home</a>
+
+  <!-- Container wrapper for scaling -->
+  <div class="container-wrapper">
+    <div id="pdf-1" class="container">
+      <div id="receipt">
+        <div class="header">
+          <p id="receipt-date">Date: <!-- Dynamic Date --></p>
+          <h1>RECEIPT</h1>
+          <div class="logo"></div>
+        </div>
 
       <div class="company-details">
         <h2 id="company-name">Shans Accessories PTY LTD</h2>
@@ -440,7 +455,8 @@
       <p>Facebook: Shans Accessories (By Car Brand)</p>
       <p>YouTube/Tik Tok: Shans Accessories All products are Non OEM</p>
     </div>
-  </div>
+    </div>
+  </div><!-- End of container-wrapper -->
 
   <div class="button-container">
     <button id="confirm-button" class="action-button">Confirm</button>
@@ -896,6 +912,10 @@
       loadingSpinner.style.display = 'inline-block';
       const element = document.getElementById('pdf-1');
 
+      // Temporarily remove any scaling for the screenshot
+      const originalTransform = element.style.transform;
+      element.style.transform = 'none';
+
       // Get client name and reference number for the filename
       const customerInfoCookie = getCookie('customerInfo');
       let clientName = 'client';
@@ -921,19 +941,34 @@
       // Create dynamic filename
       const filename = `receipt-${clientName}-${referenceNumber}.png`;
 
-      html2canvas(element, { scale: 2 })
+      // Use higher scale for better quality
+      html2canvas(element, {
+        scale: 2,
+        width: 794, // A4 width
+        height: 1123, // A4 height
+        windowWidth: 794,
+        windowHeight: 1123
+      })
         .then(canvas => {
           const imgData = canvas.toDataURL('image/png');
           const link = document.createElement('a');
           link.href = imgData;
           link.download = filename;
           link.click();
+
+          // Restore original transform
+          element.style.transform = originalTransform;
+
           loadingSpinner.style.display = 'none';
           showToastMessage(`Image saved as ${filename}`, 'success');
         })
         .catch(err => {
           console.error('Error capturing image:', err);
           showToastMessage('Failed to capture image.', 'error');
+
+          // Restore original transform even on error
+          element.style.transform = originalTransform;
+
           loadingSpinner.style.display = 'none';
         });
     }

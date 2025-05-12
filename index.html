@@ -530,7 +530,7 @@
     let allProducts = []; // To store all fetched products
     let newProductCounter = 1; // Counter for new products
 
-    const API_BASE_URL = 'http://localhost:8000/api';
+    const API_BASE_URL = 'https://shans-backend-1.onrender.com/api';
     const CURRENCY_SYMBOL = 'R';
     const TAX_RATE = 0.15;
 
@@ -1261,7 +1261,8 @@
         shipping: sameAsBillingCheckbox.checked ? null : shippingInfo,
         paymentMethod: 'N/A',
         comments: comments,
-        salespersonName: salespersonName
+        salespersonName: salespersonName,
+        timestamp: Date.now().toString() // Add timestamp to track when this quotation was created
       };
 
       const selectedCompany = JSON.parse(selectedCompanyCookie);

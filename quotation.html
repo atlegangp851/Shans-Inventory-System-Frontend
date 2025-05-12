@@ -513,8 +513,33 @@
       const selectedCompanyCookie = getCookie('selectedCompany');
       const quotationConfirmedCookie = getCookie('quotationConfirmed');
 
-      // Check if quotation has already been confirmed
-      if (quotationConfirmedCookie === 'true') {
+      // Check if we have a timestamp in the customer info
+      let isNewQuotation = true;
+      if (customerInfoCookie) {
+        try {
+          const customerInfo = JSON.parse(customerInfoCookie);
+          const lastQuotationTimestamp = getCookie('lastQuotationTimestamp');
+
+          // If we have a timestamp in the cookie and it matches the customer info timestamp,
+          // this is not a new quotation
+          if (lastQuotationTimestamp && customerInfo.timestamp &&
+              lastQuotationTimestamp === customerInfo.timestamp) {
+            isNewQuotation = false;
+          } else {
+            // This is a new quotation, save the timestamp
+            setCookie('lastQuotationTimestamp', customerInfo.timestamp || Date.now().toString());
+            // Clear the quotationConfirmed cookie for new quotations
+            if (quotationConfirmedCookie === 'true') {
+              setCookie('quotationConfirmed', 'false');
+            }
+          }
+        } catch (e) {
+          console.error('Error parsing customer info:', e);
+        }
+      }
+
+      // Check if quotation has already been confirmed and it's not a new quotation
+      if (quotationConfirmedCookie === 'true' && !isNewQuotation) {
         // Hide the confirm button
         const confirmButton = document.getElementById('confirm-button');
         confirmButton.style.display = 'none';
@@ -780,6 +805,10 @@
         // Set a cookie to remember that this quotation has been confirmed
         setCookie('quotationConfirmed', 'true', 7); // Keep for 7 days
 
+        // Store the confirmation timestamp
+        const confirmationTimestamp = Date.now().toString();
+        setCookie('quotationConfirmationTimestamp', confirmationTimestamp, 7);
+
         // Now that the request is successful, hide the confirm button
         confirmButton.style.display = 'none';
 
@@ -810,7 +839,15 @@
       }
     }
 
-    document.addEventListener('DOMContentLoaded', populateQuotation);
+    document.addEventListener('DOMContentLoaded', function() {
+      // Check if this is a new session by looking at the referrer
+      if (document.referrer.includes('index.html')) {
+        // Coming from index.html, this is likely a new quotation
+        // Clear the quotationConfirmed cookie to ensure we start fresh
+        setCookie('quotationConfirmed', 'false');
+      }
+      populateQuotation();
+    });
     document.getElementById('confirm-button').addEventListener('click', confirmQuotation);
 
     // Screenshot functionality
