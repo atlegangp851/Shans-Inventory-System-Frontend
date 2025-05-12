@@ -294,6 +294,34 @@
     .remove-button:hover {
       background-color: #e60000;
     }
+
+    /* Minimum order quantity styles */
+    input[type="number"][data-min-order]:not([data-min-order="1"]) {
+      border-left: 4px solid #ff9900;
+      background-color: #fff9e6;
+    }
+
+    /* Add a small badge to indicate minimum order quantity */
+    .min-order-badge {
+      position: relative;
+    }
+
+    .min-order-badge::after {
+      content: attr(data-min-order);
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background-color: #ff9900;
+      color: white;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: bold;
+    }
     /* Loading Screen Styles */
     #loadingScreen {
       position: fixed;
@@ -434,7 +462,10 @@
       </div>
 
       <label for="quantity">Quantity:</label>
-      <input type="number" id="quantity" value="1" min="1">
+      <div style="position: relative;">
+        <input type="number" id="quantity" value="1" min="1">
+        <span id="minOrderIndicator" class="hidden" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #ff9900; font-weight: bold; font-size: 12px;"></span>
+      </div>
 
       <label for="price">Price (R):</label>
       <input type="number" id="price" value="0" min="0" step="1">
@@ -499,7 +530,7 @@
     let allProducts = []; // To store all fetched products
     let newProductCounter = 1; // Counter for new products
 
-    const API_BASE_URL = 'https://shans-backend-1.onrender.com/api';
+    const API_BASE_URL = 'http://localhost:8000/api';
     const CURRENCY_SYMBOL = 'R';
     const TAX_RATE = 0.15;
 
@@ -615,7 +646,7 @@
         // Create product details element
         const productDetailsDiv = document.createElement('div');
         productDetailsDiv.className = 'product-details';
-        productDetailsDiv.textContent = `Room: ${product.room_name || 'N/A'} | Stock: ${product.available_stock}`;
+        productDetailsDiv.textContent = `Room: ${product.room_name || 'N/A'} | Stock: ${product.available_stock} | Min Order: ${product.min_order_quantity || 1}`;
 
         // Add elements to list item
         li.appendChild(productNameDiv);
@@ -631,6 +662,39 @@
       // Set the default price from the database, but this can be modified by the user
       // for negotiated prices or discounts before adding to the order
       document.getElementById('price').value = Math.round(parseFloat(product.unit_retail_price));
+
+      // Get the quantity input element
+      const quantityInput = document.getElementById('quantity');
+
+      // Set the minimum attribute to reflect the minimum order quantity
+      const minOrderQty = product.min_order_quantity || 1;
+      quantityInput.setAttribute('min', minOrderQty);
+
+      // Set a data attribute to store the minimum order quantity for reference
+      quantityInput.setAttribute('data-min-order', minOrderQty);
+
+      // Set the default quantity to the minimum order quantity
+      quantityInput.value = minOrderQty;
+
+      // Add a tooltip to inform the user about the minimum order quantity
+      if (product.min_order_quantity && product.min_order_quantity > 1) {
+        quantityInput.setAttribute('title', `Minimum order quantity: ${product.min_order_quantity}`);
+
+        // Add visual indicator for minimum order quantity
+        quantityInput.classList.add('min-order-badge');
+
+        // Show the minimum order indicator
+        const minOrderIndicator = document.getElementById('minOrderIndicator');
+        minOrderIndicator.textContent = `Min: ${product.min_order_quantity}`;
+        minOrderIndicator.classList.remove('hidden');
+      } else {
+        quantityInput.removeAttribute('title');
+        quantityInput.classList.remove('min-order-badge');
+
+        // Hide the minimum order indicator
+        document.getElementById('minOrderIndicator').classList.add('hidden');
+      }
+
       roomInput.value = product.room_name;
       roomInput.classList.remove('hidden');
       roomLabel.classList.remove('hidden');
@@ -659,6 +723,22 @@
       if (product && quantity > product.available_stock) {
         showToastMessage(`Cannot add ${quantity} units. Only ${product.available_stock} available in stock.`, 'error');
         return;
+      }
+      // Check if the quantity meets the minimum order quantity
+      if (product && product.min_order_quantity && quantity < product.min_order_quantity) {
+        // Ask the user if they want to use the minimum order quantity instead
+        const useMinimum = confirm(`The minimum order quantity for ${productName} is ${product.min_order_quantity}. Would you like to set the quantity to the minimum?`);
+
+        if (useMinimum) {
+          // Update the quantity input field
+          document.getElementById('quantity').value = product.min_order_quantity;
+          // Update the quantity variable for further processing
+          quantity = product.min_order_quantity;
+          showToastMessage(`Quantity updated to minimum order quantity: ${product.min_order_quantity}`, 'info');
+        } else {
+          showToastMessage(`Order not added. Minimum order quantity for ${productName} is ${product.min_order_quantity}.`, 'error');
+          return;
+        }
       }
 
       // We'll store the typed-in price in product.price
@@ -692,7 +772,20 @@
 
       updateSelectedProductsTable();
       productSearchInput.value = '';
-      document.getElementById('quantity').value = '1';
+
+      // Reset quantity input field
+      const quantityInput = document.getElementById('quantity');
+      quantityInput.value = '1';
+      quantityInput.setAttribute('min', '1');
+      quantityInput.removeAttribute('data-min-order');
+      quantityInput.style.borderColor = '';
+      quantityInput.style.backgroundColor = '';
+      quantityInput.classList.remove('min-order-badge');
+
+      // Hide the minimum order indicator
+      document.getElementById('minOrderIndicator').classList.add('hidden');
+
+      // Reset price and room fields
       document.getElementById('price').value = '0';
       roomInput.value = '';
       roomInput.classList.add('hidden');
@@ -1295,6 +1388,40 @@
         const selectedCompany = JSON.parse(selectedCompanyCookie);
         companySelect.value = selectedCompany.key;
       }
+
+      // Add event listener to quantity input to validate minimum order quantity
+      const quantityInput = document.getElementById('quantity');
+      quantityInput.addEventListener('input', function() {
+        // Check if a product is selected and has a minimum order quantity
+        if (this.hasAttribute('data-min-order')) {
+          const minOrderQty = parseInt(this.getAttribute('data-min-order'));
+          const currentQty = parseInt(this.value);
+
+          // If the entered quantity is less than the minimum, show a warning
+          if (!isNaN(currentQty) && currentQty < minOrderQty) {
+            this.style.borderColor = '#ff9900';
+            this.style.backgroundColor = '#fff9e6';
+
+            // Show the warning in the indicator
+            const minOrderIndicator = document.getElementById('minOrderIndicator');
+            minOrderIndicator.textContent = `Min: ${minOrderQty}`;
+            minOrderIndicator.style.color = '#ff0000';
+            minOrderIndicator.classList.remove('hidden');
+          } else {
+            this.style.borderColor = '';
+            this.style.backgroundColor = '';
+
+            // Reset the indicator style
+            const minOrderIndicator = document.getElementById('minOrderIndicator');
+            minOrderIndicator.style.color = '#ff9900';
+
+            // Only hide the indicator if there's no minimum order quantity or it's 1
+            if (minOrderQty <= 1) {
+              minOrderIndicator.classList.add('hidden');
+            }
+          }
+        }
+      });
     };
   </script>
 

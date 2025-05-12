@@ -315,6 +315,11 @@
             background-color: #dc3545;
         }
 
+        .status-message.warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+
         /* Popup Overlay (Add and Edit) */
         .popup-overlay {
             display: none; /* Hidden by default */
@@ -713,6 +718,10 @@
                         <input type="number" id="availableStock" name="availableStock" required min="0">
                     </div>
                     <div class="form-group">
+                        <label for="minOrderQuantity">Minimum Order Quantity</label>
+                        <input type="number" id="minOrderQuantity" name="minOrderQuantity" min="1" value="1">
+                    </div>
+                    <div class="form-group">
                         <label for="location">Location</label>
                         <input type="text" id="location" name="location">
                     </div>
@@ -813,6 +822,10 @@
                         <input type="number" id="editAvailableStock" name="editAvailableStock" required min="0">
                     </div>
                     <div class="form-group">
+                        <label for="editMinOrderQuantity">Minimum Order Quantity</label>
+                        <input type="number" id="editMinOrderQuantity" name="editMinOrderQuantity" min="1">
+                    </div>
+                    <div class="form-group">
                         <label for="editLocation">Location</label>
                         <input type="text" id="editLocation" name="editLocation">
                     </div>
@@ -866,6 +879,7 @@
                         <th>Car Model</th>
                         <th>Category</th>
                         <th>Available Stock</th>
+                        <th>Min Order Qty</th>
                         <th>Colour Tape</th>
                         <th>Location</th>
                         <th>Unit Retail Price (ZAR)</th>
@@ -1076,6 +1090,7 @@
                         <p><strong>Car Model:</strong> <span>${product.car_model || 'N/A'}</span></p>
                         <p><strong>Category:</strong> <span>${capitalizeWords(product.product_category.replace(/_/g, ' '))}</span></p>
                         <p><strong>Available Stock:</strong> <span>${product.available_stock}</span></p>
+                        <p><strong>Min Order Qty:</strong> <span>${product.min_order_quantity || 1}</span></p>
                         <p><strong>Colour Tape:</strong>
                             <span style="display:inline-block;width:20px;height:20px;background-color:${product.colour_tape};border-radius:50%;border:1px solid #ddd;"></span>
                         </p>
@@ -1118,7 +1133,7 @@
         <script>
             document.addEventListener('DOMContentLoaded', function() {
                 // Define the base URL for the API
-                const API_URL = 'https://shans-backend-1.onrender.com/api';
+                const API_URL = 'http://localhost:8000/api';
 
                 // **Element References**
                 // Add Product Modal Elements
@@ -1185,6 +1200,54 @@
 
                 // Store car models data
                 let carModels = [];
+
+                // Local cache for products when database connection fails
+                let localProductCache = {
+                    pendingUpdates: {},
+
+                    // Save a product update to local cache
+                    saveUpdate: function(itemCode, productData) {
+                        this.pendingUpdates[itemCode] = productData;
+                        localStorage.setItem('pendingProductUpdates', JSON.stringify(this.pendingUpdates));
+                        console.log('Saved product update to local cache:', itemCode, productData);
+                    },
+
+                    // Load pending updates from localStorage
+                    loadPendingUpdates: function() {
+                        const saved = localStorage.getItem('pendingProductUpdates');
+                        if (saved) {
+                            try {
+                                this.pendingUpdates = JSON.parse(saved);
+                                console.log('Loaded pending updates from cache:', Object.keys(this.pendingUpdates).length);
+                            } catch (e) {
+                                console.error('Error loading pending updates:', e);
+                                this.pendingUpdates = {};
+                            }
+                        }
+                    },
+
+                    // Apply pending updates to the products array
+                    applyPendingUpdates: function(products) {
+                        for (const itemCode in this.pendingUpdates) {
+                            const index = products.findIndex(p => p.item_code === itemCode);
+                            if (index !== -1) {
+                                // Merge the cached update with the product
+                                products[index] = { ...products[index], ...this.pendingUpdates[itemCode] };
+                                console.log('Applied cached update to product:', itemCode);
+                            }
+                        }
+                        return products;
+                    },
+
+                    // Remove a pending update after it's successfully saved to the database
+                    removePendingUpdate: function(itemCode) {
+                        if (this.pendingUpdates[itemCode]) {
+                            delete this.pendingUpdates[itemCode];
+                            localStorage.setItem('pendingProductUpdates', JSON.stringify(this.pendingUpdates));
+                            console.log('Removed pending update for:', itemCode);
+                        }
+                    }
+                };
 
                 // **Helper Functions**
 
@@ -1255,6 +1318,11 @@
                     document.getElementById('editCarModel').value = product.car_model;
                     document.getElementById('editProductCategory').value = product.product_category;
                     document.getElementById('editAvailableStock').value = product.available_stock;
+                    // Make sure min_order_quantity is properly set
+                    console.log('Setting min_order_quantity:', product.min_order_quantity);
+                    // Force the min_order_quantity to be a number and default to 1 if not valid
+                    const minOrderQty = parseInt(product.min_order_quantity);
+                    document.getElementById('editMinOrderQuantity').value = isNaN(minOrderQty) ? 1 : minOrderQty;
                     document.getElementById('editLocation').value = product.location;
                     document.getElementById('editUnitRetailPrice').value = product.unit_retail_price;
                     document.getElementById('editWholesalePrice').value = product.wholesale_price;
@@ -1313,11 +1381,18 @@
                  */
                 async function fetchProducts() {
                     try {
+                        // Load any pending updates from localStorage
+                        localProductCache.loadPendingUpdates();
+
                         const response = await fetch(`${API_URL}/products`);
                         if (!response.ok) {
                             throw new Error('Failed to fetch products');
                         }
-                        const products = await response.json();
+                        let products = await response.json();
+
+                        // Apply any pending updates from the local cache
+                        products = localProductCache.applyPendingUpdates(products);
+
                         allProducts = products; // Store all products
 
                         renderProductsTable(allProducts);
@@ -1325,6 +1400,12 @@
                     } catch (error) {
                         console.error('Error fetching products:', error);
                         showStatusMessage('Failed to load products. Please try again later.', 'error');
+
+                        // If we have products in memory, apply pending updates to them
+                        if (allProducts.length > 0) {
+                            allProducts = localProductCache.applyPendingUpdates(allProducts);
+                            renderProductsTable(allProducts);
+                        }
                     }
                 }
 
@@ -1348,6 +1429,7 @@
                             <td>${product.car_model || 'N/A'}</td>
                             <td>${capitalizeWords(product.product_category.replace(/_/g, ' '))}</td>
                             <td>${product.available_stock}</td>
+                            <td>${product.min_order_quantity || 1}</td>
                             <td>
                                 <span style="display:inline-block;width:20px;height:20px;background-color:${product.colour_tape};border-radius:50%;border:1px solid #ddd;">
                                 </span>
@@ -1477,6 +1559,7 @@
                         unit_cost: parseFloat(document.getElementById('unitCost').value),
                         supplier_code: document.getElementById('supplierCode').value.trim(),
                         available_stock: parseInt(document.getElementById('availableStock').value),
+                        min_order_quantity: parseInt(document.getElementById('minOrderQuantity').value) || 1,
                         location: document.getElementById('location').value.trim(),
                         colour_tape: document.getElementById('colourTape').value,
                         product_category: document.getElementById('productCategory').value,
@@ -1540,6 +1623,7 @@
                         unit_cost: parseFloat(document.getElementById('editUnitCost').value),
                         supplier_code: document.getElementById('editSupplierCode').value.trim(),
                         available_stock: parseInt(document.getElementById('editAvailableStock').value),
+                        min_order_quantity: Math.max(1, parseInt(document.getElementById('editMinOrderQuantity').value) || 1), // Ensure it's a number and at least 1
                         location: document.getElementById('editLocation').value.trim(),
                         colour_tape: document.getElementById('editColourTape').value,
                         product_category: document.getElementById('editProductCategory').value,
@@ -1558,6 +1642,7 @@
 
                     // Send PUT request
                     try {
+                        console.log('Sending update with formData:', formData);
                         const response = await fetch(`${API_URL}/products/${encodeURIComponent(item_code)}`, {
                             method: 'PUT',
                             headers: { 'Content-Type': 'application/json' },
@@ -1565,7 +1650,12 @@
                         });
 
                         if (response.ok) {
-                            await response.json();
+                            const updatedProduct = await response.json();
+                            console.log('Updated product from server:', updatedProduct);
+
+                            // Remove from local cache if it was there
+                            localProductCache.removePendingUpdate(item_code);
+
                             showStatusMessage('Product updated successfully!', 'success');
                             editProductForm.reset();
                             editColourTape.value = '#000000';
@@ -1578,7 +1668,32 @@
                         }
                     } catch (error) {
                         console.error('Error updating product:', error);
-                        showStatusMessage('An error occurred while updating the product.', 'error');
+
+                        // Save the update to local cache
+                        localProductCache.saveUpdate(item_code, formData);
+
+                        // Update the product in memory
+                        const productIndex = allProducts.findIndex(p => p.item_code === item_code);
+                        if (productIndex !== -1) {
+                            // Calculate profit
+                            const profit = parseFloat(formData.unit_retail_price) - parseFloat(formData.unit_cost);
+
+                            // Update the product in memory
+                            allProducts[productIndex] = {
+                                ...allProducts[productIndex],
+                                ...formData,
+                                profit: profit
+                            };
+
+                            // Re-render the table
+                            renderProductsTable(allProducts);
+                        }
+
+                        showStatusMessage('Database connection failed. Changes saved locally and will be applied when connection is restored.', 'warning');
+                        editProductForm.reset();
+                        editColourTape.value = '#000000';
+                        editColourTapeText.value = '#000000';
+                        closeEditModal();
                     }
                 });
 
@@ -1637,6 +1752,7 @@
                                 throw new Error('Failed to fetch product details');
                             }
                             const product = await response.json();
+                            console.log('Product data from server:', product);
                             openEditModal(product);
                         } catch (error) {
                             console.error('Error fetching product details:', error);
