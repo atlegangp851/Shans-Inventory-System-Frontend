@@ -126,6 +126,127 @@
       width: 100%;
       overflow-x: auto;
     }
+
+    /* Mobile product cards */
+    .product-cards-container {
+      display: none; /* Hidden by default, shown on mobile */
+    }
+
+    .product-card {
+      background-color: white;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .product-card:active {
+      transform: scale(0.98);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+
+    .product-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 8px;
+    }
+
+    .product-card-name {
+      font-weight: bold;
+      font-size: 16px;
+      flex: 1;
+    }
+
+    .product-card-quantity {
+      background-color: #4a90e2;
+      color: white;
+      border-radius: 50%;
+      width: 25px;
+      height: 25px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+
+    .product-card-details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .product-card-detail {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .detail-label {
+      font-size: 12px;
+      color: #666;
+    }
+
+    .detail-value {
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .product-card-total {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid #eee;
+    }
+
+    .product-card-total-label {
+      font-weight: bold;
+    }
+
+    .product-card-total-value {
+      font-weight: bold;
+      font-size: 16px;
+      color: #4a90e2;
+    }
+
+    .product-card-actions {
+      margin-top: 10px;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .product-card .remove-button {
+      width: 100%;
+      text-align: center;
+      padding: 8px 0;
+    }
+
+    .new-product-label {
+      color: #ff9900;
+      font-weight: bold;
+      margin-left: 5px;
+      font-size: 12px;
+    }
+
+    .summary-card {
+      background-color: #f8f9fa;
+      border-left: 4px solid #4a90e2;
+      margin-bottom: 20px;
+    }
+
+    .summary-card-title {
+      font-weight: bold;
+      font-size: 14px;
+      margin-bottom: 10px;
+      color: #4a90e2;
+    }
+
     @media (max-width: 600px) {
       body {
         padding: 10px;
@@ -139,10 +260,6 @@
         font-size: 18px;
         margin-right: 0;
       }
-      th, td {
-        padding: 10px;
-        font-size: 14px;
-      }
       .loader {
         width: 25px;
         height: 25px;
@@ -153,6 +270,14 @@
       .button-group {
         flex-direction: column;
         align-items: stretch;
+      }
+
+      /* Hide table on mobile and show cards instead */
+      .table-responsive {
+        display: none;
+      }
+      .product-cards-container {
+        display: block;
       }
     }
     .hidden {
@@ -170,33 +295,7 @@
       background-color: #e60000;
     }
 
-    /* Minimum order quantity styles */
-    input[type="number"][data-min-order]:not([data-min-order="1"]) {
-      border-left: 4px solid #ff9900;
-      background-color: #fff9e6;
-    }
 
-    /* Add a small badge to indicate minimum order quantity */
-    .min-order-badge {
-      position: relative;
-    }
-
-    .min-order-badge::after {
-      content: attr(data-min-order);
-      position: absolute;
-      top: -8px;
-      right: -8px;
-      background-color: #ff9900;
-      color: white;
-      border-radius: 50%;
-      width: 20px;
-      height: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-      font-weight: bold;
-    }
     /* Loading Screen Styles */
     #loadingScreen {
       position: fixed;
@@ -337,9 +436,8 @@
       </div>
 
       <label for="quantity">Quantity:</label>
-      <div style="position: relative;">
+      <div>
         <input type="number" id="quantity" value="1" min="1">
-        <span id="minOrderIndicator" class="hidden" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #ff9900; font-weight: bold; font-size: 12px;"></span>
       </div>
 
       <label for="price">Price (R):</label>
@@ -354,11 +452,17 @@
     <!-- Selected Products and Totals Section -->
     <div class="section">
       <h2>Selected Products</h2>
+      <!-- Table view (desktop) -->
       <div class="table-responsive">
         <table id="selectedProductsTable">
           <thead></thead>
           <tbody id="selectedProductsBody"></tbody>
         </table>
+      </div>
+
+      <!-- Card view (mobile) -->
+      <div class="product-cards-container" id="productCardsContainer">
+        <!-- Product cards will be added here dynamically -->
       </div>
 
       <div style="display: flex; align-items: center;">
@@ -515,7 +619,7 @@
         // Create product details element
         const productDetailsDiv = document.createElement('div');
         productDetailsDiv.className = 'product-details';
-        productDetailsDiv.textContent = `Room: ${product.room_name || 'N/A'} | Stock: ${product.available_stock} | Min Order: ${product.min_order_quantity || 1}`;
+        productDetailsDiv.textContent = `Room: ${product.room_name || 'N/A'} | Stock: ${product.available_stock}`;
 
         // Add elements to list item
         li.appendChild(productNameDiv);
@@ -535,34 +639,11 @@
       // Get the quantity input element
       const quantityInput = document.getElementById('quantity');
 
-      // Set the minimum attribute to reflect the minimum order quantity
-      const minOrderQty = product.min_order_quantity || 1;
-      quantityInput.setAttribute('min', minOrderQty);
+      // Set the minimum attribute to 1
+      quantityInput.setAttribute('min', 1);
 
-      // Set a data attribute to store the minimum order quantity for reference
-      quantityInput.setAttribute('data-min-order', minOrderQty);
-
-      // Set the default quantity to the minimum order quantity
-      quantityInput.value = minOrderQty;
-
-      // Add a tooltip to inform the user about the minimum order quantity
-      if (product.min_order_quantity && product.min_order_quantity > 1) {
-        quantityInput.setAttribute('title', `Minimum order quantity: ${product.min_order_quantity}`);
-
-        // Add visual indicator for minimum order quantity
-        quantityInput.classList.add('min-order-badge');
-
-        // Show the minimum order indicator
-        const minOrderIndicator = document.getElementById('minOrderIndicator');
-        minOrderIndicator.textContent = `Min: ${product.min_order_quantity}`;
-        minOrderIndicator.classList.remove('hidden');
-      } else {
-        quantityInput.removeAttribute('title');
-        quantityInput.classList.remove('min-order-badge');
-
-        // Hide the minimum order indicator
-        document.getElementById('minOrderIndicator').classList.add('hidden');
-      }
+      // Set the default quantity to 1
+      quantityInput.value = 1;
 
       roomInput.value = product.room_name;
       roomInput.classList.remove('hidden');
@@ -593,22 +674,7 @@
         showToastMessage(`Cannot add ${quantity} units. Only ${product.available_stock} available in stock.`, 'error');
         return;
       }
-      // Check if the quantity meets the minimum order quantity
-      if (product && product.min_order_quantity && quantity < product.min_order_quantity) {
-        // Ask the user if they want to use the minimum order quantity instead
-        const useMinimum = confirm(`The minimum order quantity for ${productName} is ${product.min_order_quantity}. Would you like to set the quantity to the minimum?`);
 
-        if (useMinimum) {
-          // Update the quantity input field
-          document.getElementById('quantity').value = product.min_order_quantity;
-          // Update the quantity variable for further processing
-          quantity = product.min_order_quantity;
-          showToastMessage(`Quantity updated to minimum order quantity: ${product.min_order_quantity}`, 'info');
-        } else {
-          showToastMessage(`Order not added. Minimum order quantity for ${productName} is ${product.min_order_quantity}.`, 'error');
-          return;
-        }
-      }
 
       // We'll store the typed-in price in product.price
       // Then let the table logic figure out net vs. tax if needed
@@ -646,13 +712,6 @@
       const quantityInput = document.getElementById('quantity');
       quantityInput.value = '1';
       quantityInput.setAttribute('min', '1');
-      quantityInput.removeAttribute('data-min-order');
-      quantityInput.style.borderColor = '';
-      quantityInput.style.backgroundColor = '';
-      quantityInput.classList.remove('min-order-badge');
-
-      // Hide the minimum order indicator
-      document.getElementById('minOrderIndicator').classList.add('hidden');
 
       // Reset price and room fields
       document.getElementById('price').value = '0';
@@ -673,11 +732,113 @@
      *   - "Total (R)" = price * quantity
      */
     function updateSelectedProductsTable() {
+      // Update the table view (desktop)
       const tbody = document.getElementById('selectedProductsBody');
       tbody.innerHTML = '';
       updateTableHeader();
 
+      // Update the card view (mobile)
+      const cardsContainer = document.getElementById('productCardsContainer');
+      cardsContainer.innerHTML = '';
+
+      // Calculate totals for the summary card
+      let subtotal = 0;
+      let tax = 0;
+      let total = 0;
+
+      selectedProducts.forEach(product => {
+        if (taxCheckbox.checked) {
+          subtotal += (product.price * (1 - TAX_RATE)) * product.quantity;
+          tax += (product.price * TAX_RATE) * product.quantity;
+          total += (product.price * product.quantity);
+        } else {
+          subtotal += (product.price * product.quantity);
+          total += (product.price * product.quantity);
+        }
+      });
+
+      if (!taxCheckbox.checked) {
+        tax = 0;
+      }
+
+      // Add summary card if there are products
+      if (selectedProducts.length > 0) {
+        const summaryCard = document.createElement('div');
+        summaryCard.className = 'product-card summary-card';
+
+        const summaryTitle = document.createElement('div');
+        summaryTitle.className = 'summary-card-title';
+        summaryTitle.textContent = 'Order Summary';
+        summaryCard.appendChild(summaryTitle);
+
+        const summaryDetails = document.createElement('div');
+        summaryDetails.className = 'product-card-details';
+
+        // Subtotal detail
+        const subtotalDetail = document.createElement('div');
+        subtotalDetail.className = 'product-card-detail';
+
+        const subtotalLabel = document.createElement('div');
+        subtotalLabel.className = 'detail-label';
+        subtotalLabel.textContent = 'Subtotal';
+
+        const subtotalValue = document.createElement('div');
+        subtotalValue.className = 'detail-value';
+        subtotalValue.textContent = `${CURRENCY_SYMBOL}${subtotal.toFixed(0)}`;
+
+        subtotalDetail.appendChild(subtotalLabel);
+        subtotalDetail.appendChild(subtotalValue);
+        summaryDetails.appendChild(subtotalDetail);
+
+        // Tax detail
+        const taxDetail = document.createElement('div');
+        taxDetail.className = 'product-card-detail';
+
+        const taxLabel = document.createElement('div');
+        taxLabel.className = 'detail-label';
+        taxLabel.textContent = 'Tax (15%)';
+
+        const taxValue = document.createElement('div');
+        taxValue.className = 'detail-value';
+        taxValue.textContent = `${CURRENCY_SYMBOL}${tax.toFixed(0)}`;
+
+        taxDetail.appendChild(taxLabel);
+        taxDetail.appendChild(taxValue);
+        summaryDetails.appendChild(taxDetail);
+
+        summaryCard.appendChild(summaryDetails);
+
+        // Total
+        const totalSection = document.createElement('div');
+        totalSection.className = 'product-card-total';
+
+        const totalLabel = document.createElement('div');
+        totalLabel.className = 'product-card-total-label';
+        totalLabel.textContent = 'Total Amount';
+
+        const totalValue = document.createElement('div');
+        totalValue.className = 'product-card-total-value';
+        totalValue.textContent = `${CURRENCY_SYMBOL}${total.toFixed(0)}`;
+
+        totalSection.appendChild(totalLabel);
+        totalSection.appendChild(totalValue);
+        summaryCard.appendChild(totalSection);
+
+        cardsContainer.appendChild(summaryCard);
+      }
+
+      // Show a message if no products are selected
+      if (selectedProducts.length === 0) {
+        const emptyMessage = document.createElement('div');
+        emptyMessage.style.textAlign = 'center';
+        emptyMessage.style.padding = '20px';
+        emptyMessage.style.color = '#666';
+        emptyMessage.innerHTML = '<i>No products selected yet.</i><br>Search and add products above.';
+        cardsContainer.appendChild(emptyMessage);
+      }
+
       selectedProducts.forEach((product, index) => {
+        // TABLE VIEW (DESKTOP)
         const row = tbody.insertRow();
 
         // Product name
@@ -695,12 +856,12 @@
         const qtyCell = row.insertCell();
         qtyCell.textContent = product.quantity;
 
-        if (taxCheckbox.checked) {
-          // net = price * 0.85, tax = price * 0.15, total = price * quantity
-          const netPrice = product.price * (1 - TAX_RATE);
-          const taxAmount = product.price * TAX_RATE;
-          const lineTotal = product.price * product.quantity;
+        // Calculate prices
+        const netPrice = taxCheckbox.checked ? product.price * (1 - TAX_RATE) : product.price;
+        const taxAmount = taxCheckbox.checked ? product.price * TAX_RATE : 0;
+        const lineTotal = product.price * product.quantity;
 
+        if (taxCheckbox.checked) {
           // Unit Price (net)
           const unitPriceCell = row.insertCell();
           unitPriceCell.textContent = `${CURRENCY_SYMBOL}${netPrice.toFixed(0)}`;
@@ -721,9 +882,6 @@
           removeBtn.onclick = () => removeProduct(index);
           actionCell.appendChild(removeBtn);
         } else {
-          // No tax => unit price is the typed-in price, total = price * quantity
-          const lineTotal = product.price * product.quantity;
-
           // Unit Price
           const unitPriceCell = row.insertCell();
           unitPriceCell.textContent = `${CURRENCY_SYMBOL}${product.price.toFixed(0)}`;
@@ -740,6 +898,121 @@
           removeBtn.onclick = () => removeProduct(index);
           actionCell.appendChild(removeBtn);
         }
+
+        // CARD VIEW (MOBILE)
+        const card = document.createElement('div');
+        card.className = 'product-card';
+
+        // Card header with product name and quantity
+        const cardHeader = document.createElement('div');
+        cardHeader.className = 'product-card-header';
+
+        const cardName = document.createElement('div');
+        cardName.className = 'product-card-name';
+        cardName.textContent = product.name;
+        if (product.is_new) {
+          const newLabel = document.createElement('span');
+          newLabel.className = 'new-product-label';
+          newLabel.textContent = '(New)';
+          cardName.appendChild(newLabel);
+        }
+
+        const cardQuantity = document.createElement('div');
+        cardQuantity.className = 'product-card-quantity';
+        cardQuantity.textContent = product.quantity;
+
+        cardHeader.appendChild(cardName);
+        cardHeader.appendChild(cardQuantity);
+        card.appendChild(cardHeader);
+
+        // Card details
+        const cardDetails = document.createElement('div');
+        cardDetails.className = 'product-card-details';
+
+        // Room detail (if available)
+        const foundProduct = allProducts.find(p => p.item_code === product.item_code);
+        if (foundProduct && foundProduct.room_name) {
+          const roomDetail = document.createElement('div');
+          roomDetail.className = 'product-card-detail';
+
+          const roomLabel = document.createElement('div');
+          roomLabel.className = 'detail-label';
+          roomLabel.textContent = 'Room';
+
+          const roomValue = document.createElement('div');
+          roomValue.className = 'detail-value';
+          roomValue.textContent = foundProduct.room_name;
+
+          roomDetail.appendChild(roomLabel);
+          roomDetail.appendChild(roomValue);
+          cardDetails.appendChild(roomDetail);
+        }
+
+        // Unit price detail
+        const unitPriceDetail = document.createElement('div');
+        unitPriceDetail.className = 'product-card-detail';
+
+        const unitPriceLabel = document.createElement('div');
+        unitPriceLabel.className = 'detail-label';
+        unitPriceLabel.textContent = 'Unit Price';
+
+        const unitPriceValue = document.createElement('div');
+        unitPriceValue.className = 'detail-value';
+        unitPriceValue.textContent = `${CURRENCY_SYMBOL}${netPrice.toFixed(0)}`;
+
+        unitPriceDetail.appendChild(unitPriceLabel);
+        unitPriceDetail.appendChild(unitPriceValue);
+        cardDetails.appendChild(unitPriceDetail);
+
+        // Tax detail (only if tax is checked)
+        if (taxCheckbox.checked) {
+          const taxDetail = document.createElement('div');
+          taxDetail.className = 'product-card-detail';
+
+          const taxLabel = document.createElement('div');
+          taxLabel.className = 'detail-label';
+          taxLabel.textContent = 'Tax per Unit';
+
+          const taxValue = document.createElement('div');
+          taxValue.className = 'detail-value';
+          taxValue.textContent = `${CURRENCY_SYMBOL}${taxAmount.toFixed(0)}`;
+
+          taxDetail.appendChild(taxLabel);
+          taxDetail.appendChild(taxValue);
+          cardDetails.appendChild(taxDetail);
+        }
+
+        card.appendChild(cardDetails);
+
+        // Card total
+        const cardTotal = document.createElement('div');
+        cardTotal.className = 'product-card-total';
+
+        const totalLabel = document.createElement('div');
+        totalLabel.className = 'product-card-total-label';
+        totalLabel.textContent = 'Total';
+
+        const totalValue = document.createElement('div');
+        totalValue.className = 'product-card-total-value';
+        totalValue.textContent = `${CURRENCY_SYMBOL}${lineTotal.toFixed(0)}`;
+
+        cardTotal.appendChild(totalLabel);
+        cardTotal.appendChild(totalValue);
+        card.appendChild(cardTotal);
+
+        // Card actions
+        const cardActions = document.createElement('div');
+        cardActions.className = 'product-card-actions';
+
+        const removeButton = document.createElement('button');
+        removeButton.className = 'remove-button';
+        removeButton.textContent = 'Remove';
+        removeButton.onclick = () => removeProduct(index);
+
+        cardActions.appendChild(removeButton);
+        card.appendChild(cardActions);
+
+        cardsContainer.appendChild(card);
       });
 
       calculateAndDisplayTotal();
@@ -1045,39 +1318,7 @@
         companySelect.value = selectedCompany.key;
       }
 
-      // Add event listener to quantity input to validate minimum order quantity
-      const quantityInput = document.getElementById('quantity');
-      quantityInput.addEventListener('input', function() {
-        // Check if a product is selected and has a minimum order quantity
-        if (this.hasAttribute('data-min-order')) {
-          const minOrderQty = parseInt(this.getAttribute('data-min-order'));
-          const currentQty = parseInt(this.value);
 
-          // If the entered quantity is less than the minimum, show a warning
-          if (!isNaN(currentQty) && currentQty < minOrderQty) {
-            this.style.borderColor = '#ff9900';
-            this.style.backgroundColor = '#fff9e6';
-
-            // Show the warning in the indicator
-            const minOrderIndicator = document.getElementById('minOrderIndicator');
-            minOrderIndicator.textContent = `Min: ${minOrderQty}`;
-            minOrderIndicator.style.color = '#ff0000';
-            minOrderIndicator.classList.remove('hidden');
-          } else {
-            this.style.borderColor = '';
-            this.style.backgroundColor = '';
-
-            // Reset the indicator style
-            const minOrderIndicator = document.getElementById('minOrderIndicator');
-            minOrderIndicator.style.color = '#ff9900';
-
-            // Only hide the indicator if there's no minimum order quantity or it's 1
-            if (minOrderQty <= 1) {
-              minOrderIndicator.classList.add('hidden');
-            }
-          }
-        }
-      });
     };
   </script>
 

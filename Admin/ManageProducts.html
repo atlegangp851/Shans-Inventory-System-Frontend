@@ -717,10 +717,7 @@
                         <label for="availableStock">Available Stock</label>
                         <input type="number" id="availableStock" name="availableStock" required min="0">
                     </div>
-                    <div class="form-group">
-                        <label for="minOrderQuantity">Minimum Order Quantity</label>
-                        <input type="number" id="minOrderQuantity" name="minOrderQuantity" min="1" value="1">
-                    </div>
+
                     <div class="form-group">
                         <label for="location">Location</label>
                         <input type="text" id="location" name="location">
@@ -821,10 +818,7 @@
                         <label for="editAvailableStock">Available Stock</label>
                         <input type="number" id="editAvailableStock" name="editAvailableStock" required min="0">
                     </div>
-                    <div class="form-group">
-                        <label for="editMinOrderQuantity">Minimum Order Quantity</label>
-                        <input type="number" id="editMinOrderQuantity" name="editMinOrderQuantity" min="1">
-                    </div>
+
                     <div class="form-group">
                         <label for="editLocation">Location</label>
                         <input type="text" id="editLocation" name="editLocation">
@@ -879,7 +873,6 @@
                         <th>Car Model</th>
                         <th>Category</th>
                         <th>Available Stock</th>
-                        <th>Min Order Qty</th>
                         <th>Colour Tape</th>
                         <th>Location</th>
                         <th>Unit Retail Price (ZAR)</th>
@@ -1090,7 +1083,6 @@
                         <p><strong>Car Model:</strong> <span>${product.car_model || 'N/A'}</span></p>
                         <p><strong>Category:</strong> <span>${capitalizeWords(product.product_category.replace(/_/g, ' '))}</span></p>
                         <p><strong>Available Stock:</strong> <span>${product.available_stock}</span></p>
-                        <p><strong>Min Order Qty:</strong> <span>${product.min_order_quantity || 1}</span></p>
                         <p><strong>Colour Tape:</strong>
                             <span style="display:inline-block;width:20px;height:20px;background-color:${product.colour_tape};border-radius:50%;border:1px solid #ddd;"></span>
                         </p>
