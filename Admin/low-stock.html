@@ -838,13 +838,13 @@
                         statusText.textContent = 'Out of Stock';
                         statusText.classList.add('critical-text');
                     }
-                    // If stock is 3 or less (but not 0), it's critically low
-                    else if (stock <= 3) {
+                    // If stock is exactly 1, it's critically low
+                    else if (stock === 1) {
                         indicator.classList.add('critical');
                         statusText.textContent = 'Critically Low';
                         statusText.classList.add('critical-text');
                     }
-                    // If stock is less than threshold but greater than 3, it's low
+                    // If stock is less than threshold but greater than 1, it's low
                     else if (stock < threshold) {
                         indicator.classList.add('warning');
                         statusText.textContent = 'Low';
@@ -906,7 +906,7 @@
 
                     if (stock === 0) {
                         statusText = 'Out of Stock';
-                    } else if (stock <= 3) {
+                    } else if (stock === 1) {
                         statusText = 'Critically Low';
                     } else if (stock < threshold) {
                         statusText = 'Low';
