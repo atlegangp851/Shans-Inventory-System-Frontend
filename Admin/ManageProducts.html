@@ -717,6 +717,11 @@
                         <label for="availableStock">Available Stock</label>
                         <input type="number" id="availableStock" name="availableStock" required min="0">
                     </div>
+                    <div class="form-group">
+                        <label for="lowStockThreshold">Low Stock Warning Threshold</label>
+                        <input type="number" id="lowStockThreshold" name="lowStockThreshold" value="5" min="1">
+                        <small>Products with stock at or below this number will appear in the Low Stock page</small>
+                    </div>
 
                     <div class="form-group">
                         <label for="location">Location</label>
@@ -818,6 +823,16 @@
                         <label for="editAvailableStock">Available Stock</label>
                         <input type="number" id="editAvailableStock" name="editAvailableStock" required min="0">
                     </div>
+                    <div class="form-group">
+                        <label for="editLowStockThreshold">Low Stock Warning Threshold</label>
+                        <input type="number" id="editLowStockThreshold" name="editLowStockThreshold" value="5" min="1">
+                        <small>Products with stock at or below this number will appear in the Low Stock page</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="editMinOrderQuantity">Min Order Quantity</label>
+                        <input type="number" id="editMinOrderQuantity" name="editMinOrderQuantity" value="1" min="1">
+                    </div>
 
                     <div class="form-group">
                         <label for="editLocation">Location</label>
@@ -873,6 +888,7 @@
                         <th>Car Model</th>
                         <th>Category</th>
                         <th>Available Stock</th>
+                        <th>Low Stock Threshold</th>
                         <th>Colour Tape</th>
                         <th>Location</th>
                         <th>Unit Retail Price (ZAR)</th>
@@ -1083,6 +1099,7 @@
                         <p><strong>Car Model:</strong> <span>${product.car_model || 'N/A'}</span></p>
                         <p><strong>Category:</strong> <span>${capitalizeWords(product.product_category.replace(/_/g, ' '))}</span></p>
                         <p><strong>Available Stock:</strong> <span>${product.available_stock}</span></p>
+                        <p><strong>Low Stock Threshold:</strong> <span>${product.low_stock_threshold || 5}</span></p>
                         <p><strong>Colour Tape:</strong>
                             <span style="display:inline-block;width:20px;height:20px;background-color:${product.colour_tape};border-radius:50%;border:1px solid #ddd;"></span>
                         </p>
@@ -1125,7 +1142,7 @@
         <script>
             document.addEventListener('DOMContentLoaded', function() {
                 // Define the base URL for the API
-                const API_URL = 'https://shans-backend-1.onrender.com/api';
+                const API_URL = 'http://localhost:8000/api';
 
                 // **Element References**
                 // Add Product Modal Elements
@@ -1299,6 +1316,8 @@
                  * @param {Object} product - The product data to edit
                  */
                 function openEditModal(product) {
+                    console.log('Opening edit modal with product data:', product);
+
                     editProductOverlay.style.display = 'flex';
                     editProductOverlay.setAttribute('aria-hidden', 'false');
 
@@ -1306,24 +1325,46 @@
                     document.getElementById('editItemCode').value = product.item_code;
                     document.getElementById('editRoom').value = product.room_id;
                     document.getElementById('editItemName').value = product.item_name;
-                    document.getElementById('editCarBrand').value = product.car_brand;
-                    document.getElementById('editCarModel').value = product.car_model;
+                    document.getElementById('editCarBrand').value = product.car_brand || '';
+                    document.getElementById('editCarModel').value = product.car_model || '';
                     document.getElementById('editProductCategory').value = product.product_category;
                     document.getElementById('editAvailableStock').value = product.available_stock;
+
+                    // Set the low stock threshold
+                    const lowStockThreshold = parseInt(product.low_stock_threshold);
+                    document.getElementById('editLowStockThreshold').value = isNaN(lowStockThreshold) ? 5 : lowStockThreshold;
+
                     // Make sure min_order_quantity is properly set
                     console.log('Setting min_order_quantity:', product.min_order_quantity);
                     // Force the min_order_quantity to be a number and default to 1 if not valid
                     const minOrderQty = parseInt(product.min_order_quantity);
                     document.getElementById('editMinOrderQuantity').value = isNaN(minOrderQty) ? 1 : minOrderQty;
-                    document.getElementById('editLocation').value = product.location;
-                    document.getElementById('editUnitRetailPrice').value = product.unit_retail_price;
-                    document.getElementById('editWholesalePrice').value = product.wholesale_price;
-                    document.getElementById('editUnitCost').value = product.unit_cost;
-                    document.getElementById('editSupplierCode').value = product.supplier_code;
+
+                    // Set location
+                    document.getElementById('editLocation').value = product.location || '';
+
+                    // Set prices - ensure we're handling all possible formats
+                    const unitRetailPrice = parseFloat(product.unit_retail_price);
+                    document.getElementById('editUnitRetailPrice').value = isNaN(unitRetailPrice) ? 0 : unitRetailPrice;
+
+                    const wholesalePrice = parseFloat(product.wholesale_price);
+                    document.getElementById('editWholesalePrice').value = isNaN(wholesalePrice) ? 0 : wholesalePrice;
+
+                    const unitCost = parseFloat(product.unit_cost);
+                    document.getElementById('editUnitCost').value = isNaN(unitCost) ? 0 : unitCost;
+
+                    // Set supplier code and comments
+                    document.getElementById('editSupplierCode').value = product.supplier_code || '';
                     document.getElementById('editAdditionalComments').value = product.additional_comments || '';
 
-                    editColourTape.value = product.colour_tape;
-                    editColourTapeText.value = product.colour_tape;
+                    // Set color tape
+                    editColourTape.value = product.colour_tape || '#000000';
+                    editColourTapeText.value = product.colour_tape || '#000000';
+
+                    // Log the values we're setting for debugging
+                    console.log('Set unit retail price:', document.getElementById('editUnitRetailPrice').value);
+                    console.log('Set wholesale price:', document.getElementById('editWholesalePrice').value);
+                    console.log('Set unit cost:', document.getElementById('editUnitCost').value);
                 }
 
                 /**
@@ -1335,6 +1376,54 @@
                     editProductForm.reset();
                     editColourTape.value = '#000000';
                     editColourTapeText.value = '#000000';
+                }
+
+                /**
+                 * Check URL parameters for edit_item and open the edit popup if found
+                 */
+                async function checkForEditItemParam() {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const editItemCode = urlParams.get('edit_item');
+
+                    if (editItemCode) {
+                        // Wait a short delay to ensure the products have loaded
+                        setTimeout(async () => {
+                            try {
+                                // First check if the product is already in our loaded products
+                                const existingProduct = allProducts.find(p => p.item_code === editItemCode);
+
+                                if (existingProduct) {
+                                    // If we already have the product data, use it directly
+                                    console.log('Product found in loaded data:', existingProduct);
+                                    openEditModal(existingProduct);
+                                } else {
+                                    // If not found in loaded products, fetch it from the API
+                                    showStatusMessage('Loading product details...', 'warning');
+
+                                    const response = await fetch(`${API_URL}/products/${encodeURIComponent(editItemCode)}`);
+                                    if (!response.ok) {
+                                        throw new Error('Failed to fetch product details');
+                                    }
+
+                                    const product = await response.json();
+                                    console.log('Product data fetched from API:', product);
+
+                                    // Open the edit modal with the product data
+                                    openEditModal(product);
+
+                                    // Clear the status message
+                                    document.getElementById('statusMessage').style.display = 'none';
+                                }
+
+                                // Remove the parameter from the URL to prevent reopening on refresh
+                                const newUrl = window.location.pathname;
+                                window.history.replaceState({}, document.title, newUrl);
+                            } catch (error) {
+                                console.error('Error fetching product details from URL parameter:', error);
+                                showStatusMessage('Failed to load product details. Please try again.', 'error');
+                            }
+                        }, 500); // 500ms delay to ensure products are loaded
+                    }
                 }
 
                 /**
@@ -1370,8 +1459,10 @@
 
                 /**
                  * Fetch all products from the backend and populate the products table
+                 * @param {boolean} suppressErrorMessage - If true, don't show error messages
+                 * @returns {Promise<boolean>} - True if successful, false if failed
                  */
-                async function fetchProducts() {
+                async function fetchProducts(suppressErrorMessage = false) {
                     try {
                         // Load any pending updates from localStorage
                         localProductCache.loadPendingUpdates();
@@ -1389,15 +1480,23 @@
 
                         renderProductsTable(allProducts);
                         populateFilters(); // Populate filter options after fetching products
+
+                        return true; // Success
                     } catch (error) {
                         console.error('Error fetching products:', error);
-                        showStatusMessage('Failed to load products. Please try again later.', 'error');
+
+                        // Only show error message if not suppressed
+                        if (!suppressErrorMessage) {
+                            showStatusMessage('Failed to load products. Please try again later.', 'error');
+                        }
 
                         // If we have products in memory, apply pending updates to them
                         if (allProducts.length > 0) {
                             allProducts = localProductCache.applyPendingUpdates(allProducts);
                             renderProductsTable(allProducts);
                         }
+
+                        return false; // Failed
                     }
                 }
 
@@ -1421,7 +1520,7 @@
                             <td>${product.car_model || 'N/A'}</td>
                             <td>${capitalizeWords(product.product_category.replace(/_/g, ' '))}</td>
                             <td>${product.available_stock}</td>
-                            <td>${product.min_order_quantity || 1}</td>
+                            <td>${product.low_stock_threshold || 5}</td>
                             <td>
                                 <span style="display:inline-block;width:20px;height:20px;background-color:${product.colour_tape};border-radius:50%;border:1px solid #ddd;">
                                 </span>
@@ -1551,6 +1650,7 @@
                         unit_cost: parseFloat(document.getElementById('unitCost').value),
                         supplier_code: document.getElementById('supplierCode').value.trim(),
                         available_stock: parseInt(document.getElementById('availableStock').value),
+                        low_stock_threshold: parseInt(document.getElementById('lowStockThreshold').value) || 5,
                         min_order_quantity: parseInt(document.getElementById('minOrderQuantity').value) || 1,
                         location: document.getElementById('location').value.trim(),
                         colour_tape: document.getElementById('colourTape').value,
@@ -1615,6 +1715,7 @@
                         unit_cost: parseFloat(document.getElementById('editUnitCost').value),
                         supplier_code: document.getElementById('editSupplierCode').value.trim(),
                         available_stock: parseInt(document.getElementById('editAvailableStock').value),
+                        low_stock_threshold: parseInt(document.getElementById('editLowStockThreshold').value) || 5,
                         min_order_quantity: Math.max(1, parseInt(document.getElementById('editMinOrderQuantity').value) || 1), // Ensure it's a number and at least 1
                         location: document.getElementById('editLocation').value.trim(),
                         colour_tape: document.getElementById('editColourTape').value,
@@ -2914,11 +3015,121 @@
                 filterModelBrand.addEventListener('change', renderCarModelsTable);
 
                 // Initial load - first fetch data
-                fetchCategories(); // Load categories from the backend
-                fetchCarBrands(); // Load car brands from the backend
-                fetchCarModels(); // Load car models from the backend
-                fetchRooms();
-                fetchProducts();
+                async function initializeData() {
+                    try {
+                        // Check if we're coming from the low-stock page
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const isFromLowStock = urlParams.has('edit_item');
+
+                        // If coming from low-stock page, clear any existing status messages
+                        if (isFromLowStock) {
+                            document.getElementById('statusMessage').style.display = 'none';
+                        }
+
+                        // Create a modified version of fetchCategories that doesn't show errors
+                        const fetchCategoriesSilent = async () => {
+                            try {
+                                const response = await fetch(`${API_URL}/categories`);
+                                if (!response.ok) {
+                                    throw new Error('Failed to fetch categories');
+                                }
+                                const fetchedCategories = await response.json();
+                                categories = fetchedCategories.map(cat => ({
+                                    id: cat.category_id,
+                                    name: cat.name
+                                }));
+                                updateCategoryDropdowns();
+                            } catch (error) {
+                                console.error('Error fetching categories:', error);
+                                // Don't show error message
+                            }
+                        };
+
+                        // Create a modified version of fetchCarBrands that doesn't show errors
+                        const fetchCarBrandsSilent = async () => {
+                            try {
+                                const response = await fetch(`${API_URL}/car-brands`);
+                                if (!response.ok) {
+                                    throw new Error('Failed to fetch car brands');
+                                }
+                                const fetchedBrands = await response.json();
+                                carBrands = fetchedBrands.map(brand => ({
+                                    id: brand.brand_id,
+                                    name: brand.name
+                                }));
+                                updateCarBrandDropdowns();
+                                updateModelBrandDropdowns();
+                            } catch (error) {
+                                console.error('Error fetching car brands:', error);
+                                // Don't show error message
+                            }
+                        };
+
+                        // Create a modified version of fetchCarModels that doesn't show errors
+                        const fetchCarModelsSilent = async () => {
+                            try {
+                                const response = await fetch(`${API_URL}/car-models`);
+                                if (!response.ok) {
+                                    throw new Error('Failed to fetch car models');
+                                }
+                                const fetchedModels = await response.json();
+                                carModels = fetchedModels.map(model => ({
+                                    id: model.model_id,
+                                    name: model.name,
+                                    brandId: model.brand_id
+                                }));
+                                updateCarModelDropdowns();
+                            } catch (error) {
+                                console.error('Error fetching car models:', error);
+                                // Don't show error message
+                            }
+                        };
+
+                        // Create a modified version of fetchRooms that doesn't show errors
+                        const fetchRoomsSilent = async () => {
+                            try {
+                                const response = await fetch(`${API_URL}/rooms`);
+                                if (!response.ok) {
+                                    throw new Error('Failed to fetch rooms');
+                                }
+                                const fetchedRooms = await response.json();
+                                rooms = fetchedRooms;
+                                updateRoomDropdowns();
+                            } catch (error) {
+                                console.error('Error fetching rooms:', error);
+                                // Don't show error message
+                            }
+                        };
+
+                        // Load all required data first - use silent versions if coming from low-stock page
+                        if (isFromLowStock) {
+                            await Promise.all([
+                                fetchCategoriesSilent(),
+                                fetchCarBrandsSilent(),
+                                fetchCarModelsSilent(),
+                                fetchRoomsSilent()
+                            ]);
+                        } else {
+                            await Promise.all([
+                                fetchCategories(),
+                                fetchCarBrands(),
+                                fetchCarModels(),
+                                fetchRooms()
+                            ]);
+                        }
+
+                        // Then load products - suppress error message if coming from low-stock page
+                        await fetchProducts(isFromLowStock);
+
+                        // After all data is loaded, check if we need to open the edit popup
+                        checkForEditItemParam();
+                    } catch (error) {
+                        console.error('Error during initialization:', error);
+                    }
+                }
+
+                // Start the initialization process
+                initializeData();
 
                 // Wait a bit to make sure all DOM elements are properly loaded and initialized
                 setTimeout(() => {

@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Low Stock Items - Shan's Auto Parts</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="admin.css">
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #f5f5f5;
+            --text-color: #333;
+            --border-color: #ddd;
+            --warning-color: #ff9800;
+            --critical-color: #f44336;
+            --success-color: #4CAF50;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--secondary-color);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .low-stock-container {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .low-stock-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .back-link {
+            text-decoration: none;
+            color: var(--primary-color);
+            font-size: 16px;
+            display: inline-flex;
+            align-items: center;
+            transition: color 0.3s;
+        }
+
+        .back-link:hover {
+            color: #0056b3;
+        }
+
+        .low-stock-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--text-color);
+            margin: 0;
+        }
+
+        .low-stock-count {
+            background-color: var(--critical-color);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 80px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .controls-left {
+            flex-grow: 1;
+        }
+
+        .controls-right {
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-bar {
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            width: 300px;
+            transition: all 0.3s ease;
+            flex-grow: 1;
+        }
+
+        .search-bar:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+        }
+
+        .excel-button {
+            background-color: #217346; /* Excel green color */
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .excel-button:hover {
+            background-color: #1e6b3e;
+            transform: translateY(-2px);
+        }
+
+        /* Excel-like table styling */
+        .table-container {
+            overflow-x: auto;
+            max-width: 100%;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .low-stock-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            font-size: 14px;
+            border: 1px solid #e0e0e0;
+            margin-bottom: 0;
+        }
+
+        .low-stock-table th {
+            position: sticky;
+            top: 0;
+            background-color: #f2f2f2;
+            color: #333;
+            font-weight: bold;
+            border-bottom: 2px solid #d0d0d0;
+            z-index: 10;
+            text-align: left;
+            padding: 12px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .low-stock-table td {
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 200px;
+        }
+
+        .low-stock-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .low-stock-table tr:hover {
+            background-color: #f0f7ff;
+        }
+
+        /* Column specific styling */
+        .low-stock-table td:nth-child(1), .low-stock-table th:nth-child(1) { /* Item Code */
+            min-width: 100px;
+            font-weight: 500;
+        }
+
+        .low-stock-table td:nth-child(2), .low-stock-table th:nth-child(2) { /* Item Name */
+            min-width: 150px;
+            font-weight: 500;
+        }
+
+        .low-stock-table td:nth-child(3), .low-stock-table th:nth-child(3) { /* Room */
+            min-width: 100px;
+        }
+
+        .low-stock-table td:nth-child(4), .low-stock-table th:nth-child(4), /* Current Stock */
+        .low-stock-table td:nth-child(5), .low-stock-table th:nth-child(5) { /* Threshold */
+            text-align: right;
+            min-width: 80px;
+        }
+
+        .stock-level {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stock-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .stock-text {
+            font-weight: 500;
+        }
+
+        .critical {
+            background-color: var(--critical-color);
+        }
+
+        .critical-text {
+            color: var(--critical-color);
+        }
+
+        .warning {
+            background-color: var(--warning-color);
+        }
+
+        .warning-text {
+            color: var(--warning-color);
+        }
+
+        .actions-cell {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+        }
+
+        .edit-button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-size: 14px;
+        }
+
+        .edit-button:hover {
+            background-color: #357ab8;
+            transform: translateY(-2px);
+        }
+
+        .update-stock-button {
+            background-color: var(--success-color);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-size: 14px;
+        }
+
+        .update-stock-button:hover {
+            background-color: #3d8b40;
+            transform: translateY(-2px);
+        }
+
+        .no-items {
+            text-align: center;
+            padding: 20px;
+            font-style: italic;
+            color: #666;
+            background-color: #f9f9f9;
+        }
+
+        /* Stock Update Modal */
+        .stock-update-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .stock-update-content {
+            background-color: white;
+            padding: 25px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .stock-update-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .stock-update-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .stock-update-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group label {
+            font-weight: 500;
+            color: #555;
+        }
+
+        .form-group input {
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+
+        .stock-update-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .cancel-button {
+            background-color: #f5f5f5;
+            color: #333;
+            border: 1px solid #ddd;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .cancel-button:hover {
+            background-color: #e0e0e0;
+        }
+
+        .save-button {
+            background-color: var(--success-color);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .save-button:hover {
+            background-color: #3d8b40;
+        }
+
+        .product-info {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .product-info p {
+            margin: 5px 0;
+        }
+
+        .product-name {
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .product-code {
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* Toast Notification Styles */
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1050;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 350px;
+        }
+
+        .toast {
+            padding: 15px 20px;
+            border-radius: 4px;
+            color: white;
+            font-weight: 500;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            animation: slideIn 0.3s ease-out forwards;
+            opacity: 0;
+            transform: translateX(50px);
+        }
+
+        .toast-success {
+            background-color: var(--success-color);
+        }
+
+        .toast-error {
+            background-color: var(--critical-color);
+        }
+
+        .toast-warning {
+            background-color: var(--warning-color);
+        }
+
+        .toast-info {
+            background-color: var(--primary-color);
+        }
+
+        .toast-message {
+            flex-grow: 1;
+            margin-right: 10px;
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+
+        .toast-close:hover {
+            opacity: 1;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .low-stock-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .controls {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .controls-left, .controls-right {
+                width: 100%;
+            }
+
+            .search-bar {
+                width: 100%;
+            }
+
+            .excel-button {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .table-container {
+                overflow-x: auto;
+                max-width: 100%;
+            }
+
+            .low-stock-table {
+                font-size: 13px;
+            }
+
+            .low-stock-table th,
+            .low-stock-table td {
+                padding: 8px 5px;
+            }
+
+            .edit-button {
+                padding: 4px 8px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+
+    <main>
+        <div class="admin-content">
+            <div class="low-stock-container">
+                <div class="low-stock-header">
+                    <div class="header-left">
+                        <a href="index.html" class="back-link">&larr; Back to Dashboard</a>
+                        <h1 class="low-stock-title">Low Stock Items</h1>
+                    </div>
+                    <div class="low-stock-count" id="lowStockCount">0 items</div>
+                </div>
+
+                <div class="controls">
+                    <div class="controls-left">
+                        <input type="text" id="searchInput" class="search-bar" placeholder="Search low stock items...">
+                    </div>
+                    <div class="controls-right">
+                        <button id="export-excel" class="excel-button">Export to Excel</button>
+                    </div>
+                </div>
+
+                <div class="table-container" id="lowStockTableContainer">
+                    <table class="low-stock-table">
+                        <thead>
+                            <tr>
+                                <th>Item Code</th>
+                                <th>Item Name</th>
+                                <th>Room</th>
+                                <th>Current Stock</th>
+                                <th>Threshold</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lowStockTableBody">
+                            <!-- Table rows will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Stock Update Modal -->
+    <div id="stockUpdateModal" class="stock-update-modal">
+        <div class="stock-update-content">
+            <div class="stock-update-header">
+                <h2 class="stock-update-title">Update Stock</h2>
+                <button class="close-modal" id="closeModal">&times;</button>
+            </div>
+            <div class="product-info">
+                <p class="product-name" id="updateProductName"></p>
+                <p class="product-code" id="updateProductCode"></p>
+                <p>Room: <span id="updateProductRoom"></span></p>
+            </div>
+            <form id="stockUpdateForm" class="stock-update-form">
+                <input type="hidden" id="updateItemCode">
+                <div class="form-group">
+                    <label for="currentStock">Current Stock:</label>
+                    <input type="number" id="currentStock" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="newStock">New Stock Quantity:</label>
+                    <input type="number" id="newStock" min="0" required>
+                </div>
+                <div class="stock-update-actions">
+                    <button type="button" class="cancel-button" id="cancelUpdate">Cancel</button>
+                    <button type="submit" class="save-button">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Include SheetJS library for Excel export -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // API URL - use production URL
+            const API_URL = 'https://shans-backend-1.onrender.com/api';
+
+            // DOM elements
+            const tableBody = document.getElementById('lowStockTableBody');
+            const lowStockCount = document.getElementById('lowStockCount');
+            const searchInput = document.getElementById('searchInput');
+            const exportExcelBtn = document.getElementById('export-excel');
+            const stockUpdateModal = document.getElementById('stockUpdateModal');
+            const stockUpdateForm = document.getElementById('stockUpdateForm');
+            const closeModalBtn = document.getElementById('closeModal');
+            const cancelUpdateBtn = document.getElementById('cancelUpdate');
+            const toastContainer = document.getElementById('toastContainer');
+
+            // Store all products for filtering
+            let allLowStockProducts = [];
+
+            /**
+             * Show a toast notification
+             * @param {string} message - The message to display
+             * @param {string} type - The type of toast (success, error, warning, info)
+             * @param {number} duration - How long to show the toast in milliseconds
+             */
+            function showToast(message, type = 'info', duration = 3000) {
+                // Create toast element
+                const toast = document.createElement('div');
+                toast.className = `toast toast-${type}`;
+
+                // Create message element
+                const messageEl = document.createElement('div');
+                messageEl.className = 'toast-message';
+                messageEl.textContent = message;
+
+                // Create close button
+                const closeBtn = document.createElement('button');
+                closeBtn.className = 'toast-close';
+                closeBtn.innerHTML = '&times;';
+                closeBtn.addEventListener('click', () => {
+                    removeToast(toast);
+                });
+
+                // Assemble toast
+                toast.appendChild(messageEl);
+                toast.appendChild(closeBtn);
+
+                // Add to container
+                toastContainer.appendChild(toast);
+
+                // Set timeout to remove toast
+                setTimeout(() => {
+                    removeToast(toast);
+                }, duration);
+            }
+
+            /**
+             * Remove a toast from the container with animation
+             * @param {HTMLElement} toast - The toast element to remove
+             */
+            function removeToast(toast) {
+                // Add fadeout animation
+                toast.style.animation = 'fadeOut 0.3s forwards';
+
+                // Remove after animation completes
+                setTimeout(() => {
+                    if (toast.parentNode === toastContainer) {
+                        toastContainer.removeChild(toast);
+                    }
+                }, 300);
+            }
+
+            // Add event listeners
+            exportExcelBtn.addEventListener('click', exportToExcel);
+            closeModalBtn.addEventListener('click', closeStockUpdateModal);
+            cancelUpdateBtn.addEventListener('click', closeStockUpdateModal);
+            stockUpdateForm.addEventListener('submit', handleStockUpdate);
+
+            // Close modal when clicking outside the content
+            stockUpdateModal.addEventListener('click', function(e) {
+                if (e.target === stockUpdateModal) {
+                    closeStockUpdateModal();
+                }
+            });
+
+            // Fetch low stock products
+            async function fetchLowStockProducts() {
+                try {
+                    // Fetch all products first
+                    const response = await fetch(`${API_URL}/products`);
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch products');
+                    }
+                    const allProducts = await response.json();
+
+                    // Filter products based on the new criteria:
+                    // 1. Show products with stock less than threshold
+                    // 2. Don't show items that don't meet this criterion
+                    const filteredProducts = allProducts.filter(product => {
+                        const threshold = product.low_stock_threshold || 5;
+                        const stock = product.available_stock;
+
+                        // Only include products that are below threshold
+                        return stock < threshold;
+                    });
+
+                    console.log(`Filtered ${filteredProducts.length} products from ${allProducts.length} total`);
+
+                    // Store filtered products for search functionality
+                    allLowStockProducts = filteredProducts;
+
+                    // Render the table with filtered products
+                    renderLowStockTable(filteredProducts);
+
+                    // Initialize search functionality
+                    initSearch();
+                } catch (error) {
+                    console.error('Error fetching products:', error);
+                    showError('Failed to load low stock products. Please try again later.');
+                }
+            }
+
+            // Initialize search functionality
+            function initSearch() {
+                searchInput.addEventListener('input', function() {
+                    const searchTerm = this.value.trim().toLowerCase();
+
+                    if (searchTerm === '') {
+                        // If search is empty, show all products
+                        renderLowStockTable(allLowStockProducts);
+                        return;
+                    }
+
+                    // Filter products based on search term
+                    const filteredProducts = allLowStockProducts.filter(product => {
+                        return (
+                            product.item_code.toLowerCase().includes(searchTerm) ||
+                            product.item_name.toLowerCase().includes(searchTerm) ||
+                            product.room_name.toLowerCase().includes(searchTerm)
+                        );
+                    });
+
+                    // Render filtered products
+                    renderLowStockTable(filteredProducts);
+                });
+            }
+
+            // Render the low stock table
+            function renderLowStockTable(products) {
+                // Update the count
+                lowStockCount.textContent = `${products.length} items`;
+
+                // Clear the table
+                tableBody.innerHTML = '';
+
+                if (products.length === 0) {
+                    // Show a message if there are no low stock items
+                    const row = document.createElement('tr');
+                    const cell = document.createElement('td');
+                    cell.colSpan = 7; // Updated to 7 to include the Actions column
+                    cell.className = 'no-items';
+                    cell.textContent = 'No low stock items found.';
+                    row.appendChild(cell);
+                    tableBody.appendChild(row);
+                    return;
+                }
+
+                // Add each product to the table
+                products.forEach(product => {
+                    const row = document.createElement('tr');
+
+                    // Item Code
+                    const codeCell = document.createElement('td');
+                    codeCell.textContent = product.item_code;
+                    row.appendChild(codeCell);
+
+                    // Item Name
+                    const nameCell = document.createElement('td');
+                    nameCell.textContent = product.item_name;
+                    nameCell.title = product.item_name; // Add tooltip for long names
+                    row.appendChild(nameCell);
+
+                    // Room
+                    const roomCell = document.createElement('td');
+                    roomCell.textContent = product.room_name;
+                    row.appendChild(roomCell);
+
+                    // Current Stock
+                    const stockCell = document.createElement('td');
+                    stockCell.textContent = product.available_stock;
+                    stockCell.style.textAlign = 'right';
+                    row.appendChild(stockCell);
+
+                    // Threshold
+                    const thresholdCell = document.createElement('td');
+                    thresholdCell.textContent = product.low_stock_threshold || 5;
+                    thresholdCell.style.textAlign = 'right';
+                    row.appendChild(thresholdCell);
+
+                    // Status
+                    const statusCell = document.createElement('td');
+                    const stockLevel = document.createElement('div');
+                    stockLevel.className = 'stock-level';
+
+                    const indicator = document.createElement('span');
+                    indicator.className = 'stock-indicator';
+
+                    const statusText = document.createElement('span');
+                    statusText.className = 'stock-text';
+
+                    const threshold = product.low_stock_threshold || 5;
+                    const stock = product.available_stock;
+
+                    // If stock is 0, it's out of stock
+                    if (stock === 0) {
+                        indicator.classList.add('critical');
+                        statusText.textContent = 'Out of Stock';
+                        statusText.classList.add('critical-text');
+                    }
+                    // If stock is 3 or less (but not 0), it's critically low
+                    else if (stock <= 3) {
+                        indicator.classList.add('critical');
+                        statusText.textContent = 'Critically Low';
+                        statusText.classList.add('critical-text');
+                    }
+                    // If stock is less than threshold but greater than 3, it's low
+                    else if (stock < threshold) {
+                        indicator.classList.add('warning');
+                        statusText.textContent = 'Low';
+                        statusText.classList.add('warning-text');
+                    }
+
+                    stockLevel.appendChild(indicator);
+                    stockLevel.appendChild(statusText);
+                    statusCell.appendChild(stockLevel);
+                    row.appendChild(statusCell);
+
+                    // Actions cell with Update Stock button
+                    const actionsCell = document.createElement('td');
+                    actionsCell.className = 'actions-cell';
+
+                    const updateButton = document.createElement('button');
+                    updateButton.className = 'update-stock-button';
+                    updateButton.textContent = 'Update Stock';
+                    updateButton.setAttribute('data-item-code', product.item_code);
+                    updateButton.addEventListener('click', () => openStockUpdateModal(product));
+
+                    actionsCell.appendChild(updateButton);
+                    row.appendChild(actionsCell);
+
+                    tableBody.appendChild(row);
+                });
+            }
+
+            // Show error message
+            function showError(message) {
+                tableBody.innerHTML = '';
+
+                const row = document.createElement('tr');
+                const cell = document.createElement('td');
+                cell.colSpan = 7; // Updated to 7 to include the Actions column
+                cell.className = 'no-items';
+                cell.textContent = message;
+                row.appendChild(cell);
+                tableBody.appendChild(row);
+
+                lowStockCount.textContent = '0 items';
+            }
+
+            /**
+             * Export low stock items to Excel
+             */
+            function exportToExcel() {
+                if (allLowStockProducts.length === 0) {
+                    showToast('No data available to export!', 'warning');
+                    return;
+                }
+
+                // Format data for Excel
+                const excelData = allLowStockProducts.map(product => {
+                    // Determine status text
+                    let statusText = '';
+                    const threshold = product.low_stock_threshold || 5;
+                    const stock = product.available_stock;
+
+                    if (stock === 0) {
+                        statusText = 'Out of Stock';
+                    } else if (stock <= 3) {
+                        statusText = 'Critically Low';
+                    } else if (stock < threshold) {
+                        statusText = 'Low';
+                    }
+
+                    // Return formatted object for Excel
+                    return {
+                        'Item Code': product.item_code,
+                        'Item Name': product.item_name,
+                        'Room': product.room_name,
+                        'Current Stock': product.available_stock,
+                        'Threshold': product.low_stock_threshold || 5,
+                        'Status': statusText
+                    };
+                });
+
+                // Create worksheet
+                const worksheet = XLSX.utils.json_to_sheet(excelData);
+
+                // Create workbook
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, 'Low Stock Items');
+
+                // Generate filename with current date
+                const date = new Date().toISOString().split('T')[0];
+                const filename = `Low_Stock_Report_${date}.xlsx`;
+
+                // Export to Excel file
+                XLSX.writeFile(workbook, filename);
+            }
+
+            /**
+             * Open the stock update modal
+             */
+            function openStockUpdateModal(product) {
+                // Populate the modal with product information
+                document.getElementById('updateProductName').textContent = product.item_name;
+                document.getElementById('updateProductCode').textContent = `Item Code: ${product.item_code}`;
+                document.getElementById('updateProductRoom').textContent = product.room_name;
+                document.getElementById('currentStock').value = product.available_stock;
+                document.getElementById('newStock').value = product.available_stock;
+                document.getElementById('updateItemCode').value = product.item_code;
+
+                // Show the modal
+                stockUpdateModal.style.display = 'flex';
+
+                // Focus on the new stock input
+                document.getElementById('newStock').focus();
+                document.getElementById('newStock').select();
+            }
+
+            /**
+             * Close the stock update modal
+             */
+            function closeStockUpdateModal() {
+                stockUpdateModal.style.display = 'none';
+            }
+
+            /**
+             * Handle stock update form submission
+             */
+            async function handleStockUpdate(e) {
+                e.preventDefault();
+
+                const itemCode = document.getElementById('updateItemCode').value;
+                const newStockValue = parseInt(document.getElementById('newStock').value);
+
+                if (isNaN(newStockValue) || newStockValue < 0) {
+                    showToast('Please enter a valid stock quantity (0 or greater).', 'error');
+                    return;
+                }
+
+                try {
+                    // First, get the full product details
+                    const productResponse = await fetch(`${API_URL}/products/${encodeURIComponent(itemCode)}`);
+                    if (!productResponse.ok) {
+                        throw new Error('Failed to fetch product details');
+                    }
+
+                    const product = await productResponse.json();
+
+                    // Prepare the update data with all required fields
+                    const updateData = {
+                        room_id: product.room_id,
+                        item_name: product.item_name,
+                        car_brand: product.car_brand,
+                        car_model: product.car_model,
+                        unit_retail_price: product.unit_retail_price,
+                        wholesale_price: product.wholesale_price,
+                        unit_cost: product.unit_cost,
+                        supplier_code: product.supplier_code,
+                        available_stock: newStockValue, // Update the stock value
+                        location: product.location,
+                        colour_tape: product.colour_tape,
+                        additional_comments: product.additional_comments || '',
+                        product_category: product.product_category,
+                        low_stock_threshold: product.low_stock_threshold || 5
+                    };
+
+                    // Send the update request
+                    const updateResponse = await fetch(`${API_URL}/products/${encodeURIComponent(itemCode)}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(updateData)
+                    });
+
+                    if (!updateResponse.ok) {
+                        throw new Error('Failed to update stock');
+                    }
+
+                    // Update was successful
+
+                    // Update the product in the local array
+                    const productIndex = allLowStockProducts.findIndex(p => p.item_code === itemCode);
+                    if (productIndex !== -1) {
+                        allLowStockProducts[productIndex].available_stock = newStockValue;
+
+                        // If the new stock is not below threshold, remove it from the array
+                        const threshold = allLowStockProducts[productIndex].low_stock_threshold || 5;
+                        if (newStockValue >= threshold) {
+                            allLowStockProducts.splice(productIndex, 1);
+                        }
+                    }
+
+                    // Re-render the table
+                    renderLowStockTable(allLowStockProducts);
+
+                    // Close the modal
+                    closeStockUpdateModal();
+
+                    // Show success message
+                    showToast(`Stock for ${itemCode} successfully updated to ${newStockValue}.`, 'success');
+
+                } catch (error) {
+                    console.error('Error updating stock:', error);
+                    showToast(`Failed to update stock: ${error.message}`, 'error');
+                }
+            }
+
+            // Initialize the page
+            fetchLowStockProducts();
+        });
+    </script>
+</body>
+</html>
