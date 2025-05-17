@@ -22,7 +22,7 @@
       padding: 20px;
     }
 
-    /* A4 Fixed Container */
+    /* Responsive Container */
     .container {
       width: 100%;
       max-width: 800px; /* Approximately A4 width */
@@ -30,10 +30,15 @@
       background: white;
       padding: 20px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      /* A4 aspect ratio is 1:1.414 (width:height) */
       position: relative;
-      /* Set a min-height to approximate A4 proportions */
-      min-height: calc(800px * 1.414);
+    }
+
+    /* Container wrapper */
+    .container-wrapper {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
     }
 
     /* Header */
@@ -108,34 +113,103 @@
       font-size: 16px;
     }
 
-    /* Table Styling */
-    table {
+    /* Table Container Styling */
+    .table-container {
       width: 100%;
-      border-collapse: collapse;
       margin-bottom: 20px;
-      table-layout: fixed;
+      border-radius: 4px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+      overflow-x: auto; /* Allow horizontal scrolling on desktop */
     }
 
-    th, td {
-      padding: 12px 15px;
-      text-align: left;
-      border-bottom: 1px solid #ddd;
-      word-wrap: break-word;
+    /* Div-based Table Styling */
+    .div-table {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      background-color: white;
+      font-size: 14px;
+      border: 1px solid #e0e0e0;
+      margin-bottom: 0;
     }
 
-    th {
-      background-color: #f2f2f2;
-      font-size: 16px;
+    .div-table-row {
+      display: flex;
+      flex-direction: row;
+      border-bottom: 1px solid #e0e0e0;
     }
 
-    tr:nth-child(even) {
+    .div-table-row:nth-child(even) {
       background-color: #f9f9f9;
     }
 
-    /* Ensure all table headers and data cells within #receipt are left-aligned */
-    #receipt table th,
-    #receipt table td {
-      text-align: left;
+    .div-table-row:hover {
+      background-color: #f0f7ff;
+    }
+
+    .div-table-header {
+      background-color: #f2f2f2;
+      font-weight: bold;
+      border-bottom: 2px solid #d0d0d0;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .div-table-cell {
+      padding: 8px 10px;
+      border-right: 1px solid #e0e0e0;
+      white-space: nowrap; /* No wrapping on desktop */
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: flex;
+      align-items: center;
+    }
+
+    .div-table-cell:last-child {
+      border-right: none;
+    }
+
+    .div-table-heading {
+      color: #333;
+      font-weight: 700; /* Consistent bold weight */
+    }
+
+    /* Column-specific styling */
+    .product-column {
+      flex: 3;
+      min-width: 250px;
+      max-width: 350px;
+      justify-content: flex-start;
+      padding-left: 12px;
+    }
+
+    .qty-column {
+      flex: 0.5;
+      min-width: 40px;
+      max-width: 50px;
+      justify-content: center;
+      font-weight: 700; /* Make it bold */
+      text-align: center;
+    }
+
+    .price-column {
+      flex: 1;
+      min-width: 100px;
+      justify-content: flex-end;
+      padding-right: 12px;
+    }
+
+    /* For the tax column that may be hidden */
+    .tax-column {
+      display: flex; /* Will be toggled with JavaScript */
+    }
+
+    /* Div Table Body */
+    .div-table-body {
+      display: flex;
+      flex-direction: column;
     }
 
     /* Additional Comments Section */
@@ -217,6 +291,11 @@
       gap: 10px;
       justify-content: center;
       margin-top: 20px;
+      width: 100%;
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+      padding: 0 10px;
     }
 
     .action-button {
@@ -310,67 +389,230 @@
       100% { opacity: 0; }
     }
 
-    /* A4 Paper Simulation */
-    .a4-container {
-      /* A4 dimensions in pixels at 96 DPI: 794px × 1123px */
-      width: 794px;
-      height: 1123px;
-      margin: 0 auto;
-      background: white;
-      position: relative;
-      overflow: hidden;
+    /* Responsive Design */
+    @media (max-width: 830px) {
+      body {
+        padding: 10px;
+      }
+
+      .container {
+        padding: 15px;
+      }
+
+      /* Adjust table for medium screens */
+      .div-table-cell {
+        padding: 6px 8px;
+        font-size: 13px;
+      }
+
+      /* Adjust column widths for medium screens */
+      .product-column {
+        min-width: 180px;
+        flex: 2.5;
+      }
+
+      .qty-column {
+        min-width: 35px;
+        flex: 0.5;
+      }
+
+      .price-column {
+        min-width: 80px;
+        flex: 1;
+      }
+
+      /* Adjust header for medium screens */
+      h1 {
+        font-size: 28px;
+      }
+
+      .logo {
+        width: 80px;
+        height: 80px;
+      }
+
+      /* Adjust billing/shipping for medium screens */
+      .billing, .shipping {
+        font-size: 14px;
+      }
     }
 
-    /* Responsive Scaling for A4 Format */
-    @media (max-width: 830px) {
-      /* Container wrapper for scaling */
-      .container-wrapper {
-        width: 100%;
-        overflow-x: hidden;
-        display: flex;
-        justify-content: center;
-        align-items: flex-start;
-      }
-
-      /* Scale the container to fit the screen width while maintaining A4 proportions */
-      .container {
-        transform-origin: top center;
-        transform: scale(calc(100vw / 830));
-        width: 794px; /* Fixed A4 width */
-        margin: 0 auto;
-        height: auto;
-        min-height: 1123px; /* A4 height */
-        padding: 40px; /* Larger padding for better appearance */
-      }
-
-      /* Adjust the wrapper height to account for the scaled content */
+    /* Specific adjustments for small screens */
+    @media (max-width: 650px) {
       body {
-        padding: 0;
-        margin: 0;
+        padding: 5px;
       }
 
-      /* Ensure the button container is below the scaled receipt */
-      .button-container {
-        margin-top: calc(1123px * (100vw / 830) - 1123px + 40px);
-        padding: 20px;
+      .container {
+        padding: 12px;
+        box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      }
+
+      /* Adjust header for small screens */
+      h1 {
+        font-size: 24px;
+      }
+
+      .logo {
+        width: 60px;
+        height: 60px;
+      }
+
+      /* Adjust billing/shipping for small screens */
+      .billing-shipping {
+        flex-direction: column;
+      }
+
+      .billing, .shipping {
+        flex-basis: 100%;
+        margin-bottom: 15px;
+      }
+
+      /* Adjust table for small screens */
+      .table-container {
+        overflow-x: visible; /* Disable horizontal scrolling on mobile */
+        box-shadow: none;
+        border-radius: 0;
+      }
+
+      .div-table {
+        border-radius: 4px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      }
+
+      .div-table-cell {
+        padding: 5px 6px;
+        font-size: 12px;
+      }
+
+      .product-column {
+        min-width: 0; /* Remove min-width to allow full flexibility */
+        flex: 1.5;
+      }
+
+      .qty-column {
+        min-width: 0; /* Remove min-width to allow full flexibility */
+        max-width: none;
+        flex: 0.5;
+      }
+
+      .price-column {
+        min-width: 0; /* Remove min-width to allow full flexibility */
+        flex: 1;
       }
     }
 
     /* Specific adjustments for very small screens */
     @media (max-width: 480px) {
-      .container {
-        padding: 30px;
+      body {
+        padding: 0;
       }
 
-      /* Ensure the button container is properly positioned */
+      .container {
+        padding: 10px;
+      }
+
+      /* Adjust button container for very small screens */
       .button-container {
-        margin-top: calc(1123px * (100vw / 830) - 1123px + 30px);
         flex-direction: column;
-        gap: 15px;
+        gap: 10px;
+        padding: 10px;
       }
 
       .action-button {
         width: 100%;
+        padding: 12px 0;
+      }
+
+      /* Mobile-optimized table */
+      .div-table-cell {
+        padding: 4px 5px;
+        font-size: 11px;
+        white-space: normal; /* Allow text wrapping on mobile */
+      }
+
+      /* Adjust column proportions for mobile */
+      .product-column {
+        flex: 1.2;
+      }
+
+      .qty-column {
+        flex: 0.4;
+      }
+
+      .price-column {
+        flex: 0.8;
+      }
+
+      /* Adjust totals section for very small screens */
+      .totals {
+        padding: 10px;
+        margin-top: 15px;
+      }
+
+      .totals p {
+        font-size: 14px;
+      }
+
+      /* Adjust footer for very small screens */
+      .footer {
+        font-size: 12px;
+        margin-top: 15px;
+      }
+    }
+
+    /* Specific adjustments for extra small screens */
+    @media (max-width: 380px) {
+      .container {
+        padding: 8px;
+      }
+
+      h1 {
+        font-size: 20px;
+      }
+
+      .logo {
+        width: 50px;
+        height: 50px;
+      }
+
+      /* Further optimize table for very small screens */
+      .div-table-cell {
+        padding: 3px 4px;
+        font-size: 10px;
+      }
+
+      /* Adjust column proportions for very small screens */
+      .product-column {
+        flex: 1;
+      }
+
+      .qty-column {
+        flex: 0.3;
+        justify-content: center;
+        text-align: center;
+      }
+
+      .price-column {
+        flex: 0.7;
+      }
+
+      /* Ensure the table fits the screen width */
+      .div-table {
+        width: 100%;
+        min-width: 0;
+      }
+    }
+
+    /* Ultra small screens */
+    @media (max-width: 320px) {
+      .container {
+        padding: 5px;
+      }
+
+      .div-table-cell {
+        padding: 2px 3px;
+        font-size: 9px;
       }
     }
   </style>
@@ -413,21 +655,23 @@
 
       <p class="payment-method">Payment Method: <span id="paymentMethod">N/A</span></p>
 
-      <!-- Products Table -->
-      <table>
-        <thead>
-          <tr id="table-header">
-            <th>Product</th>
-            <th>QTY</th>
-            <th>UNIT PRICE (R)</th>
-            <th>TAX PER UNIT (R)</th>
-            <th>TOTAL (R)</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Dynamic Product Rows Will Be Inserted Here -->
-        </tbody>
-      </table>
+      <!-- Products Table (Div-based) -->
+      <div class="table-container">
+        <div class="div-table">
+          <!-- Table Header -->
+          <div class="div-table-row div-table-header" id="table-header">
+            <div class="div-table-cell div-table-heading product-column">Product</div>
+            <div class="div-table-cell div-table-heading qty-column" style="font-weight: 700; text-align: center;">QTY</div>
+            <div class="div-table-cell div-table-heading price-column">UNIT PRICE (R)</div>
+            <div class="div-table-cell div-table-heading price-column tax-column">TAX PER UNIT (R)</div>
+            <div class="div-table-cell div-table-heading price-column">TOTAL (R)</div>
+          </div>
+          <!-- Table Body - Dynamic Product Rows Will Be Inserted Here -->
+          <div class="div-table-body">
+            <!-- JavaScript will populate this section -->
+          </div>
+        </div>
+      </div>
 
       <!-- Additional Comments Section -->
       <div id="additional-comments" class="additional-comments" style="margin-bottom: 20px;">
@@ -640,39 +884,40 @@
       const tableHeaderRow = document.getElementById('table-header');
       const taxInfo = document.getElementById('tax-info');
 
-      // If there's any tax, show the "TAX PER UNIT" column, otherwise remove it
+      // If there's any tax, show the "TAX PER UNIT" column, otherwise hide it
+      const taxColumn = document.querySelector('.tax-column');
       if (isTaxAdded) {
-        // Make sure the 4th column is "TAX PER UNIT"
-        const possibleTaxHeader = tableHeaderRow.querySelector('th:nth-child(4)');
-        if (!possibleTaxHeader || !possibleTaxHeader.textContent.includes('TAX PER UNIT')) {
-          const taxHeader = document.createElement('th');
-          taxHeader.textContent = 'TAX PER UNIT (R)';
-          tableHeaderRow.insertBefore(taxHeader, tableHeaderRow.children[3]);
-        }
+        // Show the tax column
+        taxColumn.style.display = 'flex';
         taxInfo.style.display = 'flex';
       } else {
-        // If there's a "TAX PER UNIT" header, remove it
-        const taxHeader = tableHeaderRow.querySelector('th:nth-child(4)');
-        if (taxHeader && taxHeader.textContent.includes('TAX PER UNIT')) {
-          taxHeader.parentNode.removeChild(taxHeader);
-        }
+        // Hide the tax column
+        taxColumn.style.display = 'none';
         taxInfo.style.display = 'none';
       }
 
       // Now populate the table rows
-      const tbody = document.querySelector('table tbody');
-      tbody.innerHTML = '';
+      const tableBody = document.querySelector('.div-table-body');
+      tableBody.innerHTML = '';
 
       selectedProducts.forEach(product => {
-        const row = tbody.insertRow();
+        // Create a new row
+        const row = document.createElement('div');
+        row.className = 'div-table-row';
 
-        // Product name
-        const descCell = row.insertCell(0);
+        // Product name cell
+        const descCell = document.createElement('div');
+        descCell.className = 'div-table-cell product-column';
         descCell.textContent = product.name;
+        row.appendChild(descCell);
 
-        // Quantity
-        const qtyCell = row.insertCell(1);
+        // Quantity cell
+        const qtyCell = document.createElement('div');
+        qtyCell.className = 'div-table-cell qty-column';
         qtyCell.textContent = product.quantity;
+        qtyCell.style.fontWeight = '700'; // Ensure QTY is bold
+        qtyCell.style.textAlign = 'center'; // Ensure text is centered
+        row.appendChild(qtyCell);
 
         // We'll apply the same "tax = 15% of final price" logic used in the main code
         if (isTaxAdded) {
@@ -682,29 +927,42 @@
           const lineTotal = product.price * product.quantity;
 
           // Unit Price cell
-          const unitPriceCell = row.insertCell(2);
+          const unitPriceCell = document.createElement('div');
+          unitPriceCell.className = 'div-table-cell price-column';
           unitPriceCell.textContent = formatCurrency(netPrice.toFixed(2));
+          row.appendChild(unitPriceCell);
 
           // Tax cell
-          const taxCell = row.insertCell(3);
+          const taxCell = document.createElement('div');
+          taxCell.className = 'div-table-cell price-column tax-column';
           taxCell.textContent = formatCurrency(taxPerUnit.toFixed(2));
+          row.appendChild(taxCell);
 
           // Total cell
-          const totalCell = row.insertCell(4);
+          const totalCell = document.createElement('div');
+          totalCell.className = 'div-table-cell price-column';
           totalCell.textContent = formatCurrency(lineTotal.toFixed(2));
+          row.appendChild(totalCell);
         } else {
           // No tax => unit price is the full product.price
           // total = price * quantity
           const lineTotal = product.price * product.quantity;
 
           // Unit Price cell
-          const unitPriceCell = row.insertCell(2);
+          const unitPriceCell = document.createElement('div');
+          unitPriceCell.className = 'div-table-cell price-column';
           unitPriceCell.textContent = formatCurrency(product.price.toFixed(2));
+          row.appendChild(unitPriceCell);
 
-          // Then the 4th cell is "Total" (since no separate tax column)
-          const totalCell = row.insertCell(3);
+          // Total cell (no tax column)
+          const totalCell = document.createElement('div');
+          totalCell.className = 'div-table-cell price-column';
           totalCell.textContent = formatCurrency(lineTotal.toFixed(2));
+          row.appendChild(totalCell);
         }
+
+        // Add the row to the table body
+        tableBody.appendChild(row);
       });
 
       // Additional Comments

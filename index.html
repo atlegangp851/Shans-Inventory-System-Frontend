@@ -127,104 +127,104 @@
       overflow-x: auto;
     }
 
-    /* Mobile product cards */
-    .product-cards-container {
-      display: none; /* Hidden by default, shown on mobile */
+    /* Div-based Table Styling */
+    .table-container {
+      width: 100%;
+      margin-bottom: 20px;
+      border-radius: 4px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+      overflow-x: auto; /* Allow horizontal scrolling on desktop */
     }
 
-    .product-card {
-      background-color: white;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      padding: 15px;
-      margin-bottom: 15px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .product-card:active {
-      transform: scale(0.98);
-      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-    }
-
-    .product-card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-      border-bottom: 1px solid #eee;
-      padding-bottom: 8px;
-    }
-
-    .product-card-name {
-      font-weight: bold;
-      font-size: 16px;
-      flex: 1;
-    }
-
-    .product-card-quantity {
-      background-color: #4a90e2;
-      color: white;
-      border-radius: 50%;
-      width: 25px;
-      height: 25px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-    }
-
-    .product-card-details {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-
-    .product-card-detail {
+    .div-table {
       display: flex;
       flex-direction: column;
-    }
-
-    .detail-label {
-      font-size: 12px;
-      color: #666;
-    }
-
-    .detail-value {
-      font-weight: bold;
-      font-size: 14px;
-    }
-
-    .product-card-total {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 10px;
-      padding-top: 10px;
-      border-top: 1px solid #eee;
-    }
-
-    .product-card-total-label {
-      font-weight: bold;
-    }
-
-    .product-card-total-value {
-      font-weight: bold;
-      font-size: 16px;
-      color: #4a90e2;
-    }
-
-    .product-card-actions {
-      margin-top: 10px;
-      display: flex;
-      justify-content: flex-end;
-    }
-
-    .product-card .remove-button {
       width: 100%;
+      background-color: white;
+      font-size: 14px;
+      border: 1px solid #e0e0e0;
+      margin-bottom: 0;
+    }
+
+    .div-table-row {
+      display: flex;
+      flex-direction: row;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .div-table-row:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+
+    .div-table-row:hover {
+      background-color: #f0f7ff;
+    }
+
+    .div-table-header {
+      background-color: #f2f2f2;
+      font-weight: bold;
+      border-bottom: 2px solid #d0d0d0;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .div-table-cell {
+      padding: 8px 10px;
+      border-right: 1px solid #e0e0e0;
+      white-space: nowrap; /* No wrapping on desktop */
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: flex;
+      align-items: center;
+    }
+
+    .div-table-cell:last-child {
+      border-right: none;
+    }
+
+    .div-table-heading {
+      color: #333;
+      font-weight: 700; /* Consistent bold weight */
+    }
+
+    /* Column-specific styling */
+    .product-column {
+      flex: 4;
+      min-width: 250px;
+      max-width: 350px;
+      justify-content: flex-start;
+      padding-left: 12px;
+    }
+
+    .qty-column {
+      flex: 0.3;
+      min-width: 30px;
+      max-width: 40px;
+      justify-content: center;
+      font-weight: 700; /* Make it bold */
       text-align: center;
-      padding: 8px 0;
+      font-size: 13px;
+    }
+
+    .price-column {
+      flex: 0.7;
+      min-width: 70px;
+      justify-content: flex-end;
+      padding-right: 12px;
+      font-size: 13px;
+    }
+
+    /* For the tax column that may be hidden */
+    .tax-column {
+      display: flex; /* Will be toggled with JavaScript */
+    }
+
+    /* Div Table Body */
+    .div-table-body {
+      display: flex;
+      flex-direction: column;
     }
 
     .new-product-label {
@@ -234,50 +234,159 @@
       font-size: 12px;
     }
 
-    .summary-card {
-      background-color: #f8f9fa;
-      border-left: 4px solid #4a90e2;
-      margin-bottom: 20px;
-    }
-
-    .summary-card-title {
+    /* Remove X styling */
+    .remove-x {
+      color: #ff3b30;
       font-weight: bold;
-      font-size: 14px;
-      margin-bottom: 10px;
-      color: #4a90e2;
+      font-size: 16px;
+      cursor: pointer;
+      padding: 5px 10px;
+      transition: transform 0.2s ease, color 0.2s ease;
+      display: inline-block;
     }
 
-    @media (max-width: 600px) {
+    .remove-x:hover {
+      transform: scale(1.2);
+      color: #cc0000;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 830px) {
       body {
         padding: 10px;
       }
+
       .container {
         padding: 15px;
       }
+
+      /* Adjust table for medium screens */
+      .div-table-cell {
+        padding: 6px 8px;
+        font-size: 13px;
+      }
+
+      /* Adjust column widths for medium screens */
+      .product-column {
+        min-width: 180px;
+        flex: 3;
+      }
+
+      .qty-column {
+        min-width: 25px;
+        flex: 0.3;
+        font-size: 12px;
+      }
+
+      .price-column {
+        min-width: 60px;
+        flex: 0.6;
+        font-size: 12px;
+      }
+    }
+
+    /* Specific adjustments for small screens */
+    @media (max-width: 650px) {
+      body {
+        padding: 5px;
+      }
+
+      .container {
+        padding: 12px;
+      }
+
       button {
         width: 100%;
         padding: 12px 0;
-        font-size: 18px;
+        font-size: 16px;
         margin-right: 0;
       }
+
       .loader {
         width: 25px;
         height: 25px;
       }
+
       .section {
         padding: 10px;
       }
+
       .button-group {
         flex-direction: column;
         align-items: stretch;
       }
 
-      /* Hide table on mobile and show cards instead */
-      .table-responsive {
-        display: none;
+      /* Adjust table for small screens */
+      .table-container {
+        overflow-x: visible; /* Disable horizontal scrolling on mobile */
+        box-shadow: none;
+        border-radius: 0;
       }
-      .product-cards-container {
-        display: block;
+
+      .div-table {
+        border-radius: 4px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      }
+
+      .div-table-cell {
+        padding: 5px 6px;
+        font-size: 12px;
+      }
+
+      .product-column {
+        min-width: 0; /* Remove min-width to allow full flexibility */
+        flex: 2;
+      }
+
+      .qty-column {
+        min-width: 0; /* Remove min-width to allow full flexibility */
+        max-width: none;
+        flex: 0.25;
+        font-size: 11px;
+      }
+
+      .price-column {
+        min-width: 0; /* Remove min-width to allow full flexibility */
+        flex: 0.5;
+        font-size: 11px;
+      }
+    }
+
+    /* Specific adjustments for very small screens */
+    @media (max-width: 480px) {
+      body {
+        padding: 0;
+      }
+
+      .container {
+        padding: 10px;
+      }
+
+      /* Mobile-optimized table */
+      .div-table-cell {
+        padding: 4px 5px;
+        font-size: 11px;
+        white-space: normal; /* Allow text wrapping on mobile */
+      }
+
+      /* Make all table headers consistent size on mobile */
+      .div-table-heading {
+        font-size: 11px !important; /* Override inline styles */
+      }
+
+      /* Adjust column proportions for mobile */
+      .product-column {
+        flex: 1.5;
+      }
+
+      .qty-column {
+        flex: 0.2;
+        font-size: 10px;
+      }
+
+      .price-column {
+        flex: 0.4;
+        font-size: 10px;
       }
     }
     .hidden {
@@ -452,17 +561,18 @@
     <!-- Selected Products and Totals Section -->
     <div class="section">
       <h2>Selected Products</h2>
-      <!-- Table view (desktop) -->
-      <div class="table-responsive">
-        <table id="selectedProductsTable">
-          <thead></thead>
-          <tbody id="selectedProductsBody"></tbody>
-        </table>
-      </div>
-
-      <!-- Card view (mobile) -->
-      <div class="product-cards-container" id="productCardsContainer">
-        <!-- Product cards will be added here dynamically -->
+      <!-- Div-based Table (works on all screen sizes) -->
+      <div class="table-container">
+        <div class="div-table">
+          <!-- Table Header - Will be populated by JavaScript -->
+          <div class="div-table-row div-table-header" id="table-header">
+            <!-- Header cells will be added dynamically -->
+          </div>
+          <!-- Table Body - Will be populated by JavaScript -->
+          <div class="div-table-body" id="selectedProductsBody">
+            <!-- Product rows will be added dynamically -->
+          </div>
+        </div>
       </div>
 
       <div style="display: flex; align-items: center;">
@@ -519,7 +629,8 @@
     const taxAmountSpan = document.getElementById('taxAmount');
     const subtotalAmountSpan = document.getElementById('subtotalAmount');
     const totalAmountSpan = document.getElementById('totalAmount');
-    const selectedProductsTable = document.getElementById('selectedProductsTable');
+    const tableHeader = document.getElementById('table-header');
+    const selectedProductsBody = document.getElementById('selectedProductsBody');
     const companySelect = document.getElementById('companySelect');
     const commentsTextarea = document.getElementById('comments');
     const loadingScreen = document.getElementById('loadingScreen');
@@ -732,287 +843,108 @@
      *   - "Total (R)" = price * quantity
      */
     function updateSelectedProductsTable() {
-      // Update the table view (desktop)
-      const tbody = document.getElementById('selectedProductsBody');
-      tbody.innerHTML = '';
+      // Clear the table body
+      const tableBody = document.getElementById('selectedProductsBody');
+      tableBody.innerHTML = '';
+
+      // Update the table header
       updateTableHeader();
-
-      // Update the card view (mobile)
-      const cardsContainer = document.getElementById('productCardsContainer');
-      cardsContainer.innerHTML = '';
-
-      // Calculate totals for the summary card
-      let subtotal = 0;
-      let tax = 0;
-      let total = 0;
-
-      selectedProducts.forEach(product => {
-        if (taxCheckbox.checked) {
-          subtotal += (product.price * (1 - TAX_RATE)) * product.quantity;
-          tax += (product.price * TAX_RATE) * product.quantity;
-          total += (product.price * product.quantity);
-        } else {
-          subtotal += (product.price * product.quantity);
-          total += (product.price * product.quantity);
-        }
-      });
-
-      if (!taxCheckbox.checked) {
-        tax = 0;
-      }
-
-      // Add summary card if there are products
-      if (selectedProducts.length > 0) {
-        const summaryCard = document.createElement('div');
-        summaryCard.className = 'product-card summary-card';
-
-        const summaryTitle = document.createElement('div');
-        summaryTitle.className = 'summary-card-title';
-        summaryTitle.textContent = 'Order Summary';
-        summaryCard.appendChild(summaryTitle);
-
-        const summaryDetails = document.createElement('div');
-        summaryDetails.className = 'product-card-details';
-
-        // Subtotal detail
-        const subtotalDetail = document.createElement('div');
-        subtotalDetail.className = 'product-card-detail';
-
-        const subtotalLabel = document.createElement('div');
-        subtotalLabel.className = 'detail-label';
-        subtotalLabel.textContent = 'Subtotal';
-
-        const subtotalValue = document.createElement('div');
-        subtotalValue.className = 'detail-value';
-        subtotalValue.textContent = `${CURRENCY_SYMBOL}${subtotal.toFixed(0)}`;
-
-        subtotalDetail.appendChild(subtotalLabel);
-        subtotalDetail.appendChild(subtotalValue);
-        summaryDetails.appendChild(subtotalDetail);
-
-        // Tax detail
-        const taxDetail = document.createElement('div');
-        taxDetail.className = 'product-card-detail';
-
-        const taxLabel = document.createElement('div');
-        taxLabel.className = 'detail-label';
-        taxLabel.textContent = 'Tax (15%)';
-
-        const taxValue = document.createElement('div');
-        taxValue.className = 'detail-value';
-        taxValue.textContent = `${CURRENCY_SYMBOL}${tax.toFixed(0)}`;
-
-        taxDetail.appendChild(taxLabel);
-        taxDetail.appendChild(taxValue);
-        summaryDetails.appendChild(taxDetail);
-
-        summaryCard.appendChild(summaryDetails);
-
-        // Total
-        const totalSection = document.createElement('div');
-        totalSection.className = 'product-card-total';
-
-        const totalLabel = document.createElement('div');
-        totalLabel.className = 'product-card-total-label';
-        totalLabel.textContent = 'Total Amount';
-
-        const totalValue = document.createElement('div');
-        totalValue.className = 'product-card-total-value';
-        totalValue.textContent = `${CURRENCY_SYMBOL}${total.toFixed(0)}`;
-
-        totalSection.appendChild(totalLabel);
-        totalSection.appendChild(totalValue);
-        summaryCard.appendChild(totalSection);
-
-        cardsContainer.appendChild(summaryCard);
-      }
 
       // Show a message if no products are selected
       if (selectedProducts.length === 0) {
-        const emptyMessage = document.createElement('div');
-        emptyMessage.style.textAlign = 'center';
-        emptyMessage.style.padding = '20px';
-        emptyMessage.style.color = '#666';
-        emptyMessage.innerHTML = '<i>No products selected yet.</i><br>Search and add products above.';
-        cardsContainer.appendChild(emptyMessage);
+        const emptyRow = document.createElement('div');
+        emptyRow.className = 'div-table-row';
+        emptyRow.style.justifyContent = 'center';
+        emptyRow.style.padding = '20px';
+        emptyRow.style.color = '#666';
+        emptyRow.innerHTML = '<i>No products selected yet. Search and add products above.</i>';
+        tableBody.appendChild(emptyRow);
+        calculateAndDisplayTotal();
+        return;
       }
 
+      // Add product rows
       selectedProducts.forEach((product, index) => {
-        // TABLE VIEW (DESKTOP)
-        const row = tbody.insertRow();
-
-        // Product name
-        const nameCell = row.insertCell();
-        nameCell.textContent = product.name;
-        if (product.is_new) {
-          const newLabel = document.createElement('span');
-          newLabel.textContent = ' (New)';
-          newLabel.style.color = '#ff9900';
-          newLabel.style.fontWeight = 'bold';
-          nameCell.appendChild(newLabel);
-        }
-
-        // Quantity
-        const qtyCell = row.insertCell();
-        qtyCell.textContent = product.quantity;
+        // Create a new row
+        const row = document.createElement('div');
+        row.className = 'div-table-row';
 
         // Calculate prices
         const netPrice = taxCheckbox.checked ? product.price * (1 - TAX_RATE) : product.price;
         const taxAmount = taxCheckbox.checked ? product.price * TAX_RATE : 0;
         const lineTotal = product.price * product.quantity;
 
-        if (taxCheckbox.checked) {
-          // Unit Price (net)
-          const unitPriceCell = row.insertCell();
-          unitPriceCell.textContent = `${CURRENCY_SYMBOL}${netPrice.toFixed(0)}`;
-
-          // Tax per Unit
-          const taxCell = row.insertCell();
-          taxCell.textContent = `${CURRENCY_SYMBOL}${taxAmount.toFixed(0)}`;
-
-          // Total
-          const totalCell = row.insertCell();
-          totalCell.textContent = `${CURRENCY_SYMBOL}${lineTotal.toFixed(0)}`;
-
-          // Remove button
-          const actionCell = row.insertCell();
-          const removeBtn = document.createElement('button');
-          removeBtn.textContent = 'Remove';
-          removeBtn.classList.add('remove-button');
-          removeBtn.onclick = () => removeProduct(index);
-          actionCell.appendChild(removeBtn);
-        } else {
-          // Unit Price
-          const unitPriceCell = row.insertCell();
-          unitPriceCell.textContent = `${CURRENCY_SYMBOL}${product.price.toFixed(0)}`;
-
-          // Total
-          const totalCell = row.insertCell();
-          totalCell.textContent = `${CURRENCY_SYMBOL}${lineTotal.toFixed(0)}`;
-
-          // Remove button
-          const actionCell = row.insertCell();
-          const removeBtn = document.createElement('button');
-          removeBtn.textContent = 'Remove';
-          removeBtn.classList.add('remove-button');
-          removeBtn.onclick = () => removeProduct(index);
-          actionCell.appendChild(removeBtn);
-        }
-
-        // CARD VIEW (MOBILE)
-        const card = document.createElement('div');
-        card.className = 'product-card';
-
-        // Card header with product name and quantity
-        const cardHeader = document.createElement('div');
-        cardHeader.className = 'product-card-header';
-
-        const cardName = document.createElement('div');
-        cardName.className = 'product-card-name';
-        cardName.textContent = product.name;
+        // Product name cell
+        const nameCell = document.createElement('div');
+        nameCell.className = 'div-table-cell product-column';
+        nameCell.textContent = product.name;
         if (product.is_new) {
           const newLabel = document.createElement('span');
           newLabel.className = 'new-product-label';
-          newLabel.textContent = '(New)';
-          cardName.appendChild(newLabel);
+          newLabel.textContent = ' (New)';
+          nameCell.appendChild(newLabel);
         }
 
-        const cardQuantity = document.createElement('div');
-        cardQuantity.className = 'product-card-quantity';
-        cardQuantity.textContent = product.quantity;
+        row.appendChild(nameCell);
 
-        cardHeader.appendChild(cardName);
-        cardHeader.appendChild(cardQuantity);
-        card.appendChild(cardHeader);
+        // Quantity cell
+        const qtyCell = document.createElement('div');
+        qtyCell.className = 'div-table-cell qty-column';
+        qtyCell.textContent = product.quantity;
+        qtyCell.style.fontWeight = '700'; // Make QTY bold
+        qtyCell.style.textAlign = 'center';
+        row.appendChild(qtyCell);
 
-        // Card details
-        const cardDetails = document.createElement('div');
-        cardDetails.className = 'product-card-details';
-
-        // Room detail (if available)
-        const foundProduct = allProducts.find(p => p.item_code === product.item_code);
-        if (foundProduct && foundProduct.room_name) {
-          const roomDetail = document.createElement('div');
-          roomDetail.className = 'product-card-detail';
-
-          const roomLabel = document.createElement('div');
-          roomLabel.className = 'detail-label';
-          roomLabel.textContent = 'Room';
-
-          const roomValue = document.createElement('div');
-          roomValue.className = 'detail-value';
-          roomValue.textContent = foundProduct.room_name;
-
-          roomDetail.appendChild(roomLabel);
-          roomDetail.appendChild(roomValue);
-          cardDetails.appendChild(roomDetail);
-        }
-
-        // Unit price detail
-        const unitPriceDetail = document.createElement('div');
-        unitPriceDetail.className = 'product-card-detail';
-
-        const unitPriceLabel = document.createElement('div');
-        unitPriceLabel.className = 'detail-label';
-        unitPriceLabel.textContent = 'Unit Price';
-
-        const unitPriceValue = document.createElement('div');
-        unitPriceValue.className = 'detail-value';
-        unitPriceValue.textContent = `${CURRENCY_SYMBOL}${netPrice.toFixed(0)}`;
-
-        unitPriceDetail.appendChild(unitPriceLabel);
-        unitPriceDetail.appendChild(unitPriceValue);
-        cardDetails.appendChild(unitPriceDetail);
-
-        // Tax detail (only if tax is checked)
         if (taxCheckbox.checked) {
-          const taxDetail = document.createElement('div');
-          taxDetail.className = 'product-card-detail';
+          // Unit Price cell
+          const unitPriceCell = document.createElement('div');
+          unitPriceCell.className = 'div-table-cell price-column';
+          unitPriceCell.textContent = `${CURRENCY_SYMBOL}${netPrice.toFixed(0)}`;
+          row.appendChild(unitPriceCell);
 
-          const taxLabel = document.createElement('div');
-          taxLabel.className = 'detail-label';
-          taxLabel.textContent = 'Tax per Unit';
+          // Tax cell
+          const taxCell = document.createElement('div');
+          taxCell.className = 'div-table-cell price-column tax-column';
+          taxCell.textContent = `${CURRENCY_SYMBOL}${taxAmount.toFixed(0)}`;
+          row.appendChild(taxCell);
 
-          const taxValue = document.createElement('div');
-          taxValue.className = 'detail-value';
-          taxValue.textContent = `${CURRENCY_SYMBOL}${taxAmount.toFixed(0)}`;
+          // Total cell
+          const totalCell = document.createElement('div');
+          totalCell.className = 'div-table-cell price-column';
+          totalCell.textContent = `${CURRENCY_SYMBOL}${lineTotal.toFixed(0)}`;
+          row.appendChild(totalCell);
+        } else {
+          // Unit Price cell
+          const unitPriceCell = document.createElement('div');
+          unitPriceCell.className = 'div-table-cell price-column';
+          unitPriceCell.textContent = `${CURRENCY_SYMBOL}${product.price.toFixed(0)}`;
+          row.appendChild(unitPriceCell);
 
-          taxDetail.appendChild(taxLabel);
-          taxDetail.appendChild(taxValue);
-          cardDetails.appendChild(taxDetail);
+          // Total cell
+          const totalCell = document.createElement('div');
+          totalCell.className = 'div-table-cell price-column';
+          totalCell.textContent = `${CURRENCY_SYMBOL}${lineTotal.toFixed(0)}`;
+          row.appendChild(totalCell);
         }
 
-        card.appendChild(cardDetails);
+        // Action cell with red X instead of remove button
+        const actionCell = document.createElement('div');
+        actionCell.className = 'div-table-cell';
+        actionCell.style.justifyContent = 'center';
+        actionCell.style.width = '40px'; // Fixed width for X column
+        actionCell.style.minWidth = '40px';
 
-        // Card total
-        const cardTotal = document.createElement('div');
-        cardTotal.className = 'product-card-total';
+        const removeX = document.createElement('span');
+        removeX.innerHTML = '&#10006;'; // X symbol
+        removeX.className = 'remove-x';
+        removeX.title = 'Remove item';
+        removeX.onclick = () => removeProduct(index);
 
-        const totalLabel = document.createElement('div');
-        totalLabel.className = 'product-card-total-label';
-        totalLabel.textContent = 'Total';
+        actionCell.appendChild(removeX);
+        row.appendChild(actionCell);
 
-        const totalValue = document.createElement('div');
-        totalValue.className = 'product-card-total-value';
-        totalValue.textContent = `${CURRENCY_SYMBOL}${lineTotal.toFixed(0)}`;
-
-        cardTotal.appendChild(totalLabel);
-        cardTotal.appendChild(totalValue);
-        card.appendChild(cardTotal);
-
-        // Card actions
-        const cardActions = document.createElement('div');
-        cardActions.className = 'product-card-actions';
-
-        const removeButton = document.createElement('button');
-        removeButton.className = 'remove-button';
-        removeButton.textContent = 'Remove';
-        removeButton.onclick = () => removeProduct(index);
-
-        cardActions.appendChild(removeButton);
-        card.appendChild(cardActions);
-
-        cardsContainer.appendChild(card);
+        // Add the row to the table body
+        tableBody.appendChild(row);
       });
 
       calculateAndDisplayTotal();
@@ -1055,21 +987,55 @@
     }
 
     function updateTableHeader() {
-      const thead = selectedProductsTable.querySelector('thead');
-      thead.innerHTML = '';
-      const headerRow = thead.insertRow();
-      headerRow.insertCell().textContent = 'Product';
-      headerRow.insertCell().textContent = 'Quantity';
-      headerRow.insertCell().textContent = 'Unit Price (R)';
+      // Clear the header
+      const header = document.getElementById('table-header');
+      header.innerHTML = '';
+
+      // Product column
+      const productHeader = document.createElement('div');
+      productHeader.className = 'div-table-cell div-table-heading product-column';
+      productHeader.textContent = 'Product';
+      header.appendChild(productHeader);
+
+      // QTY column
+      const qtyHeader = document.createElement('div');
+      qtyHeader.className = 'div-table-cell div-table-heading qty-column';
+      qtyHeader.textContent = 'QTY';
+      qtyHeader.style.fontWeight = '700';
+      qtyHeader.style.textAlign = 'center';
+      qtyHeader.style.fontSize = '13px';
+      header.appendChild(qtyHeader);
+
+      // Price column (simplified name)
+      const priceHeader = document.createElement('div');
+      priceHeader.className = 'div-table-cell div-table-heading price-column';
+      priceHeader.textContent = 'PRICE';
+      priceHeader.style.fontSize = '13px';
+      header.appendChild(priceHeader);
 
       if (taxCheckbox.checked) {
-        headerRow.insertCell().textContent = 'Tax per Unit (R)';
-        headerRow.insertCell().textContent = 'Total (R)';
-        headerRow.insertCell().textContent = 'Action';
-      } else {
-        headerRow.insertCell().textContent = 'Total (R)';
-        headerRow.insertCell().textContent = 'Action';
+        // Tax column (only if tax is checked, simplified name)
+        const taxHeader = document.createElement('div');
+        taxHeader.className = 'div-table-cell div-table-heading price-column tax-column';
+        taxHeader.textContent = 'TAX';
+        taxHeader.style.fontSize = '13px';
+        header.appendChild(taxHeader);
       }
+
+      // Total column
+      const totalHeader = document.createElement('div');
+      totalHeader.className = 'div-table-cell div-table-heading price-column';
+      totalHeader.textContent = 'TOTAL';
+      totalHeader.style.fontSize = '13px';
+      header.appendChild(totalHeader);
+
+      // Action column (X)
+      const actionHeader = document.createElement('div');
+      actionHeader.className = 'div-table-cell div-table-heading';
+      actionHeader.innerHTML = '&nbsp;'; // Empty header for the X column
+      actionHeader.style.textAlign = 'center';
+      actionHeader.style.width = '40px'; // Fixed width for X column
+      header.appendChild(actionHeader);
     }
 
     function removeProduct(index) {
