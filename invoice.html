@@ -683,35 +683,16 @@
          *   - If no tax, net = product.price, tax = 0
          */
         function populateInvoice() {
+            // Clear the invoiceConfirmed cookie when the page loads
+            // This ensures we can create a new invoice each time
+            setCookie('invoiceConfirmed', '', -1); // Expire the cookie
+
             const customerInfoCookie = getCookie('customerInfo');
             const selectedProductsCookie = getCookie('selectedProducts');
             const subtotalAmountCookie = getCookie('subtotalAmount');
             const taxAmountCookie = getCookie('taxAmount');
             const totalAmountCookie = getCookie('totalAmount');
             const selectedCompanyCookie = getCookie('selectedCompany');
-            const invoiceConfirmedCookie = getCookie('invoiceConfirmed');
-
-            // Check if invoice has already been confirmed
-            if (invoiceConfirmedCookie === 'true') {
-                // Hide the confirm button
-                const confirmButton = document.getElementById('confirm-button');
-                confirmButton.style.display = 'none';
-
-                // Show a message that the invoice has been processed
-                const successMessage = document.createElement('div');
-                successMessage.style.textAlign = 'center';
-                successMessage.style.margin = '20px 0';
-                successMessage.style.padding = '15px';
-                successMessage.style.backgroundColor = '#d4edda';
-                successMessage.style.color = '#155724';
-                successMessage.style.borderRadius = '5px';
-                successMessage.style.fontWeight = 'bold';
-                successMessage.innerHTML = 'Invoice has already been processed.<br>You can download the image or return to the home page.';
-
-                // Insert the message after the button container
-                const buttonContainer = document.querySelector('.button-container');
-                buttonContainer.parentNode.insertBefore(successMessage, buttonContainer.nextSibling);
-            }
 
             if (!customerInfoCookie ||
                 !selectedProductsCookie ||
