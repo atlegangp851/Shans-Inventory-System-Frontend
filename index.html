@@ -1269,13 +1269,73 @@
       updateSelectedProductsTable();
     });
 
+    // Function to load existing order data when returning from document pages
+    function loadExistingOrderData() {
+      // Check if we're in edit mode (coming back from a document page)
+      const isEditingOrder = sessionStorage.getItem('editingOrder') === 'true';
+
+      if (isEditingOrder) {
+        // Clear the editing flag
+        sessionStorage.removeItem('editingOrder');
+
+        // Load customer info
+        const customerInfoCookie = getCookie('customerInfo');
+        if (customerInfoCookie) {
+          const customerInfo = JSON.parse(customerInfoCookie);
+
+          // Fill in customer information
+          document.getElementById('customerName').value = customerInfo.billing.name || '';
+          document.getElementById('customerAddress').value = customerInfo.billing.address || '';
+          document.getElementById('customerEmail').value = customerInfo.billing.email || '';
+          document.getElementById('customerPhone').value = customerInfo.billing.phone || '';
+
+          // Handle shipping info
+          if (customerInfo.shipping) {
+            sameAsBillingCheckbox.checked = false;
+            shippingInfoDiv.classList.remove('hidden');
+            document.getElementById('shippingName').value = customerInfo.shipping.name || '';
+            document.getElementById('shippingAddress').value = customerInfo.shipping.address || '';
+            document.getElementById('shippingEmail').value = customerInfo.shipping.email || '';
+            document.getElementById('shippingPhone').value = customerInfo.shipping.phone || '';
+          } else {
+            sameAsBillingCheckbox.checked = true;
+            shippingInfoDiv.classList.add('hidden');
+          }
+
+          // Set payment method
+          if (customerInfo.paymentMethod) {
+            document.getElementById('paymentMethod').value = customerInfo.paymentMethod;
+          }
+
+          // Set comments
+          if (customerInfo.comments) {
+            document.getElementById('comments').value = customerInfo.comments;
+          }
+
+          // Set salesperson name
+          if (customerInfo.salespersonName) {
+            document.getElementById('salespersonName').value = customerInfo.salespersonName;
+          }
+        }
+
+        // Load selected products
+        const selectedProductsCookie = getCookie('selectedProducts');
+        if (selectedProductsCookie) {
+          selectedProducts = JSON.parse(selectedProductsCookie);
+          updateSelectedProductsTable();
+        }
+
+        // Show a message to the user
+        showToastMessage('Order loaded for editing. You can modify products and details before generating a new document.', 'info');
+      }
+    }
+
     window.onload = async function() {
       try {
         await fetchAllProducts();
       } finally {
         loadingScreen.style.display = 'none';
       }
-      updateSelectedProductsTable();
 
       // Optionally load previously selected company
       const selectedCompanyCookie = getCookie('selectedCompany');
@@ -1284,7 +1344,11 @@
         companySelect.value = selectedCompany.key;
       }
 
+      // Check if we're returning from a document page to edit an order
+      loadExistingOrderData();
 
+      // Update the products table (will show loaded products if in edit mode)
+      updateSelectedProductsTable();
     };
   </script>
 

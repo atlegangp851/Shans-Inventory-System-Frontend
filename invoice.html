@@ -426,6 +426,11 @@
                 height: 60px;
             }
 
+            /* Make the date smaller on mobile */
+            #invoice-date {
+                font-size: 12px;
+            }
+
             /* Adjust table for small screens */
             .table-container {
                 overflow-x: visible; /* Disable horizontal scrolling on mobile */
@@ -472,6 +477,11 @@
                 padding: 10px;
             }
 
+            /* Make the date even smaller on very small screens */
+            #invoice-date {
+                font-size: 10px;
+            }
+
             /* Make all table headers consistent size on mobile */
             .div-table-heading {
                 font-size: 11px !important; /* Override inline styles */
@@ -515,6 +525,11 @@
             .div-table-heading {
                 font-size: 10px !important; /* Override inline styles */
             }
+
+            /* Make the date tiny on ultra small screens */
+            #invoice-date {
+                font-size: 9px;
+            }
         }
     </style>
 </head>
@@ -522,7 +537,10 @@
     <!-- Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
 
-    <a href="index.html" style="text-decoration: none; color: #007BFF; font-size: 16px; margin-right: 20px;">&larr; Back to Home</a>
+    <div style="display: flex; margin: 20px;">
+        <a href="index.html" style="text-decoration: none; color: #007BFF; font-size: 16px; margin-right: 20px; display: inline-block;">&larr; Back to Home</a>
+        <a href="javascript:void(0)" id="edit-order-button" style="text-decoration: none; color: #007BFF; font-size: 16px; display: inline-block;">✏️ Edit Order</a>
+    </div>
 
     <div id="pdf-1" class="container">
         <div id="invoice">
@@ -991,8 +1009,27 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', populateInvoice);
-        document.getElementById('confirm-button').addEventListener('click', confirmInvoice);
+        // Function to handle the edit order button click
+        function handleEditOrder() {
+            // Set a flag in sessionStorage to indicate we're editing an existing order
+            sessionStorage.setItem('editingOrder', 'true');
+
+            // Redirect back to the index page
+            window.location.href = 'index.html';
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            populateInvoice();
+
+            // Add event listener for the confirm button
+            document.getElementById('confirm-button').addEventListener('click', confirmInvoice);
+
+            // Add event listener for the edit order button
+            const editOrderButton = document.getElementById('edit-order-button');
+            if (editOrderButton) {
+                editOrderButton.addEventListener('click', handleEditOrder);
+            }
+        });
 
         // Screenshot functionality
         document.getElementById('screenshot-button').addEventListener('click', () => {

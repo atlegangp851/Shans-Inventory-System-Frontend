@@ -428,6 +428,11 @@
         height: 60px;
       }
 
+      /* Make the date smaller on mobile */
+      #quotation-date {
+        font-size: 12px;
+      }
+
       /* Adjust table for small screens */
       .table-container {
         overflow-x: visible; /* Disable horizontal scrolling on mobile */
@@ -474,6 +479,11 @@
         padding: 10px;
       }
 
+      /* Make the date even smaller on very small screens */
+      #quotation-date {
+        font-size: 10px;
+      }
+
       /* Make all table headers consistent size on mobile */
       .div-table-heading {
         font-size: 11px !important; /* Override inline styles */
@@ -517,6 +527,11 @@
       .div-table-heading {
         font-size: 10px !important; /* Override inline styles */
       }
+
+      /* Make the date tiny on ultra small screens */
+      #quotation-date {
+        font-size: 9px;
+      }
     }
   </style>
 </head>
@@ -524,7 +539,10 @@
   <!-- Toast Container -->
   <div class="toast-container" id="toastContainer"></div>
 
-  <a href="index.html" style="text-decoration: none; color: #007BFF; font-size: 16px; margin-right: 20px;">&larr; Back to Home</a>
+  <div style="display: flex; margin: 20px;">
+    <a href="index.html" style="text-decoration: none; color: #007BFF; font-size: 16px; margin-right: 20px; display: inline-block;">&larr; Back to Home</a>
+    <a href="javascript:void(0)" id="edit-order-button" style="text-decoration: none; color: #007BFF; font-size: 16px; display: inline-block;">✏️ Edit Order</a>
+  </div>
 
   <!-- Wrap the content in a div with id "pdf-1" for screenshot capturing -->
   <div id="pdf-1" class="container">
@@ -1052,6 +1070,15 @@
       }
     }
 
+    // Function to handle the edit order button click
+    function handleEditOrder() {
+      // Set a flag in sessionStorage to indicate we're editing an existing order
+      sessionStorage.setItem('editingOrder', 'true');
+
+      // Redirect back to the index page
+      window.location.href = 'index.html';
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
       // Check if this is a new session by looking at the referrer
       if (document.referrer.includes('index.html')) {
@@ -1060,8 +1087,16 @@
         setCookie('quotationConfirmed', 'false');
       }
       populateQuotation();
+
+      // Add event listener for the confirm button
+      document.getElementById('confirm-button').addEventListener('click', confirmQuotation);
+
+      // Add event listener for the edit order button
+      const editOrderButton = document.getElementById('edit-order-button');
+      if (editOrderButton) {
+        editOrderButton.addEventListener('click', handleEditOrder);
+      }
     });
-    document.getElementById('confirm-button').addEventListener('click', confirmQuotation);
 
     // Screenshot functionality
     document.getElementById('screenshot-button').addEventListener('click', () => {

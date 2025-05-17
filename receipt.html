@@ -457,6 +457,11 @@
         height: 60px;
       }
 
+      /* Make the date smaller on mobile */
+      #receipt-date {
+        font-size: 12px;
+      }
+
       /* Adjust billing/shipping for small screens */
       .billing-shipping {
         flex-direction: column;
@@ -509,6 +514,11 @@
 
       .container {
         padding: 10px;
+      }
+
+      /* Make the date even smaller on very small screens */
+      #receipt-date {
+        font-size: 10px;
       }
 
       /* Adjust button container for very small screens */
@@ -613,6 +623,11 @@
         padding: 2px 3px;
         font-size: 9px;
       }
+
+      /* Make the date tiny on ultra small screens */
+      #receipt-date {
+        font-size: 9px;
+      }
     }
   </style>
 </head>
@@ -620,7 +635,10 @@
   <!-- Toast Container -->
   <div class="toast-container" id="toastContainer"></div>
 
-  <a href="index.html" style="text-decoration: none; color: #007BFF; font-size: 16px; margin: 20px; display: inline-block;">&larr; Back to Home</a>
+  <div style="display: flex; margin: 20px;">
+    <a href="index.html" style="text-decoration: none; color: #007BFF; font-size: 16px; margin-right: 20px; display: inline-block;">&larr; Back to Home</a>
+    <a href="javascript:void(0)" id="edit-order-button" style="text-decoration: none; color: #007BFF; font-size: 16px; display: inline-block;">✏️ Edit Order</a>
+  </div>
 
   <!-- Container wrapper for scaling -->
   <div class="container-wrapper">
@@ -746,8 +764,25 @@
       }
     }
 
+    // Function to handle the edit order button click
+    function handleEditOrder() {
+      // Set a flag in sessionStorage to indicate we're editing an existing order
+      sessionStorage.setItem('editingOrder', 'true');
+
+      // Redirect back to the index page
+      window.location.href = 'index.html';
+    }
+
     // Initialize everything when the DOM is ready
-    document.addEventListener('DOMContentLoaded', initializeReceiptPage);
+    document.addEventListener('DOMContentLoaded', function() {
+      initializeReceiptPage();
+
+      // Add event listener for the edit order button
+      const editOrderButton = document.getElementById('edit-order-button');
+      if (editOrderButton) {
+        editOrderButton.addEventListener('click', handleEditOrder);
+      }
+    });
 
     /**
      * Display a non-blocking toast message in the top-right corner.
