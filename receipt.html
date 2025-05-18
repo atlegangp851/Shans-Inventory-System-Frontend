@@ -45,17 +45,25 @@
     .header {
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
+      align-items: center;
       margin-bottom: 20px;
+      flex-wrap: wrap;
     }
 
     .logo {
       width: 150px;
-      height: 100px;
-      background-image: url('./Assets/logo2.png');
-      background-position: center;
-      background-size: cover;
-      background-repeat: no-repeat;
+      height: auto;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .logo img {
+      max-width: 100%;
+      max-height: 100px;
+      object-fit: contain;
+      width: auto;
+      height: auto;
     }
 
     h1 {
@@ -427,7 +435,10 @@
 
       .logo {
         width: 80px;
-        height: 80px;
+      }
+
+      .logo img {
+        max-height: 80px;
       }
 
       /* Adjust billing/shipping for medium screens */
@@ -454,7 +465,10 @@
 
       .logo {
         width: 60px;
-        height: 60px;
+      }
+
+      .logo img {
+        max-height: 60px;
       }
 
       /* Make the date smaller on mobile */
@@ -582,7 +596,10 @@
 
       .logo {
         width: 50px;
-        height: 50px;
+      }
+
+      .logo img {
+        max-height: 50px;
       }
 
       /* Further optimize table for very small screens */
@@ -647,7 +664,9 @@
         <div class="header">
           <p id="receipt-date">Date: <!-- Dynamic Date --></p>
           <h1>RECEIPT</h1>
-          <div class="logo"></div>
+          <div class="logo">
+            <img src="./Assets/logo2.png" alt="Company Logo">
+          </div>
         </div>
 
       <div class="company-details">
