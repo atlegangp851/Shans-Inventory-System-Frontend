@@ -234,6 +234,17 @@
       font-size: 12px;
     }
 
+    /* Stock indicator styles */
+    .stock-available {
+      color: #28a745;
+      font-weight: bold;
+    }
+
+    .stock-empty {
+      color: #dc3545;
+      font-weight: bold;
+    }
+
     /* Remove X styling */
     .remove-x {
       color: #ff3b30;
@@ -719,29 +730,57 @@
         return;
       }
 
+      // Group products by name to highlight duplicates in different rooms
+      const productsByName = {};
+      filteredProducts.forEach(product => {
+        if (!productsByName[product.item_name]) {
+          productsByName[product.item_name] = [];
+        }
+        productsByName[product.item_name].push(product);
+      });
+
+      // Display products, highlighting those with the same name in different rooms
       filteredProducts.forEach(product => {
         const li = document.createElement('li');
+        const hasDuplicates = productsByName[product.item_name].length > 1;
 
         // Create product name element
         const productNameDiv = document.createElement('div');
         productNameDiv.className = 'product-name';
-        productNameDiv.textContent = product.item_name;
+
+        // If there are duplicates of this product name in different rooms, highlight it
+        if (hasDuplicates) {
+          productNameDiv.innerHTML = `${product.item_name} <span style="color: #0066cc; font-weight: bold;">(${product.room_name})</span>`;
+        } else {
+          productNameDiv.textContent = product.item_name;
+        }
 
         // Create product details element
         const productDetailsDiv = document.createElement('div');
         productDetailsDiv.className = 'product-details';
-        productDetailsDiv.textContent = `Room: ${product.room_name || 'N/A'} | Stock: ${product.available_stock}`;
+
+        // Show room and stock information
+        const stockClass = product.available_stock > 0 ? 'stock-available' : 'stock-empty';
+        productDetailsDiv.innerHTML = `Room: <b>${product.room_name || 'N/A'}</b> | Stock: <span class="${stockClass}">${product.available_stock}</span>`;
 
         // Add elements to list item
         li.appendChild(productNameDiv);
         li.appendChild(productDetailsDiv);
         li.onclick = () => selectProduct(product);
+
+        // Add a subtle background color for items with duplicates to make them more noticeable
+        if (hasDuplicates) {
+          li.style.backgroundColor = '#f0f7ff';
+        }
+
         productList.appendChild(li);
       });
     }
 
     function selectProduct(product) {
       productSearchInput.value = product.item_name;
+      productSearchInput.dataset.itemCode = product.item_code; // Store the item_code in the dataset
+      productSearchInput.dataset.roomId = product.room_id; // Store the room_id in the dataset
       productList.innerHTML = '';
       // Set the default price from the database, but this can be modified by the user
       // for negotiated prices or discounts before adding to the order
@@ -767,7 +806,20 @@
       // Get the price from the input field - this may be the original retail price
       // or a negotiated/discounted price entered by the user
       const price = Math.round(parseFloat(document.getElementById('price').value));
-      const product = allProducts.find(p => p.item_name.toLowerCase() === productName.toLowerCase());
+
+      // Get the item_code and room_id from the dataset if available
+      const itemCode = productSearchInput.dataset.itemCode;
+      const roomId = productSearchInput.dataset.roomId;
+
+      // Find the product by item_code if available, otherwise fall back to finding by name
+      let product;
+      if (itemCode) {
+        // Find the exact product by item_code (which is unique)
+        product = allProducts.find(p => p.item_code === itemCode);
+      } else {
+        // Fall back to finding by name (for backward compatibility or manually entered products)
+        product = allProducts.find(p => p.item_name.toLowerCase() === productName.toLowerCase());
+      }
 
       if (productName === '' || isNaN(quantity) || isNaN(price)) {
         showToastMessage('Please enter valid product details.', 'error');
@@ -786,7 +838,6 @@
         return;
       }
 
-
       // We'll store the typed-in price in product.price
       // Then let the table logic figure out net vs. tax if needed
       let taxPerProduct = 0;
@@ -798,6 +849,7 @@
         selectedProducts.push({
           item_code: product.item_code,
           name: productName,
+          room_name: product.room_name, // Store room name for reference
           quantity: quantity,
           price: parseFloat(price),
           tax_per_product: taxPerProduct,
@@ -809,6 +861,7 @@
         selectedProducts.push({
           item_code: item_code,
           name: productName,
+          room_name: 'N/A', // No room for new products
           quantity: quantity,
           price: parseFloat(price),
           tax_per_product: taxPerProduct,
@@ -818,6 +871,10 @@
 
       updateSelectedProductsTable();
       productSearchInput.value = '';
+
+      // Clear the stored item_code and room_id
+      delete productSearchInput.dataset.itemCode;
+      delete productSearchInput.dataset.roomId;
 
       // Reset quantity input field
       const quantityInput = document.getElementById('quantity');
@@ -877,7 +934,14 @@
         // Product name cell
         const nameCell = document.createElement('div');
         nameCell.className = 'div-table-cell product-column';
-        nameCell.textContent = product.name;
+
+        // Show product name and room if available
+        if (product.room_name && !product.is_new) {
+          nameCell.innerHTML = `${product.name} <span style="color: #666; font-size: 0.85em;">(${product.room_name})</span>`;
+        } else {
+          nameCell.textContent = product.name;
+        }
+
         if (product.is_new) {
           const newLabel = document.createElement('span');
           newLabel.className = 'new-product-label';
