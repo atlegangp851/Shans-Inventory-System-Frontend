@@ -73,6 +73,13 @@
       font-size: 32px;
     }
 
+    /* Info Container for mobile layout */
+    .info-container {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+    }
+
     /* Company Details */
     .company-details {
       margin-bottom: 20px;
@@ -476,14 +483,53 @@
         font-size: 12px;
       }
 
-      /* Adjust billing/shipping for small screens */
+      /* Adjust info layout for small screens */
+      .info-container {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 10px;
+      }
+
+      .company-details {
+        flex: 1;
+        font-size: 12px;
+        padding-right: 10px;
+      }
+
+      .company-details h2 {
+        font-size: 16px;
+        margin-bottom: 5px;
+      }
+
+      .reference-number {
+        font-size: 12px;
+      }
+
+      .address-contact p {
+        font-size: 11px;
+        line-height: 1.3;
+      }
+
       .billing-shipping {
+        flex: 1;
         flex-direction: column;
+        font-size: 12px;
       }
 
       .billing, .shipping {
         flex-basis: 100%;
-        margin-bottom: 15px;
+        margin-bottom: 10px;
+        font-size: 11px;
+      }
+
+      .billing h3, .shipping h3 {
+        font-size: 14px;
+        margin-bottom: 5px;
+      }
+
+      .billing p, .shipping p {
+        line-height: 1.3;
       }
 
       /* Adjust table for small screens */
@@ -533,6 +579,35 @@
       /* Make the date even smaller on very small screens */
       #receipt-date {
         font-size: 10px;
+      }
+
+      /* Further reduce text size for very small screens */
+      .company-details {
+        font-size: 10px;
+      }
+
+      .company-details h2 {
+        font-size: 14px;
+      }
+
+      .reference-number {
+        font-size: 10px;
+      }
+
+      .address-contact p {
+        font-size: 9px;
+      }
+
+      .billing, .shipping {
+        font-size: 10px;
+      }
+
+      .billing h3, .shipping h3 {
+        font-size: 12px;
+      }
+
+      .billing p, .shipping p {
+        font-size: 9px;
       }
 
       /* Adjust button container for very small screens */
@@ -645,6 +720,40 @@
       #receipt-date {
         font-size: 9px;
       }
+
+      /* Extreme size reduction for ultra small screens */
+      .company-details {
+        font-size: 9px;
+      }
+
+      .company-details h2 {
+        font-size: 12px;
+      }
+
+      .reference-number {
+        font-size: 9px;
+      }
+
+      .address-contact p {
+        font-size: 8px;
+      }
+
+      .billing, .shipping {
+        font-size: 9px;
+      }
+
+      .billing h3, .shipping h3 {
+        font-size: 11px;
+      }
+
+      .billing p, .shipping p {
+        font-size: 8px;
+      }
+
+      /* Add a bit more spacing between the two sections */
+      .info-container {
+        gap: 5px;
+      }
     }
   </style>
 </head>
@@ -669,23 +778,25 @@
           </div>
         </div>
 
-      <div class="company-details">
-        <h2 id="company-name">Shans Accessories PTY LTD</h2>
-        <p>61 Civin Drive<br>Bedfordview<br>Johannesburg</p>
-        <div class="address-contact">
-          <p id="banking-info"></p>
+      <div class="info-container">
+        <div class="company-details">
+          <h2 id="company-name">Shans Accessories PTY LTD</h2>
+          <p>61 Civin Drive<br>Bedfordview<br>Johannesburg</p>
+          <div class="address-contact">
+            <p id="banking-info"></p>
+          </div>
+          <p class="reference-number" id="reference-number">Reference Number: <!-- Dynamic Reference --></p>
         </div>
-        <p class="reference-number" id="reference-number">Reference Number: <!-- Dynamic Reference --></p>
-      </div>
 
-      <div class="billing-shipping">
-        <div class="billing">
-          <h3>BILL TO</h3>
-          <p><!-- Customer Billing Information --></p>
-        </div>
-        <div class="shipping">
-          <h3>SHIP TO</h3>
-          <p><!-- Customer Shipping Information --></p>
+        <div class="billing-shipping">
+          <div class="billing">
+            <h3>BILL TO</h3>
+            <p><!-- Customer Billing Information --></p>
+          </div>
+          <div class="shipping">
+            <h3>SHIP TO</h3>
+            <p><!-- Customer Shipping Information --></p>
+          </div>
         </div>
       </div>
 

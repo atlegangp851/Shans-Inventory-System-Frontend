@@ -43,11 +43,18 @@
 
     .logo {
       width: 150px;
-      height: 100px;
-      background-image: url('./Assets/logo2.png');
-      background-position: center;
-      background-size: cover;
-      background-repeat: no-repeat;
+      height: auto;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .logo img {
+      max-width: 100%;
+      max-height: 100px;
+      object-fit: contain;
+      width: auto;
+      height: auto;
     }
 
     h1 {
@@ -55,6 +62,13 @@
       flex-grow: 1;
       margin: 0 20px;
       font-size: 32px;
+    }
+
+    /* Info Container for mobile layout */
+    .info-container {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
     }
 
     /* Company Details */
@@ -394,7 +408,10 @@
 
       .logo {
         width: 80px;
-        height: 80px;
+      }
+
+      .logo img {
+        max-height: 80px;
       }
 
       /* Adjust billing/shipping for medium screens */
@@ -425,12 +442,60 @@
 
       .logo {
         width: 60px;
-        height: 60px;
+      }
+
+      .logo img {
+        max-height: 60px;
       }
 
       /* Make the date smaller on mobile */
       #quotation-date {
         font-size: 12px;
+      }
+
+      /* Adjust info layout for small screens */
+      .info-container {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 10px;
+      }
+
+      .company-details {
+        flex: 1;
+        font-size: 12px;
+        padding-right: 10px;
+      }
+
+      .company-details h2 {
+        font-size: 16px;
+        margin-bottom: 5px;
+      }
+
+      .address-contact p {
+        font-size: 11px;
+        line-height: 1.3;
+      }
+
+      .billing-shipping {
+        flex: 1;
+        flex-direction: column;
+        font-size: 12px;
+      }
+
+      .billing, .shipping {
+        width: 100%;
+        margin-bottom: 10px;
+        font-size: 11px;
+      }
+
+      .billing h3, .shipping h3 {
+        font-size: 14px;
+        margin-bottom: 5px;
+      }
+
+      .billing p, .shipping p {
+        line-height: 1.3;
       }
 
       /* Adjust table for small screens */
@@ -484,6 +549,31 @@
         font-size: 10px;
       }
 
+      /* Further reduce text size for very small screens */
+      .company-details {
+        font-size: 10px;
+      }
+
+      .company-details h2 {
+        font-size: 14px;
+      }
+
+      .address-contact p {
+        font-size: 9px;
+      }
+
+      .billing, .shipping {
+        font-size: 10px;
+      }
+
+      .billing h3, .shipping h3 {
+        font-size: 12px;
+      }
+
+      .billing p, .shipping p {
+        font-size: 9px;
+      }
+
       /* Make all table headers consistent size on mobile */
       .div-table-heading {
         font-size: 11px !important; /* Override inline styles */
@@ -532,6 +622,36 @@
       #quotation-date {
         font-size: 9px;
       }
+
+      /* Extreme size reduction for ultra small screens */
+      .company-details {
+        font-size: 9px;
+      }
+
+      .company-details h2 {
+        font-size: 12px;
+      }
+
+      .address-contact p {
+        font-size: 8px;
+      }
+
+      .billing, .shipping {
+        font-size: 9px;
+      }
+
+      .billing h3, .shipping h3 {
+        font-size: 11px;
+      }
+
+      .billing p, .shipping p {
+        font-size: 8px;
+      }
+
+      /* Add a bit more spacing between the two sections */
+      .info-container {
+        gap: 5px;
+      }
     }
   </style>
 </head>
@@ -550,25 +670,29 @@
       <div class="header">
         <p id="quotation-date">Date: <!-- Dynamic Date --></p>
         <h1>QUOTATION</h1>
-        <div class="logo"></div>
+        <div class="logo">
+            <img src="./Assets/logo2.png" alt="Company Logo">
+          </div>
       </div>
 
-      <div class="company-details">
-        <h2 id="company-name">Shans Accessories PTY LTD</h2>
-        <p>61 Civin Drive<br>Bedfordview<br>Johannesburg</p>
-        <div class="address-contact">
-          <p id="banking-info"></p>
+      <div class="info-container">
+        <div class="company-details">
+          <h2 id="company-name">Shans Accessories PTY LTD</h2>
+          <p>61 Civin Drive<br>Bedfordview<br>Johannesburg</p>
+          <div class="address-contact">
+            <p id="banking-info"></p>
+          </div>
         </div>
-      </div>
 
-      <div class="billing-shipping">
-        <div class="billing">
-          <h3>BILL TO</h3>
-          <p><!-- Customer Billing Information --></p>
-        </div>
-        <div class="shipping">
-          <h3>SHIP TO</h3>
-          <p><!-- Customer Shipping Information --></p>
+        <div class="billing-shipping">
+          <div class="billing">
+            <h3>BILL TO</h3>
+            <p><!-- Customer Billing Information --></p>
+          </div>
+          <div class="shipping">
+            <h3>SHIP TO</h3>
+            <p><!-- Customer Shipping Information --></p>
+          </div>
         </div>
       </div>
 
