@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Low Stock Items - Shan's Auto Parts</title>
-    <link rel="stylesheet" href="../styles.css">
-    <link rel="stylesheet" href="admin.css">
+    <link rel="stylesheet" href="styles.css">
     <style>
         :root {
             --primary-color: #4a90e2;
@@ -493,6 +492,93 @@
             }
         }
 
+        /* Filter row styling */
+        .filter-row {
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #d0d0d0;
+        }
+
+        .filter-row td {
+            padding: 8px 12px;
+            border: 1px solid #e0e0e0;
+            vertical-align: middle;
+        }
+
+        .filter-input {
+            width: 100%;
+            padding: 6px 8px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            font-size: 13px;
+            background-color: white;
+            transition: border-color 0.3s;
+        }
+
+        .filter-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 1px rgba(74, 144, 226, 0.3);
+        }
+
+        .filter-select {
+            width: 100%;
+            padding: 6px 8px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            font-size: 13px;
+            background-color: white;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 1px rgba(74, 144, 226, 0.3);
+        }
+
+        .clear-filters-btn {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.3s;
+        }
+
+        .clear-filters-btn:hover {
+            background-color: #5a6268;
+        }
+
+        .filter-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 0 5px;
+        }
+
+        .filter-toggle {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        .filter-toggle:hover {
+            background-color: #357ab8;
+        }
+
+        .filter-toggle.active {
+            background-color: #28a745;
+        }
+
         /* Mobile responsiveness */
         @media (max-width: 768px) {
             .low-stock-header {
@@ -536,6 +622,17 @@
                 padding: 4px 8px;
                 font-size: 12px;
             }
+
+            .filter-input, .filter-select {
+                font-size: 12px;
+                padding: 4px 6px;
+            }
+
+            .filter-controls {
+                flex-direction: column;
+                gap: 10px;
+                align-items: stretch;
+            }
         }
     </style>
 </head>
@@ -562,6 +659,11 @@
                     </div>
                 </div>
 
+                <div class="filter-controls">
+                    <button id="toggleFilters" class="filter-toggle">Show Filters</button>
+                    <button id="clearFilters" class="clear-filters-btn" style="display: none;">Clear All Filters</button>
+                </div>
+
                 <div class="table-container" id="lowStockTableContainer">
                     <table class="low-stock-table">
                         <thead>
@@ -573,6 +675,36 @@
                                 <th>Threshold</th>
                                 <th>Status</th>
                                 <th>Actions</th>
+                            </tr>
+                            <tr id="filterRow" class="filter-row" style="display: none;">
+                                <td>
+                                    <input type="text" id="filterItemCode" class="filter-input" placeholder="Filter by code...">
+                                </td>
+                                <td>
+                                    <input type="text" id="filterItemName" class="filter-input" placeholder="Filter by name...">
+                                </td>
+                                <td>
+                                    <select id="filterRoom" class="filter-select">
+                                        <option value="">All Rooms</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="number" id="filterStock" class="filter-input" placeholder="Stock value" min="0">
+                                </td>
+                                <td>
+                                    <input type="number" id="filterThreshold" class="filter-input" placeholder="Threshold value" min="0">
+                                </td>
+                                <td>
+                                    <select id="filterStatus" class="filter-select">
+                                        <option value="">All Status</option>
+                                        <option value="Out of Stock">Out of Stock</option>
+                                        <option value="Critically Low">Critically Low</option>
+                                        <option value="Low">Low</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <!-- No filter for Actions column -->
+                                </td>
                             </tr>
                         </thead>
                         <tbody id="lowStockTableBody">
@@ -635,8 +767,21 @@
             const cancelUpdateBtn = document.getElementById('cancelUpdate');
             const toastContainer = document.getElementById('toastContainer');
 
+            // Filter elements
+            const toggleFiltersBtn = document.getElementById('toggleFilters');
+            const clearFiltersBtn = document.getElementById('clearFilters');
+            const filterRow = document.getElementById('filterRow');
+            const filterItemCode = document.getElementById('filterItemCode');
+            const filterItemName = document.getElementById('filterItemName');
+            const filterRoom = document.getElementById('filterRoom');
+            const filterStock = document.getElementById('filterStock');
+            const filterThreshold = document.getElementById('filterThreshold');
+            const filterStatus = document.getElementById('filterStatus');
+
             // Store all products for filtering
             let allLowStockProducts = [];
+            let currentFilteredProducts = [];
+            let filtersVisible = false;
 
             /**
              * Show a toast notification
@@ -696,6 +841,8 @@
             closeModalBtn.addEventListener('click', closeStockUpdateModal);
             cancelUpdateBtn.addEventListener('click', closeStockUpdateModal);
             stockUpdateForm.addEventListener('submit', handleStockUpdate);
+            toggleFiltersBtn.addEventListener('click', toggleFilters);
+            clearFiltersBtn.addEventListener('click', clearAllFilters);
 
             // Close modal when clicking outside the content
             stockUpdateModal.addEventListener('click', function(e) {
@@ -729,12 +876,17 @@
 
                     // Store filtered products for search functionality
                     allLowStockProducts = filteredProducts;
+                    currentFilteredProducts = [...allLowStockProducts];
+
+                    // Populate room filter options
+                    populateRoomFilter();
 
                     // Render the table with filtered products
-                    renderLowStockTable(filteredProducts);
+                    renderLowStockTable(currentFilteredProducts);
 
-                    // Initialize search functionality
+                    // Initialize search and filter functionality
                     initSearch();
+                    initFilters();
                 } catch (error) {
                     console.error('Error fetching products:', error);
                     showError('Failed to load low stock products. Please try again later.');
@@ -744,25 +896,7 @@
             // Initialize search functionality
             function initSearch() {
                 searchInput.addEventListener('input', function() {
-                    const searchTerm = this.value.trim().toLowerCase();
-
-                    if (searchTerm === '') {
-                        // If search is empty, show all products
-                        renderLowStockTable(allLowStockProducts);
-                        return;
-                    }
-
-                    // Filter products based on search term
-                    const filteredProducts = allLowStockProducts.filter(product => {
-                        return (
-                            product.item_code.toLowerCase().includes(searchTerm) ||
-                            product.item_name.toLowerCase().includes(searchTerm) ||
-                            product.room_name.toLowerCase().includes(searchTerm)
-                        );
-                    });
-
-                    // Render filtered products
-                    renderLowStockTable(filteredProducts);
+                    applyFilters();
                 });
             }
 
@@ -892,13 +1026,15 @@
              * Export low stock items to Excel
              */
             function exportToExcel() {
-                if (allLowStockProducts.length === 0) {
+                const dataToExport = currentFilteredProducts.length > 0 ? currentFilteredProducts : allLowStockProducts;
+
+                if (dataToExport.length === 0) {
                     showToast('No data available to export!', 'warning');
                     return;
                 }
 
                 // Format data for Excel
-                const excelData = allLowStockProducts.map(product => {
+                const excelData = dataToExport.map(product => {
                     // Determine status text
                     let statusText = '';
                     const threshold = product.low_stock_threshold || 5;
@@ -1031,8 +1167,8 @@
                         }
                     }
 
-                    // Re-render the table
-                    renderLowStockTable(allLowStockProducts);
+                    // Re-apply filters and render the table
+                    applyFilters();
 
                     // Close the modal
                     closeStockUpdateModal();
@@ -1044,6 +1180,155 @@
                     console.error('Error updating stock:', error);
                     showToast(`Failed to update stock: ${error.message}`, 'error');
                 }
+            }
+
+            /**
+             * Toggle filter visibility
+             */
+            function toggleFilters() {
+                filtersVisible = !filtersVisible;
+
+                if (filtersVisible) {
+                    filterRow.style.display = 'table-row';
+                    toggleFiltersBtn.textContent = 'Hide Filters';
+                    toggleFiltersBtn.classList.add('active');
+                    clearFiltersBtn.style.display = 'inline-block';
+                } else {
+                    filterRow.style.display = 'none';
+                    toggleFiltersBtn.textContent = 'Show Filters';
+                    toggleFiltersBtn.classList.remove('active');
+                    clearFiltersBtn.style.display = 'none';
+                }
+            }
+
+            /**
+             * Clear all filters
+             */
+            function clearAllFilters() {
+                filterItemCode.value = '';
+                filterItemName.value = '';
+                filterRoom.value = '';
+                filterStock.value = '';
+                filterThreshold.value = '';
+                filterStatus.value = '';
+                searchInput.value = '';
+
+                applyFilters();
+            }
+
+            /**
+             * Populate room filter dropdown with unique room values
+             */
+            function populateRoomFilter() {
+                const uniqueRooms = [...new Set(allLowStockProducts.map(product => product.room_name))].sort();
+
+                // Clear existing options except the first one
+                filterRoom.innerHTML = '<option value="">All Rooms</option>';
+
+                uniqueRooms.forEach(room => {
+                    const option = document.createElement('option');
+                    option.value = room;
+                    option.textContent = room;
+                    filterRoom.appendChild(option);
+                });
+            }
+
+            /**
+             * Initialize filter event listeners
+             */
+            function initFilters() {
+                filterItemCode.addEventListener('input', applyFilters);
+                filterItemName.addEventListener('input', applyFilters);
+                filterRoom.addEventListener('change', applyFilters);
+                filterStock.addEventListener('input', applyFilters);
+                filterThreshold.addEventListener('input', applyFilters);
+                filterStatus.addEventListener('change', applyFilters);
+            }
+
+            /**
+             * Apply all filters and search
+             */
+            function applyFilters() {
+                let filtered = [...allLowStockProducts];
+
+                // Apply search filter
+                const searchTerm = searchInput.value.trim().toLowerCase();
+                if (searchTerm !== '') {
+                    filtered = filtered.filter(product => {
+                        return (
+                            product.item_code.toLowerCase().includes(searchTerm) ||
+                            product.item_name.toLowerCase().includes(searchTerm) ||
+                            product.room_name.toLowerCase().includes(searchTerm)
+                        );
+                    });
+                }
+
+                // Apply item code filter
+                const itemCodeFilter = filterItemCode.value.trim().toLowerCase();
+                if (itemCodeFilter !== '') {
+                    filtered = filtered.filter(product =>
+                        product.item_code.toLowerCase().includes(itemCodeFilter)
+                    );
+                }
+
+                // Apply item name filter
+                const itemNameFilter = filterItemName.value.trim().toLowerCase();
+                if (itemNameFilter !== '') {
+                    filtered = filtered.filter(product =>
+                        product.item_name.toLowerCase().includes(itemNameFilter)
+                    );
+                }
+
+                // Apply room filter
+                const roomFilter = filterRoom.value;
+                if (roomFilter !== '') {
+                    filtered = filtered.filter(product => product.room_name === roomFilter);
+                }
+
+                // Apply stock filter (exact match)
+                const stockFilter = filterStock.value.trim();
+                if (stockFilter !== '') {
+                    const stockValue = parseInt(stockFilter);
+                    if (!isNaN(stockValue)) {
+                        filtered = filtered.filter(product => product.available_stock === stockValue);
+                    }
+                }
+
+                // Apply threshold filter (exact match)
+                const thresholdFilter = filterThreshold.value.trim();
+                if (thresholdFilter !== '') {
+                    const thresholdValue = parseInt(thresholdFilter);
+                    if (!isNaN(thresholdValue)) {
+                        filtered = filtered.filter(product => {
+                            const threshold = product.low_stock_threshold || 5;
+                            return threshold === thresholdValue;
+                        });
+                    }
+                }
+
+                // Apply status filter
+                const statusFilter = filterStatus.value;
+                if (statusFilter !== '') {
+                    filtered = filtered.filter(product => {
+                        const threshold = product.low_stock_threshold || 5;
+                        const stock = product.available_stock;
+
+                        let productStatus = '';
+                        if (stock === 0) {
+                            productStatus = 'Out of Stock';
+                        } else if (stock === 1) {
+                            productStatus = 'Critically Low';
+                        } else if (stock < threshold) {
+                            productStatus = 'Low';
+                        }
+
+                        return productStatus === statusFilter;
+                    });
+                }
+
+                // Update filtered products and render table
+                currentFilteredProducts = filtered;
+                renderLowStockTable(currentFilteredProducts);
             }
 
             // Initialize the page
