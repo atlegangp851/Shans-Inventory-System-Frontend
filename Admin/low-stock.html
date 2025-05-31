@@ -198,12 +198,17 @@
             font-weight: 500;
         }
 
-        .low-stock-table td:nth-child(3), .low-stock-table th:nth-child(3) { /* Room */
+        .low-stock-table td:nth-child(3), .low-stock-table th:nth-child(3) { /* Supplier Code */
+            min-width: 120px;
+            font-weight: 500;
+        }
+
+        .low-stock-table td:nth-child(4), .low-stock-table th:nth-child(4) { /* Room */
             min-width: 100px;
         }
 
-        .low-stock-table td:nth-child(4), .low-stock-table th:nth-child(4), /* Current Stock */
-        .low-stock-table td:nth-child(5), .low-stock-table th:nth-child(5) { /* Threshold */
+        .low-stock-table td:nth-child(5), .low-stock-table th:nth-child(5), /* Current Stock */
+        .low-stock-table td:nth-child(6), .low-stock-table th:nth-child(6) { /* Threshold */
             text-align: right;
             min-width: 80px;
         }
@@ -670,6 +675,7 @@
                             <tr>
                                 <th>Item Code</th>
                                 <th>Item Name</th>
+                                <th>Supplier Code</th>
                                 <th>Room</th>
                                 <th>Current Stock</th>
                                 <th>Threshold</th>
@@ -682,6 +688,9 @@
                                 </td>
                                 <td>
                                     <input type="text" id="filterItemName" class="filter-input" placeholder="Filter by name...">
+                                </td>
+                                <td>
+                                    <input type="text" id="filterSupplierCode" class="filter-input" placeholder="Filter by supplier...">
                                 </td>
                                 <td>
                                     <select id="filterRoom" class="filter-select">
@@ -773,6 +782,7 @@
             const filterRow = document.getElementById('filterRow');
             const filterItemCode = document.getElementById('filterItemCode');
             const filterItemName = document.getElementById('filterItemName');
+            const filterSupplierCode = document.getElementById('filterSupplierCode');
             const filterRoom = document.getElementById('filterRoom');
             const filterStock = document.getElementById('filterStock');
             const filterThreshold = document.getElementById('filterThreshold');
@@ -912,7 +922,7 @@
                     // Show a message if there are no low stock items
                     const row = document.createElement('tr');
                     const cell = document.createElement('td');
-                    cell.colSpan = 7; // Updated to 7 to include the Actions column
+                    cell.colSpan = 8; // Updated to 8 to include the Supplier Code and Actions columns
                     cell.className = 'no-items';
                     cell.textContent = 'No low stock items found.';
                     row.appendChild(cell);
@@ -934,6 +944,12 @@
                     nameCell.textContent = product.item_name;
                     nameCell.title = product.item_name; // Add tooltip for long names
                     row.appendChild(nameCell);
+
+                    // Supplier Code
+                    const supplierCell = document.createElement('td');
+                    supplierCell.textContent = product.supplier_code || 'N/A';
+                    supplierCell.title = product.supplier_code || 'No supplier code'; // Add tooltip
+                    row.appendChild(supplierCell);
 
                     // Room
                     const roomCell = document.createElement('td');
@@ -1013,7 +1029,7 @@
 
                 const row = document.createElement('tr');
                 const cell = document.createElement('td');
-                cell.colSpan = 7; // Updated to 7 to include the Actions column
+                cell.colSpan = 8; // Updated to 8 to include the Supplier Code and Actions columns
                 cell.className = 'no-items';
                 cell.textContent = message;
                 row.appendChild(cell);
@@ -1052,6 +1068,7 @@
                     return {
                         'Item Code': product.item_code,
                         'Item Name': product.item_name,
+                        'Supplier Code': product.supplier_code || 'N/A',
                         'Room': product.room_name,
                         'Current Stock': product.available_stock,
                         'Threshold': product.low_stock_threshold || 5,
@@ -1207,6 +1224,7 @@
             function clearAllFilters() {
                 filterItemCode.value = '';
                 filterItemName.value = '';
+                filterSupplierCode.value = '';
                 filterRoom.value = '';
                 filterStock.value = '';
                 filterThreshold.value = '';
@@ -1239,6 +1257,7 @@
             function initFilters() {
                 filterItemCode.addEventListener('input', applyFilters);
                 filterItemName.addEventListener('input', applyFilters);
+                filterSupplierCode.addEventListener('input', applyFilters);
                 filterRoom.addEventListener('change', applyFilters);
                 filterStock.addEventListener('input', applyFilters);
                 filterThreshold.addEventListener('input', applyFilters);
@@ -1258,7 +1277,8 @@
                         return (
                             product.item_code.toLowerCase().includes(searchTerm) ||
                             product.item_name.toLowerCase().includes(searchTerm) ||
-                            product.room_name.toLowerCase().includes(searchTerm)
+                            product.room_name.toLowerCase().includes(searchTerm) ||
+                            (product.supplier_code && product.supplier_code.toLowerCase().includes(searchTerm))
                         );
                     });
                 }
@@ -1276,6 +1296,14 @@
                 if (itemNameFilter !== '') {
                     filtered = filtered.filter(product =>
                         product.item_name.toLowerCase().includes(itemNameFilter)
+                    );
+                }
+
+                // Apply supplier code filter
+                const supplierCodeFilter = filterSupplierCode.value.trim().toLowerCase();
+                if (supplierCodeFilter !== '') {
+                    filtered = filtered.filter(product =>
+                        product.supplier_code && product.supplier_code.toLowerCase().includes(supplierCodeFilter)
                     );
                 }
 
