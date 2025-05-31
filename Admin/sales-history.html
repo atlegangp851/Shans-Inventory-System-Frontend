@@ -492,7 +492,7 @@
                 console.log('Raw data from API:', data);
 
                 // Fetch all products to get room information
-                const productsResponse = await fetch('https://shans-backend-1.onrender.com/api/products');
+                const productsResponse = await fetch('http://localhost:8000/api/products');
                 if (!productsResponse.ok) {
                     throw new Error('Failed to fetch products data.');
                 }

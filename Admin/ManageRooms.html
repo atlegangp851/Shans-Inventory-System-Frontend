@@ -229,8 +229,13 @@
 </head>
 <body>
   <div class="container">
-    <h1>Inventory Rooms</h1>
-    <a href="index.html" style="text-decoration: none; color: #007BFF; font-size: 16px; margin-right: 20px;">&larr; Back to Home</a>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <div>
+        <h1 style="margin: 0;">Inventory Rooms</h1>
+        <a href="index.html" style="text-decoration: none; color: #007BFF; font-size: 16px;">&larr; Back to Home</a>
+      </div>
+      <button onclick="logout()" style="background-color: #e74c3c; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">Logout</button>
+    </div>
     <div class="room-grid" id="roomGrid">
       <div class="room-block add-room" id="addRoomBlock" aria-label="Add new room" title="Add New Room">
         +
@@ -289,6 +294,79 @@
     // Define the API URLs
     const ROOMS_API_URL = 'https://shans-backend-1.onrender.com/api/rooms';
     const PRODUCTS_API_URL = 'https://shans-backend-1.onrender.com/api/products';
+    const API_BASE_URL = 'https://shans-backend-1.onrender.com/api';
+
+    // Check authentication status
+    async function checkAuthStatus() {
+      const token = localStorage.getItem('authToken');
+      const userInfo = localStorage.getItem('userInfo');
+
+      if (!token || !userInfo) {
+        window.location.href = '../login.html';
+        return false;
+      }
+
+      const user = JSON.parse(userInfo);
+      if (!user.is_admin) {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userInfo');
+        window.location.href = '../login.html';
+        return false;
+      }
+
+      try {
+        // Verify token with backend
+        const response = await fetch(`${API_BASE_URL}/auth/me`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('userInfo');
+          window.location.href = '../login.html';
+          return false;
+        }
+
+        const data = await response.json();
+        if (!data.user.is_admin) {
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('userInfo');
+          window.location.href = '../login.html';
+          return false;
+        }
+
+        return true;
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userInfo');
+        window.location.href = '../login.html';
+        return false;
+      }
+    }
+
+    // Logout functionality
+    function logout() {
+      fetch(`${API_BASE_URL}/auth/logout`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      })
+      .then(() => {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userInfo');
+        window.location.href = 'login.html';
+      })
+      .catch(error => {
+        console.error('Logout error:', error);
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userInfo');
+        window.location.href = 'login.html';
+      });
+    }
 
     // Get DOM elements
     const roomGrid = document.getElementById('roomGrid');
@@ -587,8 +665,15 @@
       }
     });
 
-    // Fetch and display rooms on page load
-    fetchRooms();
+    // Initialize page
+    window.onload = async function() {
+      const isAuthenticated = await checkAuthStatus();
+      if (!isAuthenticated) {
+        return;
+      }
+      // Fetch and display rooms on page load
+      fetchRooms();
+    };
   </script>
 </body>
 </html>

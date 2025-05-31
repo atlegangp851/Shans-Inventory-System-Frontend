@@ -477,6 +477,30 @@
       90% { opacity: 0.95; }
       100% { opacity: 0; }
     }
+
+    /* Admin navigation button styles */
+    .admin-nav-button {
+      background-color: #9b59b6;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      text-decoration: none;
+      display: inline-block;
+      transition: background-color 0.3s ease;
+      margin-right: 10px;
+    }
+
+    .admin-nav-button:hover {
+      background-color: #8e44ad;
+      color: white;
+    }
+
+    .admin-nav-button.hidden {
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -490,7 +514,13 @@
   <div class="toast-container" id="toastContainer"></div>
 
   <div class="container">
-    <h1>Receipt and Quotation Generator</h1>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <h1 style="margin: 0;">Receipt and Quotation Generator</h1>
+      <div style="display: flex; align-items: center;">
+        <a href="Admin/index.html" id="adminDashboardBtn" class="admin-nav-button hidden">Admin Dashboard</a>
+        <button onclick="logout()" style="background-color: #e74c3c; padding: 8px 16px; font-size: 14px;">Logout</button>
+      </div>
+    </div>
 
     <!-- Company Selection Section -->
     <div class="section">
@@ -1394,7 +1424,90 @@
       }
     }
 
+    // Check authentication status
+    async function checkAuthStatus() {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        // No token, redirect to login
+        window.location.href = 'login.html';
+        return false;
+      }
+
+      try {
+        // Verify token with backend
+        const response = await fetch(`${API_BASE_URL}/auth/me`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          // Token is invalid, redirect to login
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('userInfo');
+          window.location.href = 'login.html';
+          return false;
+        }
+
+        const data = await response.json();
+
+        // Allow admin users to access the user page if they navigate here intentionally
+        // Only redirect on login, not on manual navigation
+
+        return true;
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userInfo');
+        window.location.href = 'login.html';
+        return false;
+      }
+    }
+
+    // Check if user is admin and show admin button
+    function checkAndShowAdminButton() {
+      const userInfo = localStorage.getItem('userInfo');
+      if (userInfo) {
+        const user = JSON.parse(userInfo);
+        const adminButton = document.getElementById('adminDashboardBtn');
+        if (user.is_admin && adminButton) {
+          adminButton.classList.remove('hidden');
+        }
+      }
+    }
+
+    // Add logout functionality
+    function logout() {
+      fetch(`${API_BASE_URL}/auth/logout`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      })
+      .then(() => {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userInfo');
+        window.location.href = 'login.html';
+      })
+      .catch(error => {
+        console.error('Logout error:', error);
+        // Even if logout fails on server, clear local storage and redirect
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userInfo');
+        window.location.href = 'login.html';
+      });
+    }
+
     window.onload = async function() {
+      // Check authentication first
+      const isAuthenticated = await checkAuthStatus();
+      if (!isAuthenticated) {
+        return;
+      }
+
+      // Check if user is admin and show admin button
+      checkAndShowAdminButton();
+
       try {
         await fetchAllProducts();
       } finally {

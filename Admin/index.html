@@ -43,6 +43,25 @@
             transform: translateY(-10px);
             box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
         }
+
+        /* Navigation button styles */
+        .nav-button {
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-block;
+            transition: background-color 0.3s ease;
+        }
+
+        .nav-button:hover {
+            background-color: #2980b9;
+            color: white;
+        }
         .block h2 {
             margin: 20px 0 10px;
             color: #2c3e50;
@@ -108,7 +127,13 @@
     </div>
 
     <div class="container">
-        <h1>Welcome, Admin</h1>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+            <h1 style="margin: 0;">Welcome, Admin</h1>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <a href="../index.html" class="nav-button">Go to User Page</a>
+                <button onclick="logout()" style="background-color: #e74c3c; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">Logout</button>
+            </div>
+        </div>
         <div class="dashboard">
            <a href="./ManageRooms.html">
             <div class="block" id="manageRooms">
@@ -138,13 +163,104 @@
                     <h2>Sale History</h2>
                 </div>
             </a>
+
+            <a href="./manage-users.html">
+                <div class="block" id="saleHistory">
+                    <div class="block-icon"><i class="fas fa-chart-line"></i></div>
+                    <h2>Manage Users</h2>
+                </div>
+            </a>
         </div>
     </div>
 
     <script>
+        const API_BASE_URL = 'https://shans-backend-1.onrender.com/api';
         const loadingScreen = document.getElementById('loadingScreen'); // Loading Screen Element
 
-        window.onload = function() {
+        // Check authentication status
+        async function checkAuthStatus() {
+            const token = localStorage.getItem('authToken');
+            const userInfo = localStorage.getItem('userInfo');
+
+            if (!token || !userInfo) {
+                // No token or user info, redirect to unified login
+                window.location.href = '../login.html';
+                return false;
+            }
+
+            const user = JSON.parse(userInfo);
+            if (!user.is_admin) {
+                // User is not admin, redirect to unified login
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('userInfo');
+                window.location.href = '../login.html';
+                return false;
+            }
+
+            try {
+                // Verify token with backend
+                const response = await fetch(`${API_BASE_URL}/auth/me`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    // Token is invalid, redirect to login
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('userInfo');
+                    window.location.href = '../login.html';
+                    return false;
+                }
+
+                const data = await response.json();
+                if (!data.user.is_admin) {
+                    // User is not admin, redirect to login
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('userInfo');
+                    window.location.href = '../login.html';
+                    return false;
+                }
+
+                return true;
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('userInfo');
+                window.location.href = '../login.html';
+                return false;
+            }
+        }
+
+        // Add logout functionality
+        function logout() {
+            fetch(`${API_BASE_URL}/auth/logout`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                }
+            })
+            .then(() => {
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('userInfo');
+                window.location.href = '../login.html';
+            })
+            .catch(error => {
+                console.error('Logout error:', error);
+                // Even if logout fails on server, clear local storage and redirect
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('userInfo');
+                window.location.href = '../login.html';
+            });
+        }
+
+        window.onload = async function() {
+            // Check authentication first
+            const isAuthenticated = await checkAuthStatus();
+            if (!isAuthenticated) {
+                return;
+            }
+
             // Simulate data fetching or any other initialization tasks
             // If you have actual data fetching, place it here and hide the loading screen after it's done
 
