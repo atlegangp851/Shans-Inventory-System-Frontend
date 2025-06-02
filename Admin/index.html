@@ -127,12 +127,16 @@
             }
 
             .dashboard {
-                grid-template-columns: 1fr;
+                display: flex;
+                flex-direction: column;
                 gap: 20px;
+                align-items: stretch;
             }
 
             .block {
                 padding: 25px;
+                width: 100%;
+                box-sizing: border-box;
             }
         }
 
@@ -179,8 +183,17 @@
                 margin-bottom: 20px;
             }
 
+            .dashboard {
+                display: flex;
+                flex-direction: column;
+                gap: 15px;
+                align-items: stretch;
+            }
+
             .block {
                 padding: 20px;
+                width: 100%;
+                box-sizing: border-box;
             }
 
             .block h2 {
@@ -214,8 +227,17 @@
                 margin-bottom: 15px;
             }
 
+            .dashboard {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+                align-items: stretch;
+            }
+
             .block {
                 padding: 15px;
+                width: 100%;
+                box-sizing: border-box;
             }
 
             .block h2 {
