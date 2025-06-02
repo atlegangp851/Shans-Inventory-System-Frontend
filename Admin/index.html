@@ -115,6 +115,118 @@
             100% { transform: rotate(360deg); }
         }
 
+        /* Mobile responsive styles */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px 15px;
+            }
+
+            h1 {
+                font-size: 2em;
+                margin-bottom: 30px;
+            }
+
+            .dashboard {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .block {
+                padding: 25px;
+            }
+        }
+
+        /* Specific adjustments for small screens */
+        @media (max-width: 650px) {
+            .container {
+                padding: 15px 10px;
+            }
+
+            /* Header button styling for mobile */
+            .container > div:first-child {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 15px;
+                margin-bottom: 20px !important;
+            }
+
+            .container > div:first-child > div {
+                display: flex !important;
+                flex-direction: column;
+                gap: 10px;
+                width: 100%;
+            }
+
+            /* Navigation button mobile styling */
+            .nav-button {
+                width: 100% !important;
+                padding: 12px 0 !important;
+                text-align: center;
+                font-size: 16px !important;
+                box-sizing: border-box;
+            }
+
+            /* Logout button mobile styling */
+            button {
+                width: 100% !important;
+                padding: 12px 0 !important;
+                font-size: 16px !important;
+                box-sizing: border-box;
+            }
+
+            h1 {
+                font-size: 1.8em;
+                margin-bottom: 20px;
+            }
+
+            .block {
+                padding: 20px;
+            }
+
+            .block h2 {
+                font-size: 1.3em;
+            }
+
+            .block-icon {
+                font-size: 2.5em;
+            }
+        }
+
+        /* Specific adjustments for very small screens */
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px 5px;
+            }
+
+            /* Ensure header buttons remain properly styled on very small screens */
+            .nav-button {
+                font-size: 14px !important;
+                padding: 10px 0 !important;
+            }
+
+            button {
+                font-size: 14px !important;
+                padding: 10px 0 !important;
+            }
+
+            h1 {
+                font-size: 1.6em;
+                margin-bottom: 15px;
+            }
+
+            .block {
+                padding: 15px;
+            }
+
+            .block h2 {
+                font-size: 1.2em;
+            }
+
+            .block-icon {
+                font-size: 2em;
+            }
+        }
+
     </style>
     <!-- Ensure you replace 'your-fontawesome-kit.js' with your actual Font Awesome Kit URL -->
     <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>

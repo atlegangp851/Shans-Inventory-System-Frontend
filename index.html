@@ -306,6 +306,30 @@
         padding: 12px;
       }
 
+      /* Header button styling for mobile */
+      .container > div:first-child {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 15px;
+      }
+
+      .container > div:first-child > div {
+        display: flex !important;
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+      }
+
+      /* Admin button mobile styling */
+      .admin-nav-button {
+        width: 100% !important;
+        padding: 12px 0 !important;
+        text-align: center;
+        margin-right: 0 !important;
+        font-size: 16px !important;
+        box-sizing: border-box;
+      }
+
       button {
         width: 100%;
         padding: 12px 0;
@@ -371,6 +395,17 @@
 
       .container {
         padding: 10px;
+      }
+
+      /* Ensure header buttons remain properly styled on very small screens */
+      .admin-nav-button {
+        font-size: 14px !important;
+        padding: 10px 0 !important;
+      }
+
+      button {
+        font-size: 14px;
+        padding: 10px 0;
       }
 
       /* Mobile-optimized table */
