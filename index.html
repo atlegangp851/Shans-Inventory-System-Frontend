@@ -804,8 +804,23 @@
     async function fetchAllProducts() {
       try {
         isLoading = true;
-        const response = await fetch(`${API_BASE_URL}/products?page=${currentPage}&limit=${PRODUCTS_PER_PAGE}`);
-        if (!response.ok) throw new Error('Network response was not ok');
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
+        const response = await fetch(`${API_BASE_URL}/products?page=${currentPage}&limit=${PRODUCTS_PER_PAGE}`, {
+          signal: controller.signal,
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
         const newProducts = await response.json();
         
         if (newProducts.length < PRODUCTS_PER_PAGE) {
@@ -819,7 +834,12 @@
         displayFilteredProducts();
       } catch (error) {
         console.error('Error fetching products:', error);
-        showToastMessage('Failed to load products. Please try again later.', 'error');
+        if (error.name === 'AbortError') {
+          showToastMessage('Request timed out. Please check your connection.', 'error');
+        } else {
+          showToastMessage('Failed to load products. Please try again.', 'error');
+        }
+        throw error; // Re-throw to be caught by the caller
       } finally {
         isLoading = false;
       }
@@ -981,25 +1001,44 @@
 
     // Initialize the app
     window.onload = async function() {
-      const isAuthenticated = await checkAuthStatus();
-      if (!isAuthenticated) return;
-
-      checkAndShowAdminButton();
-
       try {
-        await fetchAllProducts();
-      } finally {
+        const isAuthenticated = await checkAuthStatus();
+        if (!isAuthenticated) {
+          DOM.loadingScreen.style.display = 'none';
+          return;
+        }
+
+        checkAndShowAdminButton();
+
+        // Add timeout for loading
+        const loadingTimeout = setTimeout(() => {
+          DOM.loadingScreen.style.display = 'none';
+          showToastMessage('Loading timeout. Please check your connection and try again.', 'error');
+        }, 10000); // 10 second timeout
+
+        try {
+          await fetchAllProducts();
+        } catch (error) {
+          console.error('Error loading products:', error);
+          showToastMessage('Failed to load products. Please try again.', 'error');
+        } finally {
+          clearTimeout(loadingTimeout);
+          DOM.loadingScreen.style.display = 'none';
+        }
+
+        const selectedCompanyCookie = getCookie('selectedCompany');
+        if (selectedCompanyCookie) {
+          const selectedCompany = JSON.parse(selectedCompanyCookie);
+          DOM.companySelect.value = selectedCompany.key;
+        }
+
+        loadExistingOrderData();
+        updateSelectedProductsTable();
+      } catch (error) {
+        console.error('Initialization error:', error);
         DOM.loadingScreen.style.display = 'none';
+        showToastMessage('An error occurred while initializing the app. Please try again.', 'error');
       }
-
-      const selectedCompanyCookie = getCookie('selectedCompany');
-      if (selectedCompanyCookie) {
-        const selectedCompany = JSON.parse(selectedCompanyCookie);
-        DOM.companySelect.value = selectedCompany.key;
-      }
-
-      loadExistingOrderData();
-      updateSelectedProductsTable();
     };
 
     // Company Information
@@ -1549,12 +1588,21 @@
       }
 
       try {
+        // Add timeout for auth check
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
         // Verify token with backend
         const response = await fetch(`${API_BASE_URL}/auth/me`, {
           headers: {
-            'Authorization': `Bearer ${token}`
-          }
+            'Authorization': `Bearer ${token}`,
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          },
+          signal: controller.signal
         });
+
+        clearTimeout(timeoutId);
 
         if (!response.ok) {
           // Token is invalid, redirect to login
@@ -1565,13 +1613,14 @@
         }
 
         const data = await response.json();
-
-        // Allow admin users to access the user page if they navigate here intentionally
-        // Only redirect on login, not on manual navigation
-
         return true;
       } catch (error) {
         console.error('Auth check failed:', error);
+        if (error.name === 'AbortError') {
+          showToastMessage('Authentication request timed out. Please check your connection.', 'error');
+        } else {
+          showToastMessage('Authentication failed. Please try again.', 'error');
+        }
         localStorage.removeItem('authToken');
         localStorage.removeItem('userInfo');
         window.location.href = 'login.html';
