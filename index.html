@@ -820,6 +820,34 @@
       salespersonNameInput: document.getElementById('salespersonName')
     };
 
+    // Add storage fallback for Huawei devices
+    const storage = {
+      get: function(key) {
+        try {
+          return localStorage.getItem(key);
+        } catch (e) {
+          console.warn('localStorage not available, using sessionStorage');
+          return sessionStorage.getItem(key);
+        }
+      },
+      set: function(key, value) {
+        try {
+          localStorage.setItem(key, value);
+        } catch (e) {
+          console.warn('localStorage not available, using sessionStorage');
+          sessionStorage.setItem(key, value);
+        }
+      },
+      remove: function(key) {
+        try {
+          localStorage.removeItem(key);
+        } catch (e) {
+          console.warn('localStorage not available, using sessionStorage');
+          sessionStorage.removeItem(key);
+        }
+      }
+    };
+
     // Optimized debounce function
     function debounce(func, wait) {
       let timeout;
@@ -1112,9 +1140,9 @@
     // Update window.onload to use the new initialization function
     window.onload = initializeApp;
 
-    // Update checkAuthStatus to handle errors better
+    // Update checkAuthStatus to use storage fallback
     async function checkAuthStatus() {
-      const token = localStorage.getItem('authToken');
+      const token = storage.get('authToken');
       if (!token) {
         // No token, redirect to login
         window.location.href = 'login.html';
@@ -1145,13 +1173,12 @@
         return true;
       } catch (error) {
         console.error('Auth check failed:', error);
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('userInfo');
+        storage.remove('authToken');
+        storage.remove('userInfo');
         
         // Show error in loading screen before redirect
         const loadingScreen = document.getElementById('loadingScreen');
         const errorMessage = loadingScreen.querySelector('.error-message');
-        const retryButton = loadingScreen.querySelector('.retry-button');
         
         errorMessage.textContent = 'Authentication failed. Redirecting to login...';
         errorMessage.style.display = 'block';
@@ -1166,36 +1193,40 @@
       }
     }
 
-    // Check if user is admin and show admin button
+    // Update checkAndShowAdminButton to use storage fallback
     function checkAndShowAdminButton() {
-      const userInfo = localStorage.getItem('userInfo');
+      const userInfo = storage.get('userInfo');
       if (userInfo) {
-        const user = JSON.parse(userInfo);
-        const adminButton = document.getElementById('adminDashboardBtn');
-        if (user.is_admin && adminButton) {
-          adminButton.classList.remove('hidden');
+        try {
+          const user = JSON.parse(userInfo);
+          const adminButton = document.getElementById('adminDashboardBtn');
+          if (user.is_admin && adminButton) {
+            adminButton.classList.remove('hidden');
+          }
+        } catch (e) {
+          console.error('Error parsing user info:', e);
         }
       }
     }
 
-    // Add logout functionality
+    // Update logout to use storage fallback
     function logout() {
       fetch(`${API_BASE_URL}/auth/logout`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          'Authorization': `Bearer ${storage.get('authToken')}`
         }
       })
       .then(() => {
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('userInfo');
+        storage.remove('authToken');
+        storage.remove('userInfo');
         window.location.href = 'login.html';
       })
       .catch(error => {
         console.error('Logout error:', error);
-        // Even if logout fails on server, clear local storage and redirect
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('userInfo');
+        // Even if logout fails on server, clear storage and redirect
+        storage.remove('authToken');
+        storage.remove('userInfo');
         window.location.href = 'login.html';
       });
     }
@@ -1238,23 +1269,33 @@
     }
 
     function setCookie(name, value, days) {
-      const d = new Date();
-      d.setTime(d.getTime() + (days*24*60*60*1000));
-      const expires = "expires="+ d.toUTCString();
-      document.cookie = name + "=" + encodeURIComponent(value) + ";" + expires + ";path=/";
+      try {
+        const d = new Date();
+        d.setTime(d.getTime() + (days*24*60*60*1000));
+        const expires = "expires="+ d.toUTCString();
+        document.cookie = name + "=" + encodeURIComponent(value) + ";" + expires + ";path=/";
+      } catch (e) {
+        console.warn('Cookie not available, using storage');
+        storage.set(name, value);
+      }
     }
 
     function getCookie(name) {
-      const cname = name + "=";
-      const decodedCookie = decodeURIComponent(document.cookie);
-      const ca = decodedCookie.split(';');
-      for(let i = 0; i < ca.length; i++) {
-        let c = ca[i].trim();
-        if (c.indexOf(cname) === 0) {
-          return c.substring(cname.length, c.length);
+      try {
+        const cname = name + "=";
+        const decodedCookie = decodeURIComponent(document.cookie);
+        const ca = decodedCookie.split(';');
+        for(let i = 0; i < ca.length; i++) {
+          let c = ca[i].trim();
+          if (c.indexOf(cname) === 0) {
+            return c.substring(cname.length, c.length);
+          }
         }
+        return "";
+      } catch (e) {
+        console.warn('Cookie not available, using storage');
+        return storage.get(name) || "";
       }
-      return "";
     }
 
     function selectProduct(product) {
@@ -1735,6 +1776,70 @@
         // Show a message to the user
         showToastMessage('Order loaded for editing. You can modify products and details before generating a new document.', 'info');
       }
+    }
+
+    // Add polyfill for AbortController if not available
+    if (typeof AbortController === 'undefined') {
+      window.AbortController = function() {
+        this.signal = {
+          aborted: false
+        };
+        this.abort = function() {
+          this.signal.aborted = true;
+        };
+      };
+    }
+
+    // Add polyfill for fetch if not available
+    if (typeof fetch === 'undefined') {
+      window.fetch = function(url, options) {
+        return new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open(options.method || 'GET', url);
+          
+          if (options.headers) {
+            Object.keys(options.headers).forEach(key => {
+              xhr.setRequestHeader(key, options.headers[key]);
+            });
+          }
+
+          xhr.onload = function() {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              resolve({
+                ok: true,
+                status: xhr.status,
+                json: () => Promise.resolve(JSON.parse(xhr.responseText))
+              });
+            } else {
+              reject({
+                ok: false,
+                status: xhr.status,
+                statusText: xhr.statusText
+              });
+            }
+          };
+
+          xhr.onerror = function() {
+            reject({
+              ok: false,
+              status: 0,
+              statusText: 'Network Error'
+            });
+          };
+
+          if (options.signal) {
+            options.signal.addEventListener('abort', () => {
+              xhr.abort();
+              reject({
+                name: 'AbortError',
+                message: 'The operation was aborted'
+              });
+            });
+          }
+
+          xhr.send(options.body);
+        });
+      };
     }
   </script>
 
