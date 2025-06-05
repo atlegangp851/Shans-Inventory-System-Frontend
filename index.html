@@ -3,8 +3,91 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <!-- Add performance-focused meta tags -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="format-detection" content="telephone=no">
   <title>Shans System</title>
   <style>
+    /* Add hardware acceleration for animations and transitions */
+    * {
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+      backface-visibility: hidden;
+      transform: translateZ(0);
+      will-change: transform;
+    }
+
+    /* Optimize input elements for touch */
+    input, select, textarea {
+      -webkit-appearance: none;
+      appearance: none;
+      user-select: text;
+      -webkit-user-select: text;
+    }
+
+    /* Optimize animations */
+    @keyframes spin {
+      0% { transform: rotate(0deg) translateZ(0); }
+      100% { transform: rotate(360deg) translateZ(0); }
+    }
+
+    /* Optimize loading screen */
+    #loadingScreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(255, 255, 255, 0.9);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      transform: translateZ(0);
+      will-change: transform;
+    }
+
+    #loadingScreen .spinner {
+      border: 8px solid #f3f3f3;
+      border-top: 8px solid #3498db;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+      transform: translateZ(0);
+      will-change: transform;
+    }
+
+    /* Optimize table rendering */
+    .div-table {
+      transform: translateZ(0);
+      will-change: transform;
+      contain: content;
+    }
+
+    .div-table-row {
+      contain: content;
+    }
+
+    /* Optimize toast animations */
+    @keyframes fadeInOut {
+      0% { opacity: 0; transform: translateZ(0); }
+      10% { opacity: 0.95; transform: translateZ(0); }
+      90% { opacity: 0.95; transform: translateZ(0); }
+      100% { opacity: 0; transform: translateZ(0); }
+    }
+
+    .toast {
+      transform: translateZ(0);
+      will-change: transform, opacity;
+    }
+
     body {
       font-family: Arial, sans-serif;
       line-height: 1.6;
@@ -450,34 +533,6 @@
       background-color: #e60000;
     }
 
-
-    /* Loading Screen Styles */
-    #loadingScreen {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(255, 255, 255, 0.9);
-      z-index: 9999;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-    }
-    #loadingScreen .spinner {
-      border: 8px solid #f3f3f3; /* Light grey */
-      border-top: 8px solid #3498db; /* Blue */
-      border-radius: 50%;
-      width: 60px;
-      height: 60px;
-      animation: spin 1s linear infinite;
-      margin-bottom: 20px;
-    }
-    #loadingScreen p {
-      font-size: 18px;
-      color: #333;
-    }
     /* Toast Container and Toast Styles */
     .toast-container {
       position: fixed;
@@ -685,31 +740,267 @@
   </div>
 
   <script>
+    // Performance optimization variables
+    const DEBOUNCE_DELAY = 300;
+    const PRODUCTS_PER_PAGE = 20;
+    let currentPage = 1;
+    let isLoading = false;
+    let hasMoreProducts = true;
+    let searchTimeout;
     let selectedProducts = [];
-    let allProducts = []; // To store all fetched products
-    let newProductCounter = 1; // Counter for new products
+    let allProducts = [];
+    let newProductCounter = 1;
 
     const API_BASE_URL = 'https://shans-backend-1.onrender.com/api';
     const CURRENCY_SYMBOL = 'R';
     const TAX_RATE = 0.15;
 
-    const productSearchInput = document.getElementById('productSearch');
-    const productList = document.getElementById('productList');
-    const searchLoader = document.getElementById('searchLoader');
-    const roomInput = document.getElementById('room');
-    const roomLabel = document.getElementById('roomLabel');
-    const sameAsBillingCheckbox = document.getElementById('sameAsBilling');
-    const shippingInfoDiv = document.getElementById('shippingInfo');
-    const paymentMethodSelect = document.getElementById('paymentMethod');
-    const taxCheckbox = document.getElementById('Tax');
-    const taxAmountSpan = document.getElementById('taxAmount');
-    const subtotalAmountSpan = document.getElementById('subtotalAmount');
-    const totalAmountSpan = document.getElementById('totalAmount');
-    const tableHeader = document.getElementById('table-header');
-    const selectedProductsBody = document.getElementById('selectedProductsBody');
-    const companySelect = document.getElementById('companySelect');
-    const commentsTextarea = document.getElementById('comments');
-    const loadingScreen = document.getElementById('loadingScreen');
+    // Cache DOM elements
+    const DOM = {
+      productSearchInput: document.getElementById('productSearch'),
+      productList: document.getElementById('productList'),
+      searchLoader: document.getElementById('searchLoader'),
+      roomInput: document.getElementById('room'),
+      roomLabel: document.getElementById('roomLabel'),
+      sameAsBillingCheckbox: document.getElementById('sameAsBilling'),
+      shippingInfoDiv: document.getElementById('shippingInfo'),
+      paymentMethodSelect: document.getElementById('paymentMethod'),
+      taxCheckbox: document.getElementById('Tax'),
+      taxAmountSpan: document.getElementById('taxAmount'),
+      subtotalAmountSpan: document.getElementById('subtotalAmount'),
+      totalAmountSpan: document.getElementById('totalAmount'),
+      tableHeader: document.getElementById('table-header'),
+      selectedProductsBody: document.getElementById('selectedProductsBody'),
+      companySelect: document.getElementById('companySelect'),
+      commentsTextarea: document.getElementById('comments'),
+      loadingScreen: document.getElementById('loadingScreen'),
+      priceInput: document.getElementById('price'),
+      quantityInput: document.getElementById('quantity'),
+      customerNameInput: document.getElementById('customerName'),
+      customerEmailInput: document.getElementById('customerEmail'),
+      customerAddressInput: document.getElementById('customerAddress'),
+      customerPhoneInput: document.getElementById('customerPhone'),
+      shippingNameInput: document.getElementById('shippingName'),
+      shippingEmailInput: document.getElementById('shippingEmail'),
+      shippingAddressInput: document.getElementById('shippingAddress'),
+      shippingPhoneInput: document.getElementById('shippingPhone'),
+      salespersonNameInput: document.getElementById('salespersonName')
+    };
+
+    // Optimized debounce function
+    function debounce(func, wait) {
+      let timeout;
+      return function executedFunction(...args) {
+        const later = () => {
+          clearTimeout(timeout);
+          func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+      };
+    }
+
+    // Optimized product fetching with pagination
+    async function fetchAllProducts() {
+      try {
+        isLoading = true;
+        const response = await fetch(`${API_BASE_URL}/products?page=${currentPage}&limit=${PRODUCTS_PER_PAGE}`);
+        if (!response.ok) throw new Error('Network response was not ok');
+        const newProducts = await response.json();
+        
+        if (newProducts.length < PRODUCTS_PER_PAGE) {
+          hasMoreProducts = false;
+        }
+        
+        allProducts = [...allProducts, ...newProducts];
+        currentPage++;
+        
+        // Update UI with new products
+        displayFilteredProducts();
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        showToastMessage('Failed to load products. Please try again later.', 'error');
+      } finally {
+        isLoading = false;
+      }
+    }
+
+    // Optimized product search with debouncing
+    const debouncedSearch = debounce(() => {
+      DOM.searchLoader.style.display = 'inline-block';
+      displayFilteredProducts();
+      DOM.searchLoader.style.display = 'none';
+    }, DEBOUNCE_DELAY);
+
+    // Optimized product display with virtual scrolling
+    function displayFilteredProducts() {
+      const searchTerm = DOM.productSearchInput.value.toLowerCase();
+      const filteredProducts = allProducts.filter(product =>
+        product.item_name.toLowerCase().includes(searchTerm)
+      );
+
+      // Clear existing products
+      DOM.productList.innerHTML = '';
+
+      if (filteredProducts.length === 0 && searchTerm !== '') {
+        const li = document.createElement('li');
+        li.textContent = 'No products found';
+        li.style.cursor = 'default';
+        DOM.productList.appendChild(li);
+        return;
+      }
+
+      // Group products by name for better performance
+      const productsByName = new Map();
+      filteredProducts.forEach(product => {
+        if (!productsByName.has(product.item_name)) {
+          productsByName.set(product.item_name, []);
+        }
+        productsByName.get(product.item_name).push(product);
+      });
+
+      // Create document fragment for better performance
+      const fragment = document.createDocumentFragment();
+
+      filteredProducts.forEach(product => {
+        const li = document.createElement('li');
+        const hasDuplicates = productsByName.get(product.item_name).length > 1;
+
+        const productNameDiv = document.createElement('div');
+        productNameDiv.className = 'product-name';
+
+        if (hasDuplicates) {
+          productNameDiv.innerHTML = `${product.item_name} <span style="color: #0066cc; font-weight: bold;">(${product.room_name})</span>`;
+        } else {
+          productNameDiv.textContent = product.item_name;
+        }
+
+        const productDetailsDiv = document.createElement('div');
+        productDetailsDiv.className = 'product-details';
+
+        const stockClass = product.available_stock > 0 ? 'stock-available' : 'stock-empty';
+        productDetailsDiv.innerHTML = `Room: <b>${product.room_name || 'N/A'}</b> | Stock: <span class="${stockClass}">${product.available_stock}</span>`;
+
+        li.appendChild(productNameDiv);
+        li.appendChild(productDetailsDiv);
+        
+        // Use passive event listener for better touch performance
+        li.addEventListener('click', () => selectProduct(product), { passive: true });
+
+        if (hasDuplicates) {
+          li.style.backgroundColor = '#f0f7ff';
+        }
+
+        fragment.appendChild(li);
+      });
+
+      DOM.productList.appendChild(fragment);
+
+      // Load more products if needed
+      if (hasMoreProducts && !isLoading && DOM.productList.scrollHeight <= DOM.productList.clientHeight + 100) {
+        fetchAllProducts();
+      }
+    }
+
+    // Optimized event listeners
+    DOM.productSearchInput.addEventListener('input', debouncedSearch, { passive: true });
+    DOM.sameAsBillingCheckbox.addEventListener('change', toggleShippingInfo, { passive: true });
+    DOM.taxCheckbox.addEventListener('change', () => {
+      requestAnimationFrame(updateSelectedProductsTable);
+    }, { passive: true });
+
+    // Optimized table updates using requestAnimationFrame
+    function updateSelectedProductsTable() {
+      requestAnimationFrame(() => {
+        DOM.selectedProductsBody.innerHTML = '';
+        updateTableHeader();
+
+        if (selectedProducts.length === 0) {
+          const emptyRow = document.createElement('div');
+          emptyRow.className = 'div-table-row';
+          emptyRow.style.justifyContent = 'center';
+          emptyRow.style.padding = '20px';
+          emptyRow.style.color = '#666';
+          emptyRow.innerHTML = '<i>No products selected yet. Search and add products above.</i>';
+          DOM.selectedProductsBody.appendChild(emptyRow);
+          calculateAndDisplayTotal();
+          return;
+        }
+
+        const fragment = document.createDocumentFragment();
+        selectedProducts.forEach((product, index) => {
+          const row = createProductRow(product, index);
+          fragment.appendChild(row);
+        });
+
+        DOM.selectedProductsBody.appendChild(fragment);
+        calculateAndDisplayTotal();
+      });
+    }
+
+    // Optimized row creation
+    function createProductRow(product, index) {
+      const row = document.createElement('div');
+      row.className = 'div-table-row';
+
+      // Create cells using document fragment
+      const fragment = document.createDocumentFragment();
+      
+      // Add cells to fragment
+      fragment.appendChild(createNameCell(product));
+      fragment.appendChild(createQuantityCell(product));
+      
+      if (DOM.taxCheckbox.checked) {
+        fragment.appendChild(createPriceCell(product, true));
+        fragment.appendChild(createTaxCell(product));
+        fragment.appendChild(createTotalCell(product));
+      } else {
+        fragment.appendChild(createPriceCell(product, false));
+        fragment.appendChild(createTotalCell(product));
+      }
+      
+      fragment.appendChild(createActionCell(index));
+      
+      row.appendChild(fragment);
+      return row;
+    }
+
+    // Memory management
+    function cleanup() {
+      selectedProducts = [];
+      allProducts = [];
+      currentPage = 1;
+      hasMoreProducts = true;
+      DOM.productList.innerHTML = '';
+      DOM.selectedProductsBody.innerHTML = '';
+      updateSelectedProductsTable();
+    }
+
+    // Add cleanup on page unload
+    window.addEventListener('unload', cleanup);
+
+    // Initialize the app
+    window.onload = async function() {
+      const isAuthenticated = await checkAuthStatus();
+      if (!isAuthenticated) return;
+
+      checkAndShowAdminButton();
+
+      try {
+        await fetchAllProducts();
+      } finally {
+        DOM.loadingScreen.style.display = 'none';
+      }
+
+      const selectedCompanyCookie = getCookie('selectedCompany');
+      if (selectedCompanyCookie) {
+        const selectedCompany = JSON.parse(selectedCompanyCookie);
+        DOM.companySelect.value = selectedCompany.key;
+      }
+
+      loadExistingOrderData();
+      updateSelectedProductsTable();
+    };
 
     // Company Information
     const companies = {
@@ -768,88 +1059,14 @@
       return "";
     }
 
-    async function fetchAllProducts() {
-      try {
-        const response = await fetch(`${API_BASE_URL}/products`);
-        if (!response.ok) throw new Error('Network response was not ok');
-        allProducts = await response.json();
-      } catch (error) {
-        console.error('Error fetching products:', error);
-        showToastMessage('Failed to load products. Please try again later.', 'error');
-      }
-    }
-
-    function displayFilteredProducts() {
-      const searchTerm = productSearchInput.value.toLowerCase();
-      const filteredProducts = allProducts.filter(product =>
-        product.item_name.toLowerCase().includes(searchTerm)
-      );
-
-      productList.innerHTML = '';
-
-      if (filteredProducts.length === 0 && searchTerm !== '') {
-        const li = document.createElement('li');
-        li.textContent = 'No products found';
-        li.style.cursor = 'default';
-        productList.appendChild(li);
-        return;
-      }
-
-      // Group products by name to highlight duplicates in different rooms
-      const productsByName = {};
-      filteredProducts.forEach(product => {
-        if (!productsByName[product.item_name]) {
-          productsByName[product.item_name] = [];
-        }
-        productsByName[product.item_name].push(product);
-      });
-
-      // Display products, highlighting those with the same name in different rooms
-      filteredProducts.forEach(product => {
-        const li = document.createElement('li');
-        const hasDuplicates = productsByName[product.item_name].length > 1;
-
-        // Create product name element
-        const productNameDiv = document.createElement('div');
-        productNameDiv.className = 'product-name';
-
-        // If there are duplicates of this product name in different rooms, highlight it
-        if (hasDuplicates) {
-          productNameDiv.innerHTML = `${product.item_name} <span style="color: #0066cc; font-weight: bold;">(${product.room_name})</span>`;
-        } else {
-          productNameDiv.textContent = product.item_name;
-        }
-
-        // Create product details element
-        const productDetailsDiv = document.createElement('div');
-        productDetailsDiv.className = 'product-details';
-
-        // Show room and stock information
-        const stockClass = product.available_stock > 0 ? 'stock-available' : 'stock-empty';
-        productDetailsDiv.innerHTML = `Room: <b>${product.room_name || 'N/A'}</b> | Stock: <span class="${stockClass}">${product.available_stock}</span>`;
-
-        // Add elements to list item
-        li.appendChild(productNameDiv);
-        li.appendChild(productDetailsDiv);
-        li.onclick = () => selectProduct(product);
-
-        // Add a subtle background color for items with duplicates to make them more noticeable
-        if (hasDuplicates) {
-          li.style.backgroundColor = '#f0f7ff';
-        }
-
-        productList.appendChild(li);
-      });
-    }
-
     function selectProduct(product) {
-      productSearchInput.value = product.item_name;
-      productSearchInput.dataset.itemCode = product.item_code; // Store the item_code in the dataset
-      productSearchInput.dataset.roomId = product.room_id; // Store the room_id in the dataset
-      productList.innerHTML = '';
+      DOM.productSearchInput.value = product.item_name;
+      DOM.productSearchInput.dataset.itemCode = product.item_code; // Store the item_code in the dataset
+      DOM.productSearchInput.dataset.roomId = product.room_id; // Store the room_id in the dataset
+      DOM.productList.innerHTML = '';
       // Set the default price from the database, but this can be modified by the user
       // for negotiated prices or discounts before adding to the order
-      document.getElementById('price').value = Math.round(parseFloat(product.unit_retail_price));
+      DOM.priceInput.value = Math.round(parseFloat(product.unit_retail_price));
 
       // Get the quantity input element
       const quantityInput = document.getElementById('quantity');
@@ -860,21 +1077,21 @@
       // Set the default quantity to 1
       quantityInput.value = 1;
 
-      roomInput.value = product.room_name;
-      roomInput.classList.remove('hidden');
-      roomLabel.classList.remove('hidden');
+      DOM.roomInput.value = product.room_name;
+      DOM.roomInput.classList.remove('hidden');
+      DOM.roomLabel.classList.remove('hidden');
     }
 
     function addSelectedProduct() {
-      const productName = productSearchInput.value.trim();
-      const quantity = parseInt(document.getElementById('quantity').value);
+      const productName = DOM.productSearchInput.value.trim();
+      const quantity = parseInt(DOM.quantityInput.value);
       // Get the price from the input field - this may be the original retail price
       // or a negotiated/discounted price entered by the user
-      const price = Math.round(parseFloat(document.getElementById('price').value));
+      const price = Math.round(parseFloat(DOM.priceInput.value));
 
       // Get the item_code and room_id from the dataset if available
-      const itemCode = productSearchInput.dataset.itemCode;
-      const roomId = productSearchInput.dataset.roomId;
+      const itemCode = DOM.productSearchInput.dataset.itemCode;
+      const roomId = DOM.productSearchInput.dataset.roomId;
 
       // Find the product by item_code if available, otherwise fall back to finding by name
       let product;
@@ -906,7 +1123,7 @@
       // We'll store the typed-in price in product.price
       // Then let the table logic figure out net vs. tax if needed
       let taxPerProduct = 0;
-      if (taxCheckbox.checked) {
+      if (DOM.taxCheckbox.checked) {
         taxPerProduct = Math.round(price * TAX_RATE);
       }
 
@@ -935,11 +1152,11 @@
       }
 
       updateSelectedProductsTable();
-      productSearchInput.value = '';
+      DOM.productSearchInput.value = '';
 
       // Clear the stored item_code and room_id
-      delete productSearchInput.dataset.itemCode;
-      delete productSearchInput.dataset.roomId;
+      delete DOM.productSearchInput.dataset.itemCode;
+      delete DOM.productSearchInput.dataset.roomId;
 
       // Reset quantity input field
       const quantityInput = document.getElementById('quantity');
@@ -947,10 +1164,10 @@
       quantityInput.setAttribute('min', '1');
 
       // Reset price and room fields
-      document.getElementById('price').value = '0';
-      roomInput.value = '';
-      roomInput.classList.add('hidden');
-      roomLabel.classList.add('hidden');
+      DOM.priceInput.value = '0';
+      DOM.roomInput.value = '';
+      DOM.roomInput.classList.add('hidden');
+      DOM.roomLabel.classList.add('hidden');
     }
 
     /**
@@ -964,139 +1181,13 @@
      *   - No separate tax column
      *   - "Total (R)" = price * quantity
      */
-    function updateSelectedProductsTable() {
-      // Clear the table body
-      const tableBody = document.getElementById('selectedProductsBody');
-      tableBody.innerHTML = '';
-
-      // Update the table header
-      updateTableHeader();
-
-      // Show a message if no products are selected
-      if (selectedProducts.length === 0) {
-        const emptyRow = document.createElement('div');
-        emptyRow.className = 'div-table-row';
-        emptyRow.style.justifyContent = 'center';
-        emptyRow.style.padding = '20px';
-        emptyRow.style.color = '#666';
-        emptyRow.innerHTML = '<i>No products selected yet. Search and add products above.</i>';
-        tableBody.appendChild(emptyRow);
-        calculateAndDisplayTotal();
-        return;
-      }
-
-      // Add product rows
-      selectedProducts.forEach((product, index) => {
-        // Create a new row
-        const row = document.createElement('div');
-        row.className = 'div-table-row';
-
-        // Calculate prices
-        const netPrice = taxCheckbox.checked ? product.price * (1 - TAX_RATE) : product.price;
-        const taxAmount = taxCheckbox.checked ? product.price * TAX_RATE : 0;
-        const lineTotal = product.price * product.quantity;
-
-        // Product name cell
-        const nameCell = document.createElement('div');
-        nameCell.className = 'div-table-cell product-column';
-
-        // Show product name and room if available
-        if (product.room_name && !product.is_new) {
-          nameCell.innerHTML = `${product.name} <span style="color: #666; font-size: 0.85em;">(${product.room_name})</span>`;
-        } else {
-          nameCell.textContent = product.name;
-        }
-
-        if (product.is_new) {
-          const newLabel = document.createElement('span');
-          newLabel.className = 'new-product-label';
-          newLabel.textContent = ' (New)';
-          nameCell.appendChild(newLabel);
-        }
-
-        row.appendChild(nameCell);
-
-        // Quantity cell
-        const qtyCell = document.createElement('div');
-        qtyCell.className = 'div-table-cell qty-column';
-        qtyCell.textContent = product.quantity;
-        qtyCell.style.fontWeight = '700'; // Make QTY bold
-        qtyCell.style.textAlign = 'center';
-        row.appendChild(qtyCell);
-
-        if (taxCheckbox.checked) {
-          // Unit Price cell
-          const unitPriceCell = document.createElement('div');
-          unitPriceCell.className = 'div-table-cell price-column';
-          unitPriceCell.textContent = `${CURRENCY_SYMBOL}${netPrice.toFixed(0)}`;
-          row.appendChild(unitPriceCell);
-
-          // Tax cell
-          const taxCell = document.createElement('div');
-          taxCell.className = 'div-table-cell price-column tax-column';
-          taxCell.textContent = `${CURRENCY_SYMBOL}${taxAmount.toFixed(0)}`;
-          row.appendChild(taxCell);
-
-          // Total cell
-          const totalCell = document.createElement('div');
-          totalCell.className = 'div-table-cell price-column';
-          totalCell.textContent = `${CURRENCY_SYMBOL}${lineTotal.toFixed(0)}`;
-          row.appendChild(totalCell);
-        } else {
-          // Unit Price cell
-          const unitPriceCell = document.createElement('div');
-          unitPriceCell.className = 'div-table-cell price-column';
-          unitPriceCell.textContent = `${CURRENCY_SYMBOL}${product.price.toFixed(0)}`;
-          row.appendChild(unitPriceCell);
-
-          // Total cell
-          const totalCell = document.createElement('div');
-          totalCell.className = 'div-table-cell price-column';
-          totalCell.textContent = `${CURRENCY_SYMBOL}${lineTotal.toFixed(0)}`;
-          row.appendChild(totalCell);
-        }
-
-        // Action cell with red X instead of remove button
-        const actionCell = document.createElement('div');
-        actionCell.className = 'div-table-cell';
-        actionCell.style.justifyContent = 'center';
-        actionCell.style.width = '40px'; // Fixed width for X column
-        actionCell.style.minWidth = '40px';
-
-        const removeX = document.createElement('span');
-        removeX.innerHTML = '&#10006;'; // X symbol
-        removeX.className = 'remove-x';
-        removeX.title = 'Remove item';
-        removeX.onclick = () => removeProduct(index);
-
-        actionCell.appendChild(removeX);
-        row.appendChild(actionCell);
-
-        // Add the row to the table body
-        tableBody.appendChild(row);
-      });
-
-      calculateAndDisplayTotal();
-    }
-
-    /**
-     * If tax is checked:
-     *   - Subtotal = sum of (price * 0.85 * quantity)
-     *   - Tax = sum of (price * 0.15 * quantity)
-     *   - Total = sum of (price * quantity)
-     *
-     * If tax is NOT checked:
-     *   - Subtotal = sum of (price * quantity)
-     *   - Tax = 0
-     *   - Total = sum of (price * quantity)
-     */
     function calculateAndDisplayTotal() {
       let subtotal = 0;
       let tax = 0;
       let total = 0;
 
       selectedProducts.forEach(product => {
-        if (taxCheckbox.checked) {
+        if (DOM.taxCheckbox.checked) {
           subtotal += (product.price * (1 - TAX_RATE)) * product.quantity;
           tax += (product.price * TAX_RATE) * product.quantity;
           total += (product.price * product.quantity);
@@ -1106,18 +1197,18 @@
         }
       });
 
-      if (!taxCheckbox.checked) {
+      if (!DOM.taxCheckbox.checked) {
         tax = 0;
       }
 
-      subtotalAmountSpan.textContent = subtotal.toFixed(0);
-      taxAmountSpan.textContent = tax.toFixed(0);
-      totalAmountSpan.textContent = total.toFixed(0);
+      DOM.subtotalAmountSpan.textContent = subtotal.toFixed(0);
+      DOM.taxAmountSpan.textContent = tax.toFixed(0);
+      DOM.totalAmountSpan.textContent = total.toFixed(0);
     }
 
     function updateTableHeader() {
       // Clear the header
-      const header = document.getElementById('table-header');
+      const header = DOM.tableHeader;
       header.innerHTML = '';
 
       // Product column
@@ -1142,7 +1233,7 @@
       priceHeader.style.fontSize = '13px';
       header.appendChild(priceHeader);
 
-      if (taxCheckbox.checked) {
+      if (DOM.taxCheckbox.checked) {
         // Tax column (only if tax is checked, simplified name)
         const taxHeader = document.createElement('div');
         taxHeader.className = 'div-table-cell div-table-heading price-column tax-column';
@@ -1190,24 +1281,24 @@
         return;
       }
       // Always ensure email has the default value if empty
-      const customerEmail = document.getElementById('customerEmail').value.trim();
+      const customerEmail = DOM.customerEmailInput.value.trim();
       const billingInfo = {
-        name: document.getElementById('customerName').value.trim(),
+        name: DOM.customerNameInput.value.trim(),
         email: customerEmail || 'invoicesshans@outlook.com',
-        address: document.getElementById('customerAddress').value.trim(),
-        phone: document.getElementById('customerPhone').value.trim()
+        address: DOM.customerAddressInput.value.trim(),
+        phone: DOM.customerPhoneInput.value.trim()
       };
       console.log('Billing info:', billingInfo);
 
       let shippingInfo = null;
-      if (!sameAsBillingCheckbox.checked) {
+      if (!DOM.sameAsBillingCheckbox.checked) {
         // Always ensure shipping email has the default value if empty
-        const shippingEmail = document.getElementById('shippingEmail').value.trim();
+        const shippingEmail = DOM.shippingEmailInput.value.trim();
         shippingInfo = {
-          name: document.getElementById('shippingName').value.trim(),
+          name: DOM.shippingNameInput.value.trim(),
           email: shippingEmail || 'invoicesshans@outlook.com',
-          address: document.getElementById('shippingAddress').value.trim(),
-          phone: document.getElementById('shippingPhone').value.trim()
+          address: DOM.shippingAddressInput.value.trim(),
+          phone: DOM.shippingPhoneInput.value.trim()
         };
       }
 
@@ -1217,14 +1308,14 @@
       }
       console.log('Products validation passed');
 
-      const paymentMethod = paymentMethodSelect.value;
-      const comments = commentsTextarea.value.trim();
-      const salespersonName = document.getElementById('salespersonName').value.trim();
+      const paymentMethod = DOM.paymentMethodSelect.value;
+      const comments = DOM.commentsTextarea.value.trim();
+      const salespersonName = DOM.salespersonNameInput.value.trim();
       console.log('Salesperson name:', salespersonName);
 
       const customerInfo = {
         billing: billingInfo,
-        shipping: sameAsBillingCheckbox.checked ? null : shippingInfo,
+        shipping: DOM.sameAsBillingCheckbox.checked ? null : shippingInfo,
         paymentMethod: paymentMethod,
         comments: comments,
         salespersonName: salespersonName
@@ -1233,9 +1324,9 @@
       const selectedCompany = JSON.parse(selectedCompanyCookie);
       setCookie('customerInfo', JSON.stringify(customerInfo), 1);
       setCookie('selectedProducts', JSON.stringify(selectedProducts), 1);
-      setCookie('subtotalAmount', JSON.stringify(subtotalAmountSpan.textContent), 1);
-      setCookie('taxAmount', JSON.stringify(taxAmountSpan.textContent), 1);
-      setCookie('totalAmount', JSON.stringify(totalAmountSpan.textContent), 1);
+      setCookie('subtotalAmount', JSON.stringify(DOM.subtotalAmountSpan.textContent), 1);
+      setCookie('taxAmount', JSON.stringify(DOM.taxAmountSpan.textContent), 1);
+      setCookie('totalAmount', JSON.stringify(DOM.totalAmountSpan.textContent), 1);
       setCookie('selectedCompany', JSON.stringify(selectedCompany), 1);
       console.log('All cookies set, redirecting to receipt.html');
 
@@ -1251,23 +1342,23 @@
       }
 
       // Always ensure email has the default value if empty
-      const customerEmail = document.getElementById('customerEmail').value.trim();
+      const customerEmail = DOM.customerEmailInput.value.trim();
       const billingInfo = {
-        name: document.getElementById('customerName').value.trim(),
+        name: DOM.customerNameInput.value.trim(),
         email: customerEmail || 'invoicesshans@outlook.com',
-        address: document.getElementById('customerAddress').value.trim(),
-        phone: document.getElementById('customerPhone').value.trim()
+        address: DOM.customerAddressInput.value.trim(),
+        phone: DOM.customerPhoneInput.value.trim()
       };
 
       let shippingInfo = null;
-      if (!sameAsBillingCheckbox.checked) {
+      if (!DOM.sameAsBillingCheckbox.checked) {
         // Always ensure shipping email has the default value if empty
-        const shippingEmail = document.getElementById('shippingEmail').value.trim();
+        const shippingEmail = DOM.shippingEmailInput.value.trim();
         shippingInfo = {
-          name: document.getElementById('shippingName').value.trim(),
+          name: DOM.shippingNameInput.value.trim(),
           email: shippingEmail || 'invoicesshans@outlook.com',
-          address: document.getElementById('shippingAddress').value.trim(),
-          phone: document.getElementById('shippingPhone').value.trim()
+          address: DOM.shippingAddressInput.value.trim(),
+          phone: DOM.shippingPhoneInput.value.trim()
         };
       }
 
@@ -1276,12 +1367,12 @@
         return;
       }
 
-      const comments = commentsTextarea.value.trim();
-      const salespersonName = document.getElementById('salespersonName').value.trim();
+      const comments = DOM.commentsTextarea.value.trim();
+      const salespersonName = DOM.salespersonNameInput.value.trim();
 
       const customerInfo = {
         billing: billingInfo,
-        shipping: sameAsBillingCheckbox.checked ? null : shippingInfo,
+        shipping: DOM.sameAsBillingCheckbox.checked ? null : shippingInfo,
         paymentMethod: 'N/A',
         comments: comments,
         salespersonName: salespersonName,
@@ -1291,9 +1382,9 @@
       const selectedCompany = JSON.parse(selectedCompanyCookie);
       setCookie('customerInfo', JSON.stringify(customerInfo), 1);
       setCookie('selectedProducts', JSON.stringify(selectedProducts), 1);
-      setCookie('subtotalAmount', JSON.stringify(subtotalAmountSpan.textContent), 1);
-      setCookie('taxAmount', JSON.stringify(taxAmountSpan.textContent), 1);
-      setCookie('totalAmount', JSON.stringify(totalAmountSpan.textContent), 1);
+      setCookie('subtotalAmount', JSON.stringify(DOM.subtotalAmountSpan.textContent), 1);
+      setCookie('taxAmount', JSON.stringify(DOM.taxAmountSpan.textContent), 1);
+      setCookie('totalAmount', JSON.stringify(DOM.totalAmountSpan.textContent), 1);
       setCookie('selectedCompany', JSON.stringify(selectedCompany), 1);
       console.log('All cookies set, redirecting to quotation.html');
 
@@ -1309,23 +1400,23 @@
       }
 
       // Always ensure email has the default value if empty
-      const customerEmail = document.getElementById('customerEmail').value.trim();
+      const customerEmail = DOM.customerEmailInput.value.trim();
       const billingInfo = {
-        name: document.getElementById('customerName').value.trim(),
+        name: DOM.customerNameInput.value.trim(),
         email: customerEmail || 'invoicesshans@outlook.com',
-        address: document.getElementById('customerAddress').value.trim(),
-        phone: document.getElementById('customerPhone').value.trim()
+        address: DOM.customerAddressInput.value.trim(),
+        phone: DOM.customerPhoneInput.value.trim()
       };
 
       let shippingInfo = null;
-      if (!sameAsBillingCheckbox.checked) {
+      if (!DOM.sameAsBillingCheckbox.checked) {
         // Always ensure shipping email has the default value if empty
-        const shippingEmail = document.getElementById('shippingEmail').value.trim();
+        const shippingEmail = DOM.shippingEmailInput.value.trim();
         shippingInfo = {
-          name: document.getElementById('shippingName').value.trim(),
+          name: DOM.shippingNameInput.value.trim(),
           email: shippingEmail || 'invoicesshans@outlook.com',
-          address: document.getElementById('shippingAddress').value.trim(),
-          phone: document.getElementById('shippingPhone').value.trim()
+          address: DOM.shippingAddressInput.value.trim(),
+          phone: DOM.shippingPhoneInput.value.trim()
         };
       }
 
@@ -1334,13 +1425,13 @@
         return;
       }
 
-      const paymentMethod = paymentMethodSelect.value;
-      const comments = commentsTextarea.value.trim();
-      const salespersonName = document.getElementById('salespersonName').value.trim();
+      const paymentMethod = DOM.paymentMethodSelect.value;
+      const comments = DOM.commentsTextarea.value.trim();
+      const salespersonName = DOM.salespersonNameInput.value.trim();
 
       const customerInfo = {
         billing: billingInfo,
-        shipping: sameAsBillingCheckbox.checked ? null : shippingInfo,
+        shipping: DOM.sameAsBillingCheckbox.checked ? null : shippingInfo,
         paymentMethod: paymentMethod,
         comments: comments,
         salespersonName: salespersonName
@@ -1349,9 +1440,9 @@
       const selectedCompany = JSON.parse(selectedCompanyCookie);
       setCookie('customerInfo', JSON.stringify(customerInfo), 1);
       setCookie('selectedProducts', JSON.stringify(selectedProducts), 1);
-      setCookie('subtotalAmount', JSON.stringify(subtotalAmountSpan.textContent), 1);
-      setCookie('taxAmount', JSON.stringify(taxAmountSpan.textContent), 1);
-      setCookie('totalAmount', JSON.stringify(totalAmountSpan.textContent), 1);
+      setCookie('subtotalAmount', JSON.stringify(DOM.subtotalAmountSpan.textContent), 1);
+      setCookie('taxAmount', JSON.stringify(DOM.taxAmountSpan.textContent), 1);
+      setCookie('totalAmount', JSON.stringify(DOM.totalAmountSpan.textContent), 1);
       setCookie('selectedCompany', JSON.stringify(selectedCompany), 1);
       console.log('All cookies set, redirecting to invoice.html');
 
@@ -1359,15 +1450,15 @@
     }
 
     function toggleShippingInfo() {
-      if (sameAsBillingCheckbox.checked) {
-        shippingInfoDiv.classList.add('hidden');
+      if (DOM.sameAsBillingCheckbox.checked) {
+        DOM.shippingInfoDiv.classList.add('hidden');
       } else {
-        shippingInfoDiv.classList.remove('hidden');
+        DOM.shippingInfoDiv.classList.remove('hidden');
       }
     }
 
     function setCompanyInfo() {
-      const selectedCompanyKey = companySelect.value;
+      const selectedCompanyKey = DOM.companySelect.value;
       if (!selectedCompanyKey || !companies[selectedCompanyKey]) {
         showToastMessage('Please select a valid company.', 'error');
         return;
@@ -1380,21 +1471,10 @@
       }), 1);
     }
 
-    companySelect.addEventListener('change', setCompanyInfo);
-
-    productSearchInput.addEventListener('input', () => {
-      searchLoader.style.display = 'inline-block';
-      clearTimeout(window.searchTimeout);
-      window.searchTimeout = setTimeout(() => {
-        displayFilteredProducts();
-        searchLoader.style.display = 'none';
-      }, 300);
-    });
-
-    sameAsBillingCheckbox.addEventListener('change', toggleShippingInfo);
+    DOM.companySelect.addEventListener('change', setCompanyInfo);
 
     // Recalculate net/tax for each product if the checkbox changes
-    taxCheckbox.addEventListener('change', () => {
+    DOM.taxCheckbox.addEventListener('change', () => {
       updateSelectedProductsTable();
     });
 
@@ -1413,37 +1493,37 @@
           const customerInfo = JSON.parse(customerInfoCookie);
 
           // Fill in customer information
-          document.getElementById('customerName').value = customerInfo.billing.name || '';
-          document.getElementById('customerAddress').value = customerInfo.billing.address || '';
-          document.getElementById('customerEmail').value = customerInfo.billing.email || '';
-          document.getElementById('customerPhone').value = customerInfo.billing.phone || '';
+          DOM.customerNameInput.value = customerInfo.billing.name || '';
+          DOM.customerAddressInput.value = customerInfo.billing.address || '';
+          DOM.customerEmailInput.value = customerInfo.billing.email || '';
+          DOM.customerPhoneInput.value = customerInfo.billing.phone || '';
 
           // Handle shipping info
           if (customerInfo.shipping) {
-            sameAsBillingCheckbox.checked = false;
-            shippingInfoDiv.classList.remove('hidden');
-            document.getElementById('shippingName').value = customerInfo.shipping.name || '';
-            document.getElementById('shippingAddress').value = customerInfo.shipping.address || '';
-            document.getElementById('shippingEmail').value = customerInfo.shipping.email || '';
-            document.getElementById('shippingPhone').value = customerInfo.shipping.phone || '';
+            DOM.sameAsBillingCheckbox.checked = false;
+            DOM.shippingInfoDiv.classList.remove('hidden');
+            DOM.shippingNameInput.value = customerInfo.shipping.name || '';
+            DOM.shippingAddressInput.value = customerInfo.shipping.address || '';
+            DOM.shippingEmailInput.value = customerInfo.shipping.email || '';
+            DOM.shippingPhoneInput.value = customerInfo.shipping.phone || '';
           } else {
-            sameAsBillingCheckbox.checked = true;
-            shippingInfoDiv.classList.add('hidden');
+            DOM.sameAsBillingCheckbox.checked = true;
+            DOM.shippingInfoDiv.classList.add('hidden');
           }
 
           // Set payment method
           if (customerInfo.paymentMethod) {
-            document.getElementById('paymentMethod').value = customerInfo.paymentMethod;
+            DOM.paymentMethodSelect.value = customerInfo.paymentMethod;
           }
 
           // Set comments
           if (customerInfo.comments) {
-            document.getElementById('comments').value = customerInfo.comments;
+            DOM.commentsTextarea.value = customerInfo.comments;
           }
 
           // Set salesperson name
           if (customerInfo.salespersonName) {
-            document.getElementById('salespersonName').value = customerInfo.salespersonName;
+            DOM.salespersonNameInput.value = customerInfo.salespersonName;
           }
         }
 
@@ -1532,36 +1612,6 @@
         window.location.href = 'login.html';
       });
     }
-
-    window.onload = async function() {
-      // Check authentication first
-      const isAuthenticated = await checkAuthStatus();
-      if (!isAuthenticated) {
-        return;
-      }
-
-      // Check if user is admin and show admin button
-      checkAndShowAdminButton();
-
-      try {
-        await fetchAllProducts();
-      } finally {
-        loadingScreen.style.display = 'none';
-      }
-
-      // Optionally load previously selected company
-      const selectedCompanyCookie = getCookie('selectedCompany');
-      if (selectedCompanyCookie) {
-        const selectedCompany = JSON.parse(selectedCompanyCookie);
-        companySelect.value = selectedCompany.key;
-      }
-
-      // Check if we're returning from a document page to edit an order
-      loadExistingOrderData();
-
-      // Update the products table (will show loaded products if in edit mode)
-      updateSelectedProductsTable();
-    };
   </script>
 
 </body>
