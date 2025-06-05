@@ -42,7 +42,7 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background-color: rgba(255, 255, 255, 0.9);
+      background-color: rgba(255, 255, 255, 0.95);
       z-index: 9999;
       display: flex;
       flex-direction: column;
@@ -62,6 +62,37 @@
       margin-bottom: 20px;
       transform: translateZ(0);
       will-change: transform;
+    }
+
+    #loadingScreen p {
+      color: #333;
+      font-size: 16px;
+      margin: 0;
+      text-align: center;
+    }
+
+    /* Add error message styling */
+    #loadingScreen .error-message {
+      color: #dc3545;
+      margin-top: 10px;
+      text-align: center;
+      max-width: 80%;
+    }
+
+    /* Add retry button styling */
+    #loadingScreen .retry-button {
+      margin-top: 15px;
+      padding: 8px 16px;
+      background-color: #4a90e2;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    #loadingScreen .retry-button:hover {
+      background-color: #357abd;
     }
 
     /* Optimize table rendering */
@@ -598,6 +629,8 @@
   <div id="loadingScreen">
     <div class="spinner"></div>
     <p>Loading products, please wait...</p>
+    <div class="error-message" style="display: none;"></div>
+    <button class="retry-button" style="display: none;" onclick="retryInitialization()">Retry</button>
   </div>
 
   <!-- Toast Container (for all messages) -->
@@ -999,31 +1032,61 @@
     // Add cleanup on page unload
     window.addEventListener('unload', cleanup);
 
-    // Initialize the app
-    window.onload = async function() {
+    // Add retry functionality
+    function retryInitialization() {
+      const loadingScreen = document.getElementById('loadingScreen');
+      const errorMessage = loadingScreen.querySelector('.error-message');
+      const retryButton = loadingScreen.querySelector('.retry-button');
+      
+      // Reset loading screen
+      errorMessage.style.display = 'none';
+      retryButton.style.display = 'none';
+      loadingScreen.querySelector('p').textContent = 'Loading products, please wait...';
+      
+      // Clear any existing data
+      allProducts = [];
+      currentPage = 1;
+      hasMoreProducts = true;
+      
+      // Restart initialization
+      initializeApp();
+    }
+
+    // Separate initialization function
+    async function initializeApp() {
+      const loadingScreen = document.getElementById('loadingScreen');
+      const errorMessage = loadingScreen.querySelector('.error-message');
+      const retryButton = loadingScreen.querySelector('.retry-button');
+      
       try {
+        // Show loading screen
+        loadingScreen.style.display = 'flex';
+        
         const isAuthenticated = await checkAuthStatus();
         if (!isAuthenticated) {
-          DOM.loadingScreen.style.display = 'none';
-          return;
+          return; // checkAuthStatus will handle the redirect
         }
 
         checkAndShowAdminButton();
 
         // Add timeout for loading
         const loadingTimeout = setTimeout(() => {
-          DOM.loadingScreen.style.display = 'none';
-          showToastMessage('Loading timeout. Please check your connection and try again.', 'error');
-        }, 10000); // 10 second timeout
+          errorMessage.textContent = 'Loading timeout. Please check your connection and try again.';
+          errorMessage.style.display = 'block';
+          retryButton.style.display = 'block';
+          loadingScreen.querySelector('p').textContent = 'Connection Error';
+        }, 10000);
 
         try {
           await fetchAllProducts();
         } catch (error) {
           console.error('Error loading products:', error);
-          showToastMessage('Failed to load products. Please try again.', 'error');
+          errorMessage.textContent = 'Failed to load products. Please try again.';
+          errorMessage.style.display = 'block';
+          retryButton.style.display = 'block';
+          loadingScreen.querySelector('p').textContent = 'Error Loading Products';
         } finally {
           clearTimeout(loadingTimeout);
-          DOM.loadingScreen.style.display = 'none';
         }
 
         const selectedCompanyCookie = getCookie('selectedCompany');
@@ -1034,12 +1097,108 @@
 
         loadExistingOrderData();
         updateSelectedProductsTable();
+        
+        // Hide loading screen on success
+        loadingScreen.style.display = 'none';
       } catch (error) {
         console.error('Initialization error:', error);
-        DOM.loadingScreen.style.display = 'none';
-        showToastMessage('An error occurred while initializing the app. Please try again.', 'error');
+        errorMessage.textContent = 'An error occurred while initializing the app. Please try again.';
+        errorMessage.style.display = 'block';
+        retryButton.style.display = 'block';
+        loadingScreen.querySelector('p').textContent = 'Initialization Error';
       }
-    };
+    }
+
+    // Update window.onload to use the new initialization function
+    window.onload = initializeApp;
+
+    // Update checkAuthStatus to handle errors better
+    async function checkAuthStatus() {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        // No token, redirect to login
+        window.location.href = 'login.html';
+        return false;
+      }
+
+      try {
+        // Add timeout for auth check
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+        const response = await fetch(`${API_BASE_URL}/auth/me`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          },
+          signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return true;
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userInfo');
+        
+        // Show error in loading screen before redirect
+        const loadingScreen = document.getElementById('loadingScreen');
+        const errorMessage = loadingScreen.querySelector('.error-message');
+        const retryButton = loadingScreen.querySelector('.retry-button');
+        
+        errorMessage.textContent = 'Authentication failed. Redirecting to login...';
+        errorMessage.style.display = 'block';
+        loadingScreen.querySelector('p').textContent = 'Authentication Error';
+        
+        // Delay redirect to show error message
+        setTimeout(() => {
+          window.location.href = 'login.html';
+        }, 2000);
+        
+        return false;
+      }
+    }
+
+    // Check if user is admin and show admin button
+    function checkAndShowAdminButton() {
+      const userInfo = localStorage.getItem('userInfo');
+      if (userInfo) {
+        const user = JSON.parse(userInfo);
+        const adminButton = document.getElementById('adminDashboardBtn');
+        if (user.is_admin && adminButton) {
+          adminButton.classList.remove('hidden');
+        }
+      }
+    }
+
+    // Add logout functionality
+    function logout() {
+      fetch(`${API_BASE_URL}/auth/logout`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      })
+      .then(() => {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userInfo');
+        window.location.href = 'login.html';
+      })
+      .catch(error => {
+        console.error('Logout error:', error);
+        // Even if logout fails on server, clear local storage and redirect
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userInfo');
+        window.location.href = 'login.html';
+      });
+    }
 
     // Company Information
     const companies = {
@@ -1576,90 +1735,6 @@
         // Show a message to the user
         showToastMessage('Order loaded for editing. You can modify products and details before generating a new document.', 'info');
       }
-    }
-
-    // Check authentication status
-    async function checkAuthStatus() {
-      const token = localStorage.getItem('authToken');
-      if (!token) {
-        // No token, redirect to login
-        window.location.href = 'login.html';
-        return false;
-      }
-
-      try {
-        // Add timeout for auth check
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-
-        // Verify token with backend
-        const response = await fetch(`${API_BASE_URL}/auth/me`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache'
-          },
-          signal: controller.signal
-        });
-
-        clearTimeout(timeoutId);
-
-        if (!response.ok) {
-          // Token is invalid, redirect to login
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('userInfo');
-          window.location.href = 'login.html';
-          return false;
-        }
-
-        const data = await response.json();
-        return true;
-      } catch (error) {
-        console.error('Auth check failed:', error);
-        if (error.name === 'AbortError') {
-          showToastMessage('Authentication request timed out. Please check your connection.', 'error');
-        } else {
-          showToastMessage('Authentication failed. Please try again.', 'error');
-        }
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('userInfo');
-        window.location.href = 'login.html';
-        return false;
-      }
-    }
-
-    // Check if user is admin and show admin button
-    function checkAndShowAdminButton() {
-      const userInfo = localStorage.getItem('userInfo');
-      if (userInfo) {
-        const user = JSON.parse(userInfo);
-        const adminButton = document.getElementById('adminDashboardBtn');
-        if (user.is_admin && adminButton) {
-          adminButton.classList.remove('hidden');
-        }
-      }
-    }
-
-    // Add logout functionality
-    function logout() {
-      fetch(`${API_BASE_URL}/auth/logout`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        }
-      })
-      .then(() => {
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('userInfo');
-        window.location.href = 'login.html';
-      })
-      .catch(error => {
-        console.error('Logout error:', error);
-        // Even if logout fails on server, clear local storage and redirect
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('userInfo');
-        window.location.href = 'login.html';
-      });
     }
   </script>
 
