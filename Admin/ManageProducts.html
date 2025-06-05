@@ -8,8 +8,6 @@
     <!-- Add within the <head> section -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
     <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
-    <!-- SheetJS for Excel export -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <style>
         /* Existing styles from your code... */
@@ -608,11 +606,6 @@
             <button id="manageCarModelsBtn" class="action-btn category-btn">
                 <span class="button-icon">🚘</span> Manage Car Models
             </button>
-
-            <!-- Export to Excel Button -->
-            <button id="exportToExcelBtn" class="action-btn" style="background-color: #28a745;">
-                <span class="button-icon">📊</span> Export to Excel
-            </button>
         </div>
 
         <!-- Filter Menu -->
@@ -1210,9 +1203,6 @@
                 const filterRoom = document.getElementById('filterRoom');
                 const filterColourTape = document.getElementById('filterColourTape');
 
-                // Export Button Element
-                const exportToExcelBtn = document.getElementById('exportToExcelBtn');
-
                 // **Data Storage**
                 let allProducts = []; // To store all fetched products
 
@@ -1645,79 +1635,6 @@
 
                     // Re-render with filtered results
                     renderProductsTable(filtered);
-                }
-
-                /**
-                 * Export all products to Excel file
-                 */
-                function exportToExcel() {
-                    try {
-                        // Show loading message
-                        showStatusMessage('Preparing Excel export...', 'warning');
-
-                        // Prepare data for export
-                        const exportData = allProducts.map(product => ({
-                            'Item Code': product.item_code,
-                            'Room': product.room_name,
-                            'Item Name': product.item_name,
-                            'Car Brand': product.car_brand || 'N/A',
-                            'Car Model': product.car_model || 'N/A',
-                            'Category': capitalizeWords(product.product_category.replace(/_/g, ' ')),
-                            'Available Stock': product.available_stock,
-                            'Low Stock Threshold': product.low_stock_threshold || 5,
-                            'Location': product.location || 'N/A',
-                            'Colour Tape': product.colour_tape,
-                            'Unit Retail Price (ZAR)': parseFloat(product.unit_retail_price).toFixed(2),
-                            'Wholesale Price (ZAR)': parseFloat(product.wholesale_price).toFixed(2),
-                            'Unit Cost (ZAR)': parseFloat(product.unit_cost).toFixed(2),
-                            'Profit (ZAR)': parseFloat(product.profit).toFixed(2),
-                            'Supplier Code': product.supplier_code || 'N/A',
-                            'Additional Comments': product.additional_comments || 'None'
-                        }));
-
-                        // Create workbook and worksheet
-                        const wb = XLSX.utils.book_new();
-                        const ws = XLSX.utils.json_to_sheet(exportData);
-
-                        // Set column widths for better readability
-                        const colWidths = [
-                            { wch: 12 }, // Item Code
-                            { wch: 15 }, // Room
-                            { wch: 30 }, // Item Name
-                            { wch: 15 }, // Car Brand
-                            { wch: 15 }, // Car Model
-                            { wch: 20 }, // Category
-                            { wch: 12 }, // Available Stock
-                            { wch: 15 }, // Low Stock Threshold
-                            { wch: 15 }, // Location
-                            { wch: 12 }, // Colour Tape
-                            { wch: 18 }, // Unit Retail Price
-                            { wch: 18 }, // Wholesale Price
-                            { wch: 15 }, // Unit Cost
-                            { wch: 15 }, // Profit
-                            { wch: 15 }, // Supplier Code
-                            { wch: 25 }  // Additional Comments
-                        ];
-                        ws['!cols'] = colWidths;
-
-                        // Add worksheet to workbook
-                        XLSX.utils.book_append_sheet(wb, ws, 'Products');
-
-                        // Generate filename with current date
-                        const now = new Date();
-                        const dateStr = now.toISOString().split('T')[0]; // YYYY-MM-DD format
-                        const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '-'); // HH-MM-SS format
-                        const filename = `Shans_Products_Database_${dateStr}_${timeStr}.xlsx`;
-
-                        // Save file
-                        XLSX.writeFile(wb, filename);
-
-                        // Show success message
-                        showStatusMessage(`Excel file exported successfully! (${allProducts.length} products)`, 'success');
-                    } catch (error) {
-                        console.error('Error exporting to Excel:', error);
-                        showStatusMessage('Failed to export Excel file. Please try again.', 'error');
-                    }
                 }
 
                 /**
@@ -3066,9 +2983,6 @@
                     carModelsOverlay.setAttribute('aria-hidden', 'true');
                     addCarModelForm.reset();
                 }
-
-                // Event listener for export button
-                exportToExcelBtn.addEventListener('click', exportToExcel);
 
                 // Event listeners for categories
                 manageCategoriesBtn.addEventListener('click', openCategoriesModal);
