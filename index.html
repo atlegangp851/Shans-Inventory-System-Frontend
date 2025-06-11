@@ -9,6 +9,7 @@
   <meta name="theme-color" content="#ffffff">
   <meta name="format-detection" content="telephone=no">
   <title>Shans System</title>
+  <script src="auth-utils.js"></script>
   <style>
     /* Add hardware acceleration for animations and transitions */
     * {
@@ -153,6 +154,33 @@
       border: 1px solid #ddd;
       border-radius: 4px;
       box-sizing: border-box;
+    }
+
+    /* Fix checkbox styling - override the width: 100% rule */
+    input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      padding: 0;
+      margin: 0;
+      margin-right: 10px;
+      vertical-align: middle;
+      cursor: pointer;
+      appearance: auto; /* Ensure native checkbox appearance */
+      -webkit-appearance: checkbox; /* For Safari */
+      -moz-appearance: checkbox; /* For Firefox */
+    }
+
+    /* Checkbox container styling */
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .checkbox-container label {
+      margin: 0;
+      cursor: pointer;
+      user-select: none; /* Prevent text selection when clicking */
     }
     textarea {
       resize: vertical;
@@ -678,9 +706,9 @@
     <!-- Shipping Information Section -->
     <div class="section">
       <h2>Shipping Information</h2>
-      <div style="display: flex; gap: 10px; align-items: center;">
-        <label for="sameAsBilling">Ship to the same address as billing</label>
+      <div class="checkbox-container">
         <input type="checkbox" id="sameAsBilling" checked>
+        <label for="sameAsBilling">Ship to the same address as billing</label>
       </div>
 
       <div id="shippingInfo" class="hidden">
@@ -739,9 +767,9 @@
         </div>
       </div>
 
-      <div style="display: flex; align-items: center;">
-        <label for="Tax">Add Tax</label>
+      <div class="checkbox-container">
         <input type="checkbox" id="Tax" checked>
+        <label for="Tax">Add Tax</label>
       </div>
 
       <!-- Display the calculated values -->
@@ -784,7 +812,7 @@
     let allProducts = [];
     let newProductCounter = 1;
 
-    const API_BASE_URL = 'https://shans-backend-1.onrender.com/api';
+    // API_BASE_URL is now defined in auth-utils.js
     const CURRENCY_SYMBOL = 'R';
     const TAX_RATE = 0.15;
 
@@ -820,33 +848,7 @@
       salespersonNameInput: document.getElementById('salespersonName')
     };
 
-    // Add storage fallback for Huawei devices
-    const storage = {
-      get: function(key) {
-        try {
-          return localStorage.getItem(key);
-        } catch (e) {
-          console.warn('localStorage not available, using sessionStorage');
-          return sessionStorage.getItem(key);
-        }
-      },
-      set: function(key, value) {
-        try {
-          localStorage.setItem(key, value);
-        } catch (e) {
-          console.warn('localStorage not available, using sessionStorage');
-          sessionStorage.setItem(key, value);
-        }
-      },
-      remove: function(key) {
-        try {
-          localStorage.removeItem(key);
-        } catch (e) {
-          console.warn('localStorage not available, using sessionStorage');
-          sessionStorage.removeItem(key);
-        }
-      }
-    };
+    // Storage object is now defined in auth-utils.js
 
     // Optimized debounce function
     function debounce(func, wait) {
@@ -868,12 +870,10 @@
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
 
-        const response = await fetch(`${API_BASE_URL}/products?page=${currentPage}&limit=${PRODUCTS_PER_PAGE}`, {
-          signal: controller.signal,
-          headers: {
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache'
-          }
+        // Add cache busting parameter to prevent cached responses
+        const cacheBuster = `&_t=${Date.now()}`;
+        const response = await fetch(`${API_BASE_URL}/products?page=${currentPage}&limit=${PRODUCTS_PER_PAGE}${cacheBuster}`, {
+          signal: controller.signal
         });
 
         clearTimeout(timeoutId);
@@ -890,9 +890,12 @@
         
         allProducts = [...allProducts, ...newProducts];
         currentPage++;
-        
-        // Update UI with new products
-        displayFilteredProducts();
+
+        // Only update UI if user is actively searching
+        const searchTerm = DOM.productSearchInput.value.toLowerCase().trim();
+        if (searchTerm.length > 0) {
+          displayFilteredProducts();
+        }
       } catch (error) {
         console.error('Error fetching products:', error);
         if (error.name === 'AbortError') {
@@ -915,15 +918,21 @@
 
     // Optimized product display with virtual scrolling
     function displayFilteredProducts() {
-      const searchTerm = DOM.productSearchInput.value.toLowerCase();
-      const filteredProducts = allProducts.filter(product =>
-        product.item_name.toLowerCase().includes(searchTerm)
-      );
+      const searchTerm = DOM.productSearchInput.value.toLowerCase().trim();
 
       // Clear existing products
       DOM.productList.innerHTML = '';
 
-      if (filteredProducts.length === 0 && searchTerm !== '') {
+      // Only show products if user has typed something (minimum 1 character)
+      if (searchTerm.length === 0) {
+        return; // Don't show any products when search is empty
+      }
+
+      const filteredProducts = allProducts.filter(product =>
+        product.item_name.toLowerCase().includes(searchTerm)
+      );
+
+      if (filteredProducts.length === 0) {
         const li = document.createElement('li');
         li.textContent = 'No products found';
         li.style.cursor = 'default';
@@ -985,6 +994,23 @@
 
     // Optimized event listeners
     DOM.productSearchInput.addEventListener('input', debouncedSearch, { passive: true });
+
+    // Clear dropdown when user clicks away or clears the search
+    DOM.productSearchInput.addEventListener('blur', () => {
+      // Small delay to allow clicking on dropdown items
+      setTimeout(() => {
+        DOM.productList.innerHTML = '';
+      }, 150);
+    });
+
+    // Clear dropdown when search is cleared
+    DOM.productSearchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        DOM.productSearchInput.value = '';
+        DOM.productList.innerHTML = '';
+      }
+    });
+
     DOM.sameAsBillingCheckbox.addEventListener('change', toggleShippingInfo, { passive: true });
     DOM.taxCheckbox.addEventListener('change', () => {
       requestAnimationFrame(updateSelectedProductsTable);
@@ -1024,25 +1050,67 @@
       const row = document.createElement('div');
       row.className = 'div-table-row';
 
-      // Create cells using document fragment
-      const fragment = document.createDocumentFragment();
-      
-      // Add cells to fragment
-      fragment.appendChild(createNameCell(product));
-      fragment.appendChild(createQuantityCell(product));
-      
-      if (DOM.taxCheckbox.checked) {
-        fragment.appendChild(createPriceCell(product, true));
-        fragment.appendChild(createTaxCell(product));
-        fragment.appendChild(createTotalCell(product));
-      } else {
-        fragment.appendChild(createPriceCell(product, false));
-        fragment.appendChild(createTotalCell(product));
+      // Product name cell
+      const nameCell = document.createElement('div');
+      nameCell.className = 'div-table-cell product-column';
+      nameCell.textContent = product.name;
+      if (product.is_new) {
+        nameCell.innerHTML += '<span class="new-product-label">(NEW)</span>';
       }
-      
-      fragment.appendChild(createActionCell(index));
-      
-      row.appendChild(fragment);
+      row.appendChild(nameCell);
+
+      // Quantity cell
+      const qtyCell = document.createElement('div');
+      qtyCell.className = 'div-table-cell qty-column';
+      qtyCell.textContent = product.quantity;
+      qtyCell.style.fontWeight = '700';
+      qtyCell.style.textAlign = 'center';
+      row.appendChild(qtyCell);
+
+      if (DOM.taxCheckbox.checked) {
+        // Price cell (net price when tax is included)
+        const priceCell = document.createElement('div');
+        priceCell.className = 'div-table-cell price-column';
+        const netPrice = product.price * (1 - TAX_RATE);
+        priceCell.textContent = `R ${Math.round(netPrice)}`;
+        row.appendChild(priceCell);
+
+        // Tax cell
+        const taxCell = document.createElement('div');
+        taxCell.className = 'div-table-cell price-column tax-column';
+        const taxPerUnit = product.price * TAX_RATE;
+        taxCell.textContent = `R ${Math.round(taxPerUnit)}`;
+        row.appendChild(taxCell);
+
+        // Total cell
+        const totalCell = document.createElement('div');
+        totalCell.className = 'div-table-cell price-column';
+        const lineTotal = product.price * product.quantity;
+        totalCell.textContent = `R ${Math.round(lineTotal)}`;
+        row.appendChild(totalCell);
+      } else {
+        // Price cell (full price when no tax)
+        const priceCell = document.createElement('div');
+        priceCell.className = 'div-table-cell price-column';
+        priceCell.textContent = `R ${Math.round(product.price)}`;
+        row.appendChild(priceCell);
+
+        // Total cell
+        const totalCell = document.createElement('div');
+        totalCell.className = 'div-table-cell price-column';
+        const lineTotal = product.price * product.quantity;
+        totalCell.textContent = `R ${Math.round(lineTotal)}`;
+        row.appendChild(totalCell);
+      }
+
+      // Action cell (remove button)
+      const actionCell = document.createElement('div');
+      actionCell.className = 'div-table-cell';
+      actionCell.style.textAlign = 'center';
+      actionCell.style.width = '40px';
+      actionCell.innerHTML = `<span class="remove-x" onclick="removeProduct(${index})">✕</span>`;
+      row.appendChild(actionCell);
+
       return row;
     }
 
@@ -1090,9 +1158,12 @@
         // Show loading screen
         loadingScreen.style.display = 'flex';
         
-        const isAuthenticated = await checkAuthStatus();
+        const isAuthenticated = await initAuth({
+          requireAuth: true,
+          showLoading: true
+        });
         if (!isAuthenticated) {
-          return; // checkAuthStatus will handle the redirect
+          return; // initAuth will handle the redirect
         }
 
         checkAndShowAdminButton();
@@ -1140,95 +1211,14 @@
     // Update window.onload to use the new initialization function
     window.onload = initializeApp;
 
-    // Update checkAuthStatus to use storage fallback
-    async function checkAuthStatus() {
-      const token = storage.get('authToken');
-      if (!token) {
-        // No token, redirect to login
-        window.location.href = 'login.html';
-        return false;
-      }
-
-      try {
-        // Add timeout for auth check
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
-
-        const response = await fetch(`${API_BASE_URL}/auth/me`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache'
-          },
-          signal: controller.signal
-        });
-
-        clearTimeout(timeoutId);
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        return true;
-      } catch (error) {
-        console.error('Auth check failed:', error);
-        storage.remove('authToken');
-        storage.remove('userInfo');
-        
-        // Show error in loading screen before redirect
-        const loadingScreen = document.getElementById('loadingScreen');
-        const errorMessage = loadingScreen.querySelector('.error-message');
-        
-        errorMessage.textContent = 'Authentication failed. Redirecting to login...';
-        errorMessage.style.display = 'block';
-        loadingScreen.querySelector('p').textContent = 'Authentication Error';
-        
-        // Delay redirect to show error message
-        setTimeout(() => {
-          window.location.href = 'login.html';
-        }, 2000);
-        
-        return false;
-      }
-    }
-
-    // Update checkAndShowAdminButton to use storage fallback
+    // Update checkAndShowAdminButton to use shared auth utilities
     function checkAndShowAdminButton() {
-      const userInfo = storage.get('userInfo');
-      if (userInfo) {
-        try {
-          const user = JSON.parse(userInfo);
-          const adminButton = document.getElementById('adminDashboardBtn');
-          if (user.is_admin && adminButton) {
-            adminButton.classList.remove('hidden');
-          }
-        } catch (e) {
-          console.error('Error parsing user info:', e);
+      if (isAdmin()) {
+        const adminButton = document.getElementById('adminDashboardBtn');
+        if (adminButton) {
+          adminButton.classList.remove('hidden');
         }
       }
-    }
-
-    // Update logout to use storage fallback
-    function logout() {
-      fetch(`${API_BASE_URL}/auth/logout`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${storage.get('authToken')}`
-        }
-      })
-      .then(() => {
-        storage.remove('authToken');
-        storage.remove('userInfo');
-        window.location.href = 'login.html';
-      })
-      .catch(error => {
-        console.error('Logout error:', error);
-        // Even if logout fails on server, clear storage and redirect
-        storage.remove('authToken');
-        storage.remove('userInfo');
-        window.location.href = 'login.html';
-      });
     }
 
     // Company Information
@@ -1392,6 +1382,7 @@
 
       updateSelectedProductsTable();
       DOM.productSearchInput.value = '';
+      DOM.productList.innerHTML = ''; // Clear the dropdown
 
       // Clear the stored item_code and room_id
       delete DOM.productSearchInput.dataset.itemCode;

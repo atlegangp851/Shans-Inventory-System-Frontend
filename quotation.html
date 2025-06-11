@@ -13,6 +13,8 @@
   <!-- Add performance optimization files -->
   <link rel="stylesheet" href="Assets/performance.css">
   <script src="Assets/performance.js"></script>
+  <!-- Add authentication utilities -->
+  <script src="auth-utils.js"></script>
   <style>
     /* Basic Reset */
     * {
@@ -1211,7 +1213,13 @@
       window.location.href = 'index.html';
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', async function() {
+      // Check authentication first
+      const isAuthenticated = await initAuth({ requireAuth: true, showLoading: false });
+      if (!isAuthenticated) {
+        return; // initAuth will handle the redirect
+      }
+
       // Check if this is a new session by looking at the referrer
       if (document.referrer.includes('index.html')) {
         // Coming from index.html, this is likely a new quotation

@@ -225,6 +225,117 @@
         opacity: 0;
       }
     }
+
+    /* Confirmation and Verification Modal Styles */
+    .confirmation-modal, .verification-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .confirmation-modal-content, .verification-modal-content {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateY(-50px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .verification-code-input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #ddd;
+      border-radius: 5px;
+      font-size: 18px;
+      text-align: center;
+      letter-spacing: 2px;
+      margin-bottom: 20px;
+      box-sizing: border-box;
+      transition: border-color 0.3s ease;
+    }
+
+    .verification-code-input:focus {
+      outline: none;
+      border-color: #4CAF50;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .modal-button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s ease;
+    }
+
+    .modal-button.delete {
+      background-color: #d32f2f;
+      color: white;
+    }
+
+    .modal-button.delete:hover {
+      background-color: #b71c1c;
+    }
+
+    .modal-button.cancel {
+      background-color: #666;
+      color: white;
+    }
+
+    .modal-button.cancel:hover {
+      background-color: #555;
+    }
+
+    /* Mobile responsive for modals */
+    @media (max-width: 600px) {
+      .confirmation-modal-content, .verification-modal-content {
+        padding: 20px;
+        margin: 20px;
+        max-width: none;
+      }
+
+      .modal-buttons {
+        flex-direction: column;
+      }
+
+      .modal-button {
+        width: 100%;
+        margin-bottom: 10px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -290,82 +401,124 @@
     </div>
   </div>
 
+  <script src="../auth-utils.js"></script>
   <script>
     // Define the API URLs
     const ROOMS_API_URL = 'https://shans-backend-1.onrender.com/api/rooms';
     const PRODUCTS_API_URL = 'https://shans-backend-1.onrender.com/api/products';
-    const API_BASE_URL = 'https://shans-backend-1.onrender.com/api';
+    // API_BASE_URL is now defined in auth-utils.js
 
-    // Check authentication status
+    // Enhanced authentication check with better error handling
     async function checkAuthStatus() {
-      const token = localStorage.getItem('authToken');
-      const userInfo = localStorage.getItem('userInfo');
+      const token = storage.get('authToken');
+      const userInfo = storage.get('userInfo');
 
       if (!token || !userInfo) {
-        window.location.href = '../login.html';
-        return false;
-      }
-
-      const user = JSON.parse(userInfo);
-      if (!user.is_admin) {
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('userInfo');
-        window.location.href = '../login.html';
+        showToast('Please log in to access this page', 'error');
+        setTimeout(() => {
+          window.location.href = '../login.html';
+        }, 2000);
         return false;
       }
 
       try {
-        // Verify token with backend
-        const response = await fetch(`${API_BASE_URL}/auth/me`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
+        const user = JSON.parse(userInfo);
+        if (!user.is_admin) {
+          showToast('Admin access required', 'error');
+          storage.remove('authToken');
+          storage.remove('userInfo');
+          setTimeout(() => {
+            window.location.href = '../login.html';
+          }, 2000);
+          return false;
+        }
+
+        // Check if we have a recent auth check (within 5 minutes)
+        const lastCheck = storage.get('lastAuthCheck');
+        const now = Date.now();
+        if (lastCheck && (now - parseInt(lastCheck)) < 5 * 60 * 1000) {
+          return true; // Skip server validation if recent check
+        }
+
+        // Verify token with backend with timeout and retry
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+        try {
+          const response = await fetch(`${API_BASE_URL}/auth/me`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            },
+            signal: controller.signal
+          });
+
+          clearTimeout(timeoutId);
+
+          if (response.ok) {
+            const data = await response.json();
+            if (data.user.is_admin) {
+              storage.set('lastAuthCheck', now.toString());
+              return true;
+            } else {
+              throw new Error('Admin privileges required');
+            }
+          } else if (response.status === 401 || response.status === 403) {
+            throw new Error('Authentication failed');
+          } else {
+            throw new Error(`Server error: ${response.status}`);
           }
-        });
+        } catch (fetchError) {
+          clearTimeout(timeoutId);
 
-        if (!response.ok) {
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('userInfo');
-          window.location.href = '../login.html';
-          return false;
+          // If it's a network error and we have cached user info, allow access
+          if (fetchError.name === 'AbortError' || fetchError.message.includes('fetch')) {
+            console.warn('Network error during auth check, using cached credentials');
+            showToast('Using cached authentication (network issues)', 'info');
+            return true; // Allow access with cached credentials
+          }
+          throw fetchError;
         }
 
-        const data = await response.json();
-        if (!data.user.is_admin) {
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('userInfo');
-          window.location.href = '../login.html';
-          return false;
-        }
-
-        return true;
       } catch (error) {
         console.error('Auth check failed:', error);
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('userInfo');
-        window.location.href = '../login.html';
+        showToast(`Authentication error: ${error.message}`, 'error');
+        storage.remove('authToken');
+        storage.remove('userInfo');
+        storage.remove('lastAuthCheck');
+        setTimeout(() => {
+          window.location.href = '../login.html';
+        }, 3000);
         return false;
       }
     }
 
-    // Logout functionality
+    // Logout functionality with better error handling
     function logout() {
-      fetch(`${API_BASE_URL}/auth/logout`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        }
-      })
-      .then(() => {
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('userInfo');
+      showToast('Logging out...', 'info');
+
+      const token = storage.get('authToken');
+
+      // Call logout endpoint (don't wait for response)
+      if (token) {
+        fetch(`${API_BASE_URL}/auth/logout`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }).catch(error => {
+          console.warn('Logout API call failed:', error);
+        });
+      }
+
+      // Clear storage and redirect
+      storage.remove('authToken');
+      storage.remove('userInfo');
+      storage.remove('lastAuthCheck');
+
+      showToast('Logged out successfully', 'success');
+      setTimeout(() => {
         window.location.href = 'login.html';
-      })
-      .catch(error => {
-        console.error('Logout error:', error);
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('userInfo');
-        window.location.href = 'login.html';
-      });
+      }, 1000);
     }
 
     // Get DOM elements
@@ -420,10 +573,35 @@
      */
     async function fetchRooms() {
       try {
-        const response = await fetch(ROOMS_API_URL);
-        if (!response.ok) {
-          throw new Error(`Network response was not ok (${response.status})`);
+        const token = storage.get('authToken');
+        if (!token) {
+          throw new Error('No authentication token found');
         }
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+        const response = await fetch(ROOMS_API_URL, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          if (response.status === 401 || response.status === 403) {
+            showToast('Authentication expired. Please log in again.', 'error');
+            setTimeout(() => {
+              window.location.href = '../login.html';
+            }, 2000);
+            return;
+          }
+          throw new Error(`Server error: ${response.status}`);
+        }
+
         const rooms = await response.json();
 
         // Clear existing room blocks except the add-room block
@@ -434,9 +612,19 @@
           const roomElement = createRoomBlock(room);
           roomGrid.insertBefore(roomElement, addRoomBlock);
         });
+
+        showToast(`Loaded ${rooms.length} rooms successfully`, 'success');
+
       } catch (error) {
         console.error('Error fetching rooms:', error);
-        showToast('Failed to load rooms. Please try again later.', 'error');
+
+        if (error.name === 'AbortError') {
+          showToast('Request timed out. Please check your connection and try again.', 'error');
+        } else if (error.message.includes('fetch')) {
+          showToast('Network error. Please check if the server is running.', 'error');
+        } else {
+          showToast(`Failed to load rooms: ${error.message}`, 'error');
+        }
       }
     }
 
@@ -591,41 +779,302 @@
     });
 
     /**
-     * Handle Delete Room action
+     * Handle Delete Room action with email verification
      * @param {number} id - The ID of the room to delete
      */
-     async function deleteRoom(id) {
-    if (!confirm('Are you sure you want to delete this room? This will also delete all products linked to this room.')) return;
+    async function deleteRoom(id) {
+      const roomBlock = document.querySelector(`.delete-button[data-id='${id}']`).parentElement;
+      const roomName = roomBlock.querySelector('h3').textContent;
 
-    try {
-        // Delete the room (the backend will handle cascading deletion of associated products)
-        const response = await fetch(`${ROOMS_API_URL}/${id}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json'
-            }
+      // Show custom confirmation modal instead of browser alert
+      showConfirmationModal(id, roomName);
+    }
+
+    /**
+     * Show custom confirmation modal
+     */
+    function showConfirmationModal(roomId, roomName) {
+      const modalHTML = `
+        <div id="confirmationModal" style="
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background-color: rgba(0, 0, 0, 0.5);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          z-index: 1000;
+        ">
+          <div style="
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            max-width: 450px;
+            width: 90%;
+            text-align: center;
+          ">
+            <h3 style="color: #d32f2f; margin-bottom: 20px;">⚠️ Delete Room Confirmation</h3>
+            <p style="margin-bottom: 15px; font-size: 16px;">
+              Are you sure you want to delete <strong>"${roomName}"</strong>?
+            </p>
+            <p style="margin-bottom: 20px; color: #666; font-size: 14px;">
+              This will also delete all products linked to this room.
+            </p>
+            <div style="background-color: #e3f2fd; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+              <p style="margin: 0; font-size: 14px; color: #1976d2;">
+                📧 A verification code will be sent to<br>
+                <strong>invoicesshans@outlook.com</strong> for confirmation
+              </p>
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: center;">
+              <button
+                onclick="proceedWithDeletion(${roomId}, '${roomName}')"
+                style="
+                  background-color: #d32f2f;
+                  color: white;
+                  padding: 12px 24px;
+                  border: none;
+                  border-radius: 5px;
+                  cursor: pointer;
+                  font-size: 16px;
+                  font-weight: bold;
+                "
+              >
+                Yes, Delete Room
+              </button>
+              <button
+                onclick="closeConfirmationModal()"
+                style="
+                  background-color: #666;
+                  color: white;
+                  padding: 12px 24px;
+                  border: none;
+                  border-radius: 5px;
+                  cursor: pointer;
+                  font-size: 16px;
+                "
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.body.insertAdjacentHTML('beforeend', modalHTML);
+    }
+
+    /**
+     * Close confirmation modal
+     */
+    function closeConfirmationModal() {
+      const modal = document.getElementById('confirmationModal');
+      if (modal) {
+        modal.remove();
+      }
+    }
+
+    /**
+     * Proceed with room deletion after confirmation
+     */
+    async function proceedWithDeletion(id, roomName) {
+      // Close confirmation modal
+      closeConfirmationModal();
+
+      try {
+        // Request verification code
+        showToast('Sending verification code...', 'info');
+
+        const response = await fetch(`${ROOMS_API_URL}/${id}/request-deletion`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          }
         });
 
         if (!response.ok) {
-            if (response.headers.get('content-type')?.includes('application/json')) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to delete the room');
-            } else {
-                throw new Error(`Server error: ${response.status}`);
-            }
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to request verification code');
         }
 
-        // Remove the room block from the UI
-        const roomBlock = document.querySelector(`.delete-button[data-id='${id}']`).parentElement;
-        if (roomBlock) {
-            roomBlock.remove();
-            showToast('Room and its associated products deleted successfully.', 'success');
-        }
-    } catch (error) {
-        console.error('Error deleting room:', error);
-        showToast('Failed to delete room. Please try again later.', 'error');
+        const data = await response.json();
+        showToast('Verification code sent to invoicesshans@outlook.com', 'success');
+
+        // Show verification modal
+        showVerificationModal(id, roomName);
+
+      } catch (error) {
+        console.error('Error requesting room deletion:', error);
+        showToast(`Failed to send verification code: ${error.message}`, 'error');
+      }
     }
-}
+
+    /**
+     * Show verification code input modal
+     */
+    function showVerificationModal(roomId, roomName) {
+      // Create modal HTML
+      const modalHTML = `
+        <div id="verificationModal" style="
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background-color: rgba(0, 0, 0, 0.5);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          z-index: 1000;
+        ">
+          <div style="
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+          ">
+            <h3 style="color: #d32f2f; margin-bottom: 20px;">Delete Room Verification</h3>
+            <p style="margin-bottom: 20px;">
+              Enter the verification code sent to<br>
+              <strong>invoicesshans@outlook.com</strong>
+            </p>
+            <p style="margin-bottom: 20px; color: #666;">
+              Room: <strong>${roomName}</strong>
+            </p>
+            <input
+              type="text"
+              id="verificationCodeInput"
+              placeholder="Enter 6-digit code"
+              maxlength="6"
+              style="
+                width: 100%;
+                padding: 12px;
+                border: 2px solid #ddd;
+                border-radius: 5px;
+                font-size: 18px;
+                text-align: center;
+                letter-spacing: 2px;
+                margin-bottom: 20px;
+                box-sizing: border-box;
+              "
+            >
+            <div style="display: flex; gap: 10px; justify-content: center;">
+              <button
+                onclick="verifyAndDeleteRoom(${roomId})"
+                style="
+                  background-color: #d32f2f;
+                  color: white;
+                  padding: 10px 20px;
+                  border: none;
+                  border-radius: 5px;
+                  cursor: pointer;
+                  font-size: 16px;
+                "
+              >
+                Verify & Delete
+              </button>
+              <button
+                onclick="closeVerificationModal()"
+                style="
+                  background-color: #666;
+                  color: white;
+                  padding: 10px 20px;
+                  border: none;
+                  border-radius: 5px;
+                  cursor: pointer;
+                  font-size: 16px;
+                "
+              >
+                Cancel
+              </button>
+            </div>
+            <p style="margin-top: 15px; font-size: 12px; color: #666;">
+              Code expires in 5 minutes
+            </p>
+          </div>
+        </div>
+      `;
+
+      // Add modal to page
+      document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+      // Focus on input
+      document.getElementById('verificationCodeInput').focus();
+
+      // Add enter key listener
+      document.getElementById('verificationCodeInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          verifyAndDeleteRoom(roomId);
+        }
+      });
+    }
+    /**
+     * Verify code and delete room
+     */
+    async function verifyAndDeleteRoom(roomId) {
+      const codeInput = document.getElementById('verificationCodeInput');
+      const verificationCode = codeInput.value.trim();
+
+      if (!verificationCode) {
+        showToast('Please enter the verification code', 'error');
+        return;
+      }
+
+      if (verificationCode.length !== 6) {
+        showToast('Verification code must be 6 digits', 'error');
+        return;
+      }
+
+      try {
+        showToast('Verifying code...', 'info');
+
+        const response = await fetch(`${ROOMS_API_URL}/${roomId}/verify-deletion`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          },
+          body: JSON.stringify({ verificationCode })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || 'Verification failed');
+        }
+
+        // Success - remove room from UI
+        const roomBlock = document.querySelector(`.delete-button[data-id='${roomId}']`).parentElement;
+        if (roomBlock) {
+          roomBlock.remove();
+        }
+
+        closeVerificationModal();
+        showToast(data.message, 'success');
+
+      } catch (error) {
+        console.error('Error verifying deletion:', error);
+        showToast(`Verification failed: ${error.message}`, 'error');
+      }
+    }
+
+    /**
+     * Close verification modal
+     */
+    function closeVerificationModal() {
+      const modal = document.getElementById('verificationModal');
+      if (modal) {
+        modal.remove();
+      }
+    }
+
     /**
      * Handle Delete Room form submission
      * @param {number} id - The ID of the room to delete
@@ -665,15 +1114,41 @@
       }
     });
 
-    // Initialize page
+    // Initialize page with better error handling
     window.onload = async function() {
-      const isAuthenticated = await checkAuthStatus();
-      if (!isAuthenticated) {
-        return;
+      try {
+        showToast('Loading rooms...', 'info');
+
+        const isAuthenticated = await checkAuthStatus();
+        if (!isAuthenticated) {
+          return; // checkAuthStatus will handle the redirect
+        }
+
+        // Fetch and display rooms on page load
+        await fetchRooms();
+
+      } catch (error) {
+        console.error('Page initialization error:', error);
+        showToast('Failed to initialize page. Please refresh and try again.', 'error');
       }
-      // Fetch and display rooms on page load
-      fetchRooms();
     };
+
+    // Also handle page visibility changes to re-check auth when user returns
+    document.addEventListener('visibilitychange', async function() {
+      if (!document.hidden) {
+        // Page became visible, check if we're still authenticated
+        const token = storage.get('authToken');
+        if (token) {
+          const lastCheck = storage.get('lastAuthCheck');
+          const now = Date.now();
+          // If last check was more than 10 minutes ago, re-verify
+          if (!lastCheck || (now - parseInt(lastCheck)) > 10 * 60 * 1000) {
+            console.log('Re-checking authentication after page visibility change');
+            await checkAuthStatus();
+          }
+        }
+      }
+    });
   </script>
 </body>
 </html>
