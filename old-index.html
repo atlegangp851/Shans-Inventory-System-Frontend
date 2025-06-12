@@ -1,0 +1,1847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <!-- Add performance-focused meta tags -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#ffffff">
+    <meta name="format-detection" content="telephone=no">
+    <title>Shans System</title>
+    <style>
+        /* Add hardware acceleration for animations and transitions */
+        * {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+            backface-visibility: hidden;
+            transform: translateZ(0);
+            will-change: transform;
+        }
+
+        /* Optimize input elements for touch */
+        input, select, textarea {
+            -webkit-appearance: none;
+            appearance: none;
+            user-select: text;
+            -webkit-user-select: text;
+        }
+
+        /* Optimize animations */
+        @keyframes spin {
+            0% { transform: rotate(0deg) translateZ(0); }
+            100% { transform: rotate(360deg) translateZ(0); }
+        }
+
+        /* Optimize loading screen */
+        #loadingScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.95);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transform: translateZ(0);
+            will-change: transform;
+        }
+
+        #loadingScreen .spinner {
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid #3498db;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+            transform: translateZ(0);
+            will-change: transform;
+        }
+
+        #loadingScreen p {
+            color: #333;
+            font-size: 16px;
+            margin: 0;
+            text-align: center;
+        }
+
+        /* Add error message styling */
+        #loadingScreen .error-message {
+            color: #dc3545;
+            margin-top: 10px;
+            text-align: center;
+            max-width: 80%;
+        }
+
+        /* Add retry button styling */
+        #loadingScreen .retry-button {
+            margin-top: 15px;
+            padding: 8px 16px;
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        #loadingScreen .retry-button:hover {
+            background-color: #357abd;
+        }
+
+        /* Optimize table rendering */
+        .div-table {
+            transform: translateZ(0);
+            will-change: transform;
+            contain: content;
+        }
+
+        .div-table-row {
+            contain: content;
+        }
+
+        /* Optimize toast animations */
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateZ(0); }
+            10% { opacity: 0.95; transform: translateZ(0); }
+            90% { opacity: 0.95; transform: translateZ(0); }
+            100% { opacity: 0; transform: translateZ(0); }
+        }
+
+        .toast {
+            transform: translateZ(0);
+            will-change: transform, opacity;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0; /* Changed to 0 to accommodate loading screen */
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #333;
+        }
+        .section {
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        input[readonly] {
+            background-color: #e9e9e9;
+            cursor: not-allowed;
+        }
+        button {
+            background-color: #4a90e2;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #81b0e6;
+        }
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: auto;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            word-wrap: break-word;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        #productList {
+            list-style-type: none;
+            padding: 0;
+            margin-top: 10px;
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        #productList li {
+            padding: 8px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            flex-direction: column;
+        }
+        #productList li:hover {
+            background-color: #f0f0f0;
+        }
+        #productList li .product-name {
+            font-weight: bold;
+        }
+        #productList li .product-details {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 3px;
+        }
+        .loader {
+            border: 4px solid #f3f3f3; /* Light grey */
+            border-top: 4px solid #3498db; /* Blue */
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: none;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        /* Div-based Table Styling */
+        .table-container {
+            width: 100%;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+            overflow-x: auto; /* Allow horizontal scrolling on desktop */
+        }
+
+        .div-table {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            background-color: white;
+            font-size: 14px;
+            border: 1px solid #e0e0e0;
+            margin-bottom: 0;
+        }
+
+        .div-table-row {
+            display: flex;
+            flex-direction: row;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .div-table-row:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .div-table-row:hover {
+            background-color: #f0f7ff;
+        }
+
+        .div-table-header {
+            background-color: #f2f2f2;
+            font-weight: bold;
+            border-bottom: 2px solid #d0d0d0;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .div-table-cell {
+            padding: 8px 10px;
+            border-right: 1px solid #e0e0e0;
+            white-space: nowrap; /* No wrapping on desktop */
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: flex;
+            align-items: center;
+        }
+
+        .div-table-cell:last-child {
+            border-right: none;
+        }
+
+        .div-table-heading {
+            color: #333;
+            font-weight: 700; /* Consistent bold weight */
+        }
+
+        /* Column-specific styling */
+        .product-column {
+            flex: 4;
+            min-width: 250px;
+            max-width: 350px;
+            justify-content: flex-start;
+            padding-left: 12px;
+        }
+
+        .qty-column {
+            flex: 0.3;
+            min-width: 30px;
+            max-width: 40px;
+            justify-content: center;
+            font-weight: 700; /* Make it bold */
+            text-align: center;
+            font-size: 13px;
+        }
+
+        .price-column {
+            flex: 0.7;
+            min-width: 70px;
+            justify-content: flex-end;
+            padding-right: 12px;
+            font-size: 13px;
+        }
+
+        /* For the tax column that may be hidden */
+        .tax-column {
+            display: flex; /* Will be toggled with JavaScript */
+        }
+
+        /* Div Table Body */
+        .div-table-body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .new-product-label {
+            color: #ff9900;
+            font-weight: bold;
+            margin-left: 5px;
+            font-size: 12px;
+        }
+
+        /* Stock indicator styles */
+        .stock-available {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .stock-empty {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        /* Remove X styling */
+        .remove-x {
+            color: #ff3b30;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 5px 10px;
+            transition: transform 0.2s ease, color 0.2s ease;
+            display: inline-block;
+        }
+
+        .remove-x:hover {
+            transform: scale(1.2);
+            color: #cc0000;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 830px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                padding: 15px;
+            }
+
+            /* Adjust table for medium screens */
+            .div-table-cell {
+                padding: 6px 8px;
+                font-size: 13px;
+            }
+
+            /* Adjust column widths for medium screens */
+            .product-column {
+                min-width: 180px;
+                flex: 3;
+            }
+
+            .qty-column {
+                min-width: 25px;
+                flex: 0.3;
+                font-size: 12px;
+            }
+
+            .price-column {
+                min-width: 60px;
+                flex: 0.6;
+                font-size: 12px;
+            }
+        }
+
+        /* Specific adjustments for small screens */
+        @media (max-width: 650px) {
+            body {
+                padding: 5px;
+            }
+
+            .container {
+                padding: 12px;
+            }
+
+            /* Header button styling for mobile */
+            .container > div:first-child {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 15px;
+            }
+
+            .container > div:first-child > div {
+                display: flex !important;
+                flex-direction: column;
+                gap: 10px;
+                width: 100%;
+            }
+
+            /* Admin button mobile styling */
+            .admin-nav-button {
+                width: 100% !important;
+                padding: 12px 0 !important;
+                text-align: center;
+                margin-right: 0 !important;
+                font-size: 16px !important;
+                box-sizing: border-box;
+            }
+
+            button {
+                width: 100%;
+                padding: 12px 0;
+                font-size: 16px;
+                margin-right: 0;
+            }
+
+            .loader {
+                width: 25px;
+                height: 25px;
+            }
+
+            .section {
+                padding: 10px;
+            }
+
+            .button-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            /* Adjust table for small screens */
+            .table-container {
+                overflow-x: visible; /* Disable horizontal scrolling on mobile */
+                box-shadow: none;
+                border-radius: 0;
+            }
+
+            .div-table {
+                border-radius: 4px;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            }
+
+            .div-table-cell {
+                padding: 5px 6px;
+                font-size: 12px;
+            }
+
+            .product-column {
+                min-width: 0; /* Remove min-width to allow full flexibility */
+                flex: 2;
+            }
+
+            .qty-column {
+                min-width: 0; /* Remove min-width to allow full flexibility */
+                max-width: none;
+                flex: 0.25;
+                font-size: 11px;
+            }
+
+            .price-column {
+                min-width: 0; /* Remove min-width to allow full flexibility */
+                flex: 0.5;
+                font-size: 11px;
+            }
+        }
+
+        /* Specific adjustments for very small screens */
+        @media (max-width: 480px) {
+            body {
+                padding: 0;
+            }
+
+            .container {
+                padding: 10px;
+            }
+
+            /* Ensure header buttons remain properly styled on very small screens */
+            .admin-nav-button {
+                font-size: 14px !important;
+                padding: 10px 0 !important;
+            }
+
+            button {
+                font-size: 14px;
+                padding: 10px 0;
+            }
+
+            /* Mobile-optimized table */
+            .div-table-cell {
+                padding: 4px 5px;
+                font-size: 11px;
+                white-space: normal; /* Allow text wrapping on mobile */
+            }
+
+            /* Make all table headers consistent size on mobile */
+            .div-table-heading {
+                font-size: 11px !important; /* Override inline styles */
+            }
+
+            /* Adjust column proportions for mobile */
+            .product-column {
+                flex: 1.5;
+            }
+
+            .qty-column {
+                flex: 0.2;
+                font-size: 10px;
+            }
+
+            .price-column {
+                flex: 0.4;
+                font-size: 10px;
+            }
+        }
+        .hidden {
+            display: none;
+        }
+        .remove-button {
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .remove-button:hover {
+            background-color: #e60000;
+        }
+
+        /* Toast Container and Toast Styles */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000; /* on top of loading screen */
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .toast {
+            background-color: #333;
+            color: #fff;
+            padding: 10px 15px;
+            border-radius: 5px;
+            opacity: 0.95;
+            font-size: 14px;
+            animation: fadeInOut 3s forwards;
+        }
+        .toast.success {
+            background-color: #28a745;
+        }
+        .toast.error {
+            background-color: #dc3545;
+        }
+        .toast.info {
+            background-color: #007bff;
+        }
+        @keyframes fadeInOut {
+            0% { opacity: 0; }
+            10% { opacity: 0.95; }
+            90% { opacity: 0.95; }
+            100% { opacity: 0; }
+        }
+
+        /* Admin navigation button styles */
+        .admin-nav-button {
+            background-color: #9b59b6;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-block;
+            transition: background-color 0.3s ease;
+            margin-right: 10px;
+        }
+
+        .admin-nav-button:hover {
+            background-color: #8e44ad;
+            color: white;
+        }
+
+        .admin-nav-button.hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<!-- Loading Screen -->
+<div id="loadingScreen">
+    <div class="spinner"></div>
+    <p>Loading products, please wait...</p>
+    <div class="error-message" style="display: none;"></div>
+    <button class="retry-button" style="display: none;" onclick="retryInitialization()">Retry</button>
+</div>
+
+<!-- Toast Container (for all messages) -->
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h1 style="margin: 0;">Receipt and Quotation Generator</h1>
+        <div style="display: flex; align-items: center;">
+            <a href="Admin/index.html" id="adminDashboardBtn" class="admin-nav-button hidden">Admin Dashboard</a>
+            <button onclick="logout()" style="background-color: #e74c3c; padding: 8px 16px; font-size: 14px;">Logout</button>
+        </div>
+    </div>
+
+    <!-- Company Selection Section -->
+    <div class="section">
+        <h2>Select Company</h2>
+        <label for="companySelect">Choose a company:</label>
+        <select id="companySelect" required>
+            <option value="" disabled selected>Select a company</option>
+            <option value="company1">Shans Accessories PTY LTD</option>
+            <option value="company2">Shans Autosport PTY LTD</option>
+        </select>
+    </div>
+
+    <!-- Customer Information Section -->
+    <div class="section">
+        <h2>Customer Information</h2>
+        <label for="customerName">Name:</label>
+        <input type="text" id="customerName">
+
+        <label for="customerEmail">Email:</label>
+        <input type="email" id="customerEmail">
+
+        <label for="customerAddress">Address:</label>
+        <input type="text" id="customerAddress">
+
+        <label for="customerPhone">Phone:</label>
+        <input type="tel" id="customerPhone">
+
+        <label for="salespersonName">Salesperson Name:</label>
+        <input type="text" id="salespersonName" placeholder="Enter your name...">
+    </div>
+
+    <!-- Shipping Information Section -->
+    <div class="section">
+        <h2>Shipping Information</h2>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <label for="sameAsBilling">Ship to the same address as billing</label>
+            <input type="checkbox" id="sameAsBilling" checked>
+        </div>
+
+        <div id="shippingInfo" class="hidden">
+            <label for="shippingName">Name:</label>
+            <input type="text" id="shippingName">
+
+            <label for="shippingEmail">Email:</label>
+            <input type="email" id="shippingEmail">
+
+            <label for="shippingAddress">Address:</label>
+            <input type="text" id="shippingAddress">
+
+            <label for="shippingPhone">Phone:</label>
+            <input type="tel" id="shippingPhone">
+        </div>
+    </div>
+
+    <!-- Add Products Section -->
+    <div class="section">
+        <h2>Add Products</h2>
+        <label for="productSearch">Search Products:</label>
+        <input type="text" id="productSearch" placeholder="Type to search products or enter new product">
+        <div style="display: flex; align-items: center; margin-bottom: 10px;">
+            <ul id="productList"></ul>
+            <div class="loader" id="searchLoader"></div>
+        </div>
+
+        <label for="quantity">Quantity:</label>
+        <div>
+            <input type="number" id="quantity" value="1" min="1">
+        </div>
+
+        <label for="price">Price (R):</label>
+        <input type="number" id="price" value="0" min="0" step="1">
+
+        <label for="room" class="hidden" id="roomLabel">Room:</label>
+        <input type="text" id="room" class="hidden" placeholder="Select a product to see the room" readonly>
+
+        <button onclick="addSelectedProduct()">Add Product</button>
+    </div>
+
+    <!-- Selected Products and Totals Section -->
+    <div class="section">
+        <h2>Selected Products</h2>
+        <!-- Div-based Table (works on all screen sizes) -->
+        <div class="table-container">
+            <div class="div-table">
+                <!-- Table Header - Will be populated by JavaScript -->
+                <div class="div-table-row div-table-header" id="table-header">
+                    <!-- Header cells will be added dynamically -->
+                </div>
+                <!-- Table Body - Will be populated by JavaScript -->
+                <div class="div-table-body" id="selectedProductsBody">
+                    <!-- Product rows will be added dynamically -->
+                </div>
+            </div>
+        </div>
+
+        <div style="display: flex; align-items: center;">
+            <label for="Tax">Add Tax</label>
+            <input type="checkbox" id="Tax" checked>
+        </div>
+
+        <!-- Display the calculated values -->
+        <p>Product Amount (Subtotal): R<span id="subtotalAmount">0.00</span></p>
+        <p>Tax (15%): R<span id="taxAmount">0.00</span></p>
+        <p>Total Amount: R<span id="totalAmount">0.00</span></p>
+
+        <!-- Comments Section -->
+        <div class="section" style="border:none; padding:0;">
+            <label for="paymentMethod">Payment Method:</label>
+            <select id="paymentMethod">
+                <option value="Cash">Cash</option>
+                <option value="EFT">EFT</option>
+            </select>
+        </div>
+
+        <!-- Added Comments Box -->
+        <div class="section" style="border:none; padding:0;">
+            <label for="comments">Additional Comments:</label>
+            <textarea id="comments" placeholder="Enter any additional comments here..."></textarea>
+        </div>
+
+        <div class="button-group">
+            <button onclick="generateReceipt()">Generate Receipt</button>
+            <button onclick="generateQuotation()">Generate Quotation</button>
+            <button onclick="generateInvoice()">Generate Invoice</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Performance optimization variables
+    const DEBOUNCE_DELAY = 300;
+    const PRODUCTS_PER_PAGE = 20;
+    let currentPage = 1;
+    let isLoading = false;
+    let hasMoreProducts = true;
+    let searchTimeout;
+    let selectedProducts = [];
+    let allProducts = [];
+    let newProductCounter = 1;
+
+    const API_BASE_URL = 'https://shans-backend-1.onrender.com/api';
+    const CURRENCY_SYMBOL = 'R';
+    const TAX_RATE = 0.15;
+
+    // Cache DOM elements
+    const DOM = {
+        productSearchInput: document.getElementById('productSearch'),
+        productList: document.getElementById('productList'),
+        searchLoader: document.getElementById('searchLoader'),
+        roomInput: document.getElementById('room'),
+        roomLabel: document.getElementById('roomLabel'),
+        sameAsBillingCheckbox: document.getElementById('sameAsBilling'),
+        shippingInfoDiv: document.getElementById('shippingInfo'),
+        paymentMethodSelect: document.getElementById('paymentMethod'),
+        taxCheckbox: document.getElementById('Tax'),
+        taxAmountSpan: document.getElementById('taxAmount'),
+        subtotalAmountSpan: document.getElementById('subtotalAmount'),
+        totalAmountSpan: document.getElementById('totalAmount'),
+        tableHeader: document.getElementById('table-header'),
+        selectedProductsBody: document.getElementById('selectedProductsBody'),
+        companySelect: document.getElementById('companySelect'),
+        commentsTextarea: document.getElementById('comments'),
+        loadingScreen: document.getElementById('loadingScreen'),
+        priceInput: document.getElementById('price'),
+        quantityInput: document.getElementById('quantity'),
+        customerNameInput: document.getElementById('customerName'),
+        customerEmailInput: document.getElementById('customerEmail'),
+        customerAddressInput: document.getElementById('customerAddress'),
+        customerPhoneInput: document.getElementById('customerPhone'),
+        shippingNameInput: document.getElementById('shippingName'),
+        shippingEmailInput: document.getElementById('shippingEmail'),
+        shippingAddressInput: document.getElementById('shippingAddress'),
+        shippingPhoneInput: document.getElementById('shippingPhone'),
+        salespersonNameInput: document.getElementById('salespersonName')
+    };
+
+    // Add storage fallback for Huawei devices
+    const storage = {
+        get: function(key) {
+            try {
+                return localStorage.getItem(key);
+            } catch (e) {
+                console.warn('localStorage not available, using sessionStorage');
+                return sessionStorage.getItem(key);
+            }
+        },
+        set: function(key, value) {
+            try {
+                localStorage.setItem(key, value);
+            } catch (e) {
+                console.warn('localStorage not available, using sessionStorage');
+                sessionStorage.setItem(key, value);
+            }
+        },
+        remove: function(key) {
+            try {
+                localStorage.removeItem(key);
+            } catch (e) {
+                console.warn('localStorage not available, using sessionStorage');
+                sessionStorage.removeItem(key);
+            }
+        }
+    };
+
+    // Optimized debounce function
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    // Optimized product fetching with pagination
+    async function fetchAllProducts() {
+        try {
+            isLoading = true;
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
+            const response = await fetch(`${API_BASE_URL}/products?page=${currentPage}&limit=${PRODUCTS_PER_PAGE}`, {
+                signal: controller.signal,
+                headers: {
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache'
+                }
+            });
+
+            clearTimeout(timeoutId);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const newProducts = await response.json();
+
+            if (newProducts.length < PRODUCTS_PER_PAGE) {
+                hasMoreProducts = false;
+            }
+
+            allProducts = [...allProducts, ...newProducts];
+            currentPage++;
+
+            // Update UI with new products
+            displayFilteredProducts();
+        } catch (error) {
+            console.error('Error fetching products:', error);
+            if (error.name === 'AbortError') {
+                showToastMessage('Request timed out. Please check your connection.', 'error');
+            } else {
+                showToastMessage('Failed to load products. Please try again.', 'error');
+            }
+            throw error; // Re-throw to be caught by the caller
+        } finally {
+            isLoading = false;
+        }
+    }
+
+    // Optimized product search with debouncing
+    const debouncedSearch = debounce(() => {
+        DOM.searchLoader.style.display = 'inline-block';
+        displayFilteredProducts();
+        DOM.searchLoader.style.display = 'none';
+    }, DEBOUNCE_DELAY);
+
+    // Optimized product display with virtual scrolling
+    function displayFilteredProducts() {
+        const searchTerm = DOM.productSearchInput.value.toLowerCase();
+        const filteredProducts = allProducts.filter(product =>
+            product.item_name.toLowerCase().includes(searchTerm)
+        );
+
+        // Clear existing products
+        DOM.productList.innerHTML = '';
+
+        if (filteredProducts.length === 0 && searchTerm !== '') {
+            const li = document.createElement('li');
+            li.textContent = 'No products found';
+            li.style.cursor = 'default';
+            DOM.productList.appendChild(li);
+            return;
+        }
+
+        // Group products by name for better performance
+        const productsByName = new Map();
+        filteredProducts.forEach(product => {
+            if (!productsByName.has(product.item_name)) {
+                productsByName.set(product.item_name, []);
+            }
+            productsByName.get(product.item_name).push(product);
+        });
+
+        // Create document fragment for better performance
+        const fragment = document.createDocumentFragment();
+
+        filteredProducts.forEach(product => {
+            const li = document.createElement('li');
+            const hasDuplicates = productsByName.get(product.item_name).length > 1;
+
+            const productNameDiv = document.createElement('div');
+            productNameDiv.className = 'product-name';
+
+            if (hasDuplicates) {
+                productNameDiv.innerHTML = `${product.item_name} <span style="color: #0066cc; font-weight: bold;">(${product.room_name})</span>`;
+            } else {
+                productNameDiv.textContent = product.item_name;
+            }
+
+            const productDetailsDiv = document.createElement('div');
+            productDetailsDiv.className = 'product-details';
+
+            const stockClass = product.available_stock > 0 ? 'stock-available' : 'stock-empty';
+            productDetailsDiv.innerHTML = `Room: <b>${product.room_name || 'N/A'}</b> | Stock: <span class="${stockClass}">${product.available_stock}</span>`;
+
+            li.appendChild(productNameDiv);
+            li.appendChild(productDetailsDiv);
+
+            // Use passive event listener for better touch performance
+            li.addEventListener('click', () => selectProduct(product), { passive: true });
+
+            if (hasDuplicates) {
+                li.style.backgroundColor = '#f0f7ff';
+            }
+
+            fragment.appendChild(li);
+        });
+
+        DOM.productList.appendChild(fragment);
+
+        // Load more products if needed
+        if (hasMoreProducts && !isLoading && DOM.productList.scrollHeight <= DOM.productList.clientHeight + 100) {
+            fetchAllProducts();
+        }
+    }
+
+    // Optimized event listeners
+    DOM.productSearchInput.addEventListener('input', debouncedSearch, { passive: true });
+    DOM.sameAsBillingCheckbox.addEventListener('change', toggleShippingInfo, { passive: true });
+    DOM.taxCheckbox.addEventListener('change', () => {
+        requestAnimationFrame(updateSelectedProductsTable);
+    }, { passive: true });
+
+    // Optimized table updates using requestAnimationFrame
+    function updateSelectedProductsTable() {
+        requestAnimationFrame(() => {
+            DOM.selectedProductsBody.innerHTML = '';
+            updateTableHeader();
+
+            if (selectedProducts.length === 0) {
+                const emptyRow = document.createElement('div');
+                emptyRow.className = 'div-table-row';
+                emptyRow.style.justifyContent = 'center';
+                emptyRow.style.padding = '20px';
+                emptyRow.style.color = '#666';
+                emptyRow.innerHTML = '<i>No products selected yet. Search and add products above.</i>';
+                DOM.selectedProductsBody.appendChild(emptyRow);
+                calculateAndDisplayTotal();
+                return;
+            }
+
+            const fragment = document.createDocumentFragment();
+            selectedProducts.forEach((product, index) => {
+                const row = createProductRow(product, index);
+                fragment.appendChild(row);
+            });
+
+            DOM.selectedProductsBody.appendChild(fragment);
+            calculateAndDisplayTotal();
+        });
+    }
+
+    // Optimized row creation
+    function createProductRow(product, index) {
+        const row = document.createElement('div');
+        row.className = 'div-table-row';
+
+        // Create cells using document fragment
+        const fragment = document.createDocumentFragment();
+
+        // Add cells to fragment
+        fragment.appendChild(createNameCell(product));
+        fragment.appendChild(createQuantityCell(product));
+
+        if (DOM.taxCheckbox.checked) {
+            fragment.appendChild(createPriceCell(product, true));
+            fragment.appendChild(createTaxCell(product));
+            fragment.appendChild(createTotalCell(product));
+        } else {
+            fragment.appendChild(createPriceCell(product, false));
+            fragment.appendChild(createTotalCell(product));
+        }
+
+        fragment.appendChild(createActionCell(index));
+
+        row.appendChild(fragment);
+        return row;
+    }
+
+    // Memory management
+    function cleanup() {
+        selectedProducts = [];
+        allProducts = [];
+        currentPage = 1;
+        hasMoreProducts = true;
+        DOM.productList.innerHTML = '';
+        DOM.selectedProductsBody.innerHTML = '';
+        updateSelectedProductsTable();
+    }
+
+    // Add cleanup on page unload
+    window.addEventListener('unload', cleanup);
+
+    // Add retry functionality
+    function retryInitialization() {
+        const loadingScreen = document.getElementById('loadingScreen');
+        const errorMessage = loadingScreen.querySelector('.error-message');
+        const retryButton = loadingScreen.querySelector('.retry-button');
+
+        // Reset loading screen
+        errorMessage.style.display = 'none';
+        retryButton.style.display = 'none';
+        loadingScreen.querySelector('p').textContent = 'Loading products, please wait...';
+
+        // Clear any existing data
+        allProducts = [];
+        currentPage = 1;
+        hasMoreProducts = true;
+
+        // Restart initialization
+        initializeApp();
+    }
+
+    // Separate initialization function
+    async function initializeApp() {
+        const loadingScreen = document.getElementById('loadingScreen');
+        const errorMessage = loadingScreen.querySelector('.error-message');
+        const retryButton = loadingScreen.querySelector('.retry-button');
+
+        try {
+            // Show loading screen
+            loadingScreen.style.display = 'flex';
+
+            const isAuthenticated = await checkAuthStatus();
+            if (!isAuthenticated) {
+                return; // checkAuthStatus will handle the redirect
+            }
+
+            checkAndShowAdminButton();
+
+            // Add timeout for loading
+            const loadingTimeout = setTimeout(() => {
+                errorMessage.textContent = 'Loading timeout. Please check your connection and try again.';
+                errorMessage.style.display = 'block';
+                retryButton.style.display = 'block';
+                loadingScreen.querySelector('p').textContent = 'Connection Error';
+            }, 10000);
+
+            try {
+                await fetchAllProducts();
+            } catch (error) {
+                console.error('Error loading products:', error);
+                errorMessage.textContent = 'Failed to load products. Please try again.';
+                errorMessage.style.display = 'block';
+                retryButton.style.display = 'block';
+                loadingScreen.querySelector('p').textContent = 'Error Loading Products';
+            } finally {
+                clearTimeout(loadingTimeout);
+            }
+
+            const selectedCompanyCookie = getCookie('selectedCompany');
+            if (selectedCompanyCookie) {
+                const selectedCompany = JSON.parse(selectedCompanyCookie);
+                DOM.companySelect.value = selectedCompany.key;
+            }
+
+            loadExistingOrderData();
+            updateSelectedProductsTable();
+
+            // Hide loading screen on success
+            loadingScreen.style.display = 'none';
+        } catch (error) {
+            console.error('Initialization error:', error);
+            errorMessage.textContent = 'An error occurred while initializing the app. Please try again.';
+            errorMessage.style.display = 'block';
+            retryButton.style.display = 'block';
+            loadingScreen.querySelector('p').textContent = 'Initialization Error';
+        }
+    }
+
+    // Update window.onload to use the new initialization function
+    window.onload = initializeApp;
+
+    // Update checkAuthStatus to use storage fallback
+    async function checkAuthStatus() {
+        const token = storage.get('authToken');
+        if (!token) {
+            // No token, redirect to login
+            window.location.href = 'login.html';
+            return false;
+        }
+
+        try {
+            // Add timeout for auth check
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+            const response = await fetch(`${API_BASE_URL}/auth/me`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache'
+                },
+                signal: controller.signal
+            });
+
+            clearTimeout(timeoutId);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            return true;
+        } catch (error) {
+            console.error('Auth check failed:', error);
+            storage.remove('authToken');
+            storage.remove('userInfo');
+
+            // Show error in loading screen before redirect
+            const loadingScreen = document.getElementById('loadingScreen');
+            const errorMessage = loadingScreen.querySelector('.error-message');
+
+            errorMessage.textContent = 'Authentication failed. Redirecting to login...';
+            errorMessage.style.display = 'block';
+            loadingScreen.querySelector('p').textContent = 'Authentication Error';
+
+            // Delay redirect to show error message
+            setTimeout(() => {
+                window.location.href = 'login.html';
+            }, 2000);
+
+            return false;
+        }
+    }
+
+    // Update checkAndShowAdminButton to use storage fallback
+    function checkAndShowAdminButton() {
+        const userInfo = storage.get('userInfo');
+        if (userInfo) {
+            try {
+                const user = JSON.parse(userInfo);
+                const adminButton = document.getElementById('adminDashboardBtn');
+                if (user.is_admin && adminButton) {
+                    adminButton.classList.remove('hidden');
+                }
+            } catch (e) {
+                console.error('Error parsing user info:', e);
+            }
+        }
+    }
+
+    // Update logout to use storage fallback
+    function logout() {
+        fetch(`${API_BASE_URL}/auth/logout`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${storage.get('authToken')}`
+            }
+        })
+            .then(() => {
+                storage.remove('authToken');
+                storage.remove('userInfo');
+                window.location.href = 'login.html';
+            })
+            .catch(error => {
+                console.error('Logout error:', error);
+                // Even if logout fails on server, clear storage and redirect
+                storage.remove('authToken');
+                storage.remove('userInfo');
+                window.location.href = 'login.html';
+            });
+    }
+
+    // Company Information
+    const companies = {
+        company1: {
+            name: "Shans Accessories PTY LTD",
+            bankingInformation: `
+          First National Bank<br>
+          Account :  62898901098<br>
+          Branch code 257705<br>
+          Swift code FIRNZAJJ
+        `
+        },
+        company2: {
+            name: "Shans Autosport PTY LTD",
+            bankingInformation: `
+          Business Account<br>
+          Capitec Current Account<br>
+          Account: 1052498876
+        `
+        }
+    };
+
+    /**
+     * Display a non-blocking toast message in the top-right corner.
+     * @param {string} message - The message to display
+     * @param {string} [type='info'] - 'success', 'error', or 'info'
+     */
+    function showToastMessage(message, type = 'info') {
+        const toastContainer = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.classList.add('toast', type);
+        toast.textContent = message;
+        toastContainer.appendChild(toast);
+        setTimeout(() => {
+            toast.remove();
+        }, 3000);
+    }
+
+    function setCookie(name, value, days) {
+        try {
+            const d = new Date();
+            d.setTime(d.getTime() + (days*24*60*60*1000));
+            const expires = "expires="+ d.toUTCString();
+            document.cookie = name + "=" + encodeURIComponent(value) + ";" + expires + ";path=/";
+        } catch (e) {
+            console.warn('Cookie not available, using storage');
+            storage.set(name, value);
+        }
+    }
+
+    function getCookie(name) {
+        try {
+            const cname = name + "=";
+            const decodedCookie = decodeURIComponent(document.cookie);
+            const ca = decodedCookie.split(';');
+            for(let i = 0; i < ca.length; i++) {
+                let c = ca[i].trim();
+                if (c.indexOf(cname) === 0) {
+                    return c.substring(cname.length, c.length);
+                }
+            }
+            return "";
+        } catch (e) {
+            console.warn('Cookie not available, using storage');
+            return storage.get(name) || "";
+        }
+    }
+
+    function selectProduct(product) {
+        DOM.productSearchInput.value = product.item_name;
+        DOM.productSearchInput.dataset.itemCode = product.item_code; // Store the item_code in the dataset
+        DOM.productSearchInput.dataset.roomId = product.room_id; // Store the room_id in the dataset
+        DOM.productList.innerHTML = '';
+        // Set the default price from the database, but this can be modified by the user
+        // for negotiated prices or discounts before adding to the order
+        DOM.priceInput.value = Math.round(parseFloat(product.unit_retail_price));
+
+        // Get the quantity input element
+        const quantityInput = document.getElementById('quantity');
+
+        // Set the minimum attribute to 1
+        quantityInput.setAttribute('min', 1);
+
+        // Set the default quantity to 1
+        quantityInput.value = 1;
+
+        DOM.roomInput.value = product.room_name;
+        DOM.roomInput.classList.remove('hidden');
+        DOM.roomLabel.classList.remove('hidden');
+    }
+
+    function addSelectedProduct() {
+        const productName = DOM.productSearchInput.value.trim();
+        const quantity = parseInt(DOM.quantityInput.value);
+        // Get the price from the input field - this may be the original retail price
+        // or a negotiated/discounted price entered by the user
+        const price = Math.round(parseFloat(DOM.priceInput.value));
+
+        // Get the item_code and room_id from the dataset if available
+        const itemCode = DOM.productSearchInput.dataset.itemCode;
+        const roomId = DOM.productSearchInput.dataset.roomId;
+
+        // Find the product by item_code if available, otherwise fall back to finding by name
+        let product;
+        if (itemCode) {
+            // Find the exact product by item_code (which is unique)
+            product = allProducts.find(p => p.item_code === itemCode);
+        } else {
+            // Fall back to finding by name (for backward compatibility or manually entered products)
+            product = allProducts.find(p => p.item_name.toLowerCase() === productName.toLowerCase());
+        }
+
+        if (productName === '' || isNaN(quantity) || isNaN(price)) {
+            showToastMessage('Please enter valid product details.', 'error');
+            return;
+        }
+        if (quantity <= 0) {
+            showToastMessage('Quantity must be at least 1.', 'error');
+            return;
+        }
+        if (price < 0) {
+            showToastMessage('Price cannot be negative.', 'error');
+            return;
+        }
+        if (product && quantity > product.available_stock) {
+            showToastMessage(`Cannot add ${quantity} units. Only ${product.available_stock} available in stock.`, 'error');
+            return;
+        }
+
+        // We'll store the typed-in price in product.price
+        // Then let the table logic figure out net vs. tax if needed
+        let taxPerProduct = 0;
+        if (DOM.taxCheckbox.checked) {
+            taxPerProduct = Math.round(price * TAX_RATE);
+        }
+
+        if (product) {
+            selectedProducts.push({
+                item_code: product.item_code,
+                name: productName,
+                room_name: product.room_name, // Store room name for reference
+                quantity: quantity,
+                price: parseFloat(price),
+                tax_per_product: taxPerProduct,
+                is_new: false
+            });
+            product.available_stock -= quantity; // update stock
+        } else {
+            const item_code = `NEW-${newProductCounter++}`;
+            selectedProducts.push({
+                item_code: item_code,
+                name: productName,
+                room_name: 'N/A', // No room for new products
+                quantity: quantity,
+                price: parseFloat(price),
+                tax_per_product: taxPerProduct,
+                is_new: true
+            });
+        }
+
+        updateSelectedProductsTable();
+        DOM.productSearchInput.value = '';
+
+        // Clear the stored item_code and room_id
+        delete DOM.productSearchInput.dataset.itemCode;
+        delete DOM.productSearchInput.dataset.roomId;
+
+        // Reset quantity input field
+        const quantityInput = document.getElementById('quantity');
+        quantityInput.value = '1';
+        quantityInput.setAttribute('min', '1');
+
+        // Reset price and room fields
+        DOM.priceInput.value = '0';
+        DOM.roomInput.value = '';
+        DOM.roomInput.classList.add('hidden');
+        DOM.roomLabel.classList.add('hidden');
+    }
+
+    /**
+     * If tax is checked:
+     *   - "Unit Price (R)" = price * 0.85
+     *   - "Tax per Unit (R)" = price * 0.15
+     *   - "Total (R)" = price * quantity
+     *
+     * If tax is NOT checked:
+     *   - "Unit Price (R)" = price (as typed)
+     *   - No separate tax column
+     *   - "Total (R)" = price * quantity
+     */
+    function calculateAndDisplayTotal() {
+        let subtotal = 0;
+        let tax = 0;
+        let total = 0;
+
+        selectedProducts.forEach(product => {
+            if (DOM.taxCheckbox.checked) {
+                subtotal += (product.price * (1 - TAX_RATE)) * product.quantity;
+                tax += (product.price * TAX_RATE) * product.quantity;
+                total += (product.price * product.quantity);
+            } else {
+                subtotal += (product.price * product.quantity);
+                total += (product.price * product.quantity);
+            }
+        });
+
+        if (!DOM.taxCheckbox.checked) {
+            tax = 0;
+        }
+
+        DOM.subtotalAmountSpan.textContent = subtotal.toFixed(0);
+        DOM.taxAmountSpan.textContent = tax.toFixed(0);
+        DOM.totalAmountSpan.textContent = total.toFixed(0);
+    }
+
+    function updateTableHeader() {
+        // Clear the header
+        const header = DOM.tableHeader;
+        header.innerHTML = '';
+
+        // Product column
+        const productHeader = document.createElement('div');
+        productHeader.className = 'div-table-cell div-table-heading product-column';
+        productHeader.textContent = 'Product';
+        header.appendChild(productHeader);
+
+        // QTY column
+        const qtyHeader = document.createElement('div');
+        qtyHeader.className = 'div-table-cell div-table-heading qty-column';
+        qtyHeader.textContent = 'QTY';
+        qtyHeader.style.fontWeight = '700';
+        qtyHeader.style.textAlign = 'center';
+        qtyHeader.style.fontSize = '13px';
+        header.appendChild(qtyHeader);
+
+        // Price column (simplified name)
+        const priceHeader = document.createElement('div');
+        priceHeader.className = 'div-table-cell div-table-heading price-column';
+        priceHeader.textContent = 'PRICE';
+        priceHeader.style.fontSize = '13px';
+        header.appendChild(priceHeader);
+
+        if (DOM.taxCheckbox.checked) {
+            // Tax column (only if tax is checked, simplified name)
+            const taxHeader = document.createElement('div');
+            taxHeader.className = 'div-table-cell div-table-heading price-column tax-column';
+            taxHeader.textContent = 'TAX';
+            taxHeader.style.fontSize = '13px';
+            header.appendChild(taxHeader);
+        }
+
+        // Total column
+        const totalHeader = document.createElement('div');
+        totalHeader.className = 'div-table-cell div-table-heading price-column';
+        totalHeader.textContent = 'TOTAL';
+        totalHeader.style.fontSize = '13px';
+        header.appendChild(totalHeader);
+
+        // Action column (X)
+        const actionHeader = document.createElement('div');
+        actionHeader.className = 'div-table-cell div-table-heading';
+        actionHeader.innerHTML = '&nbsp;'; // Empty header for the X column
+        actionHeader.style.textAlign = 'center';
+        actionHeader.style.width = '40px'; // Fixed width for X column
+        header.appendChild(actionHeader);
+    }
+
+    function removeProduct(index) {
+        const removedProduct = selectedProducts.splice(index, 1)[0];
+        updateSelectedProductsTable();
+
+        // Restore stock if it was an existing product
+        if (!removedProduct.is_new && removedProduct && allProducts.length > 0) {
+            const product = allProducts.find(p => p.item_code === removedProduct.item_code);
+            if (product) {
+                product.available_stock += removedProduct.quantity;
+            }
+        }
+
+        showToastMessage(`Removed ${removedProduct.name} from the selection.`, 'info');
+    }
+
+    function generateReceipt() {
+        console.log('Starting generateReceipt function');
+        const selectedCompanyCookie = getCookie('selectedCompany');
+        if (!selectedCompanyCookie) {
+            showToastMessage('Please select a company before generating a receipt.', 'error');
+            return;
+        }
+        // Always ensure email has the default value if empty
+        const customerEmail = DOM.customerEmailInput.value.trim();
+        const billingInfo = {
+            name: DOM.customerNameInput.value.trim(),
+            email: customerEmail || 'invoicesshans@outlook.com',
+            address: DOM.customerAddressInput.value.trim(),
+            phone: DOM.customerPhoneInput.value.trim()
+        };
+        console.log('Billing info:', billingInfo);
+
+        let shippingInfo = null;
+        if (!DOM.sameAsBillingCheckbox.checked) {
+            // Always ensure shipping email has the default value if empty
+            const shippingEmail = DOM.shippingEmailInput.value.trim();
+            shippingInfo = {
+                name: DOM.shippingNameInput.value.trim(),
+                email: shippingEmail || 'invoicesshans@outlook.com',
+                address: DOM.shippingAddressInput.value.trim(),
+                phone: DOM.shippingPhoneInput.value.trim()
+            };
+        }
+
+        if (selectedProducts.length === 0) {
+            showToastMessage('No products selected.', 'error');
+            return;
+        }
+        console.log('Products validation passed');
+
+        const paymentMethod = DOM.paymentMethodSelect.value;
+        const comments = DOM.commentsTextarea.value.trim();
+        const salespersonName = DOM.salespersonNameInput.value.trim();
+        console.log('Salesperson name:', salespersonName);
+
+        const customerInfo = {
+            billing: billingInfo,
+            shipping: DOM.sameAsBillingCheckbox.checked ? null : shippingInfo,
+            paymentMethod: paymentMethod,
+            comments: comments,
+            salespersonName: salespersonName
+        };
+
+        const selectedCompany = JSON.parse(selectedCompanyCookie);
+        setCookie('customerInfo', JSON.stringify(customerInfo), 1);
+        setCookie('selectedProducts', JSON.stringify(selectedProducts), 1);
+        setCookie('subtotalAmount', JSON.stringify(DOM.subtotalAmountSpan.textContent), 1);
+        setCookie('taxAmount', JSON.stringify(DOM.taxAmountSpan.textContent), 1);
+        setCookie('totalAmount', JSON.stringify(DOM.totalAmountSpan.textContent), 1);
+        setCookie('selectedCompany', JSON.stringify(selectedCompany), 1);
+        console.log('All cookies set, redirecting to receipt.html');
+
+        window.location.href = 'receipt.html';
+    }
+
+    function generateQuotation() {
+        console.log('Starting generateQuotation function');
+        const selectedCompanyCookie = getCookie('selectedCompany');
+        if (!selectedCompanyCookie) {
+            showToastMessage('Please select a company before generating a quotation.', 'error');
+            return;
+        }
+
+        // Always ensure email has the default value if empty
+        const customerEmail = DOM.customerEmailInput.value.trim();
+        const billingInfo = {
+            name: DOM.customerNameInput.value.trim(),
+            email: customerEmail || 'invoicesshans@outlook.com',
+            address: DOM.customerAddressInput.value.trim(),
+            phone: DOM.customerPhoneInput.value.trim()
+        };
+
+        let shippingInfo = null;
+        if (!DOM.sameAsBillingCheckbox.checked) {
+            // Always ensure shipping email has the default value if empty
+            const shippingEmail = DOM.shippingEmailInput.value.trim();
+            shippingInfo = {
+                name: DOM.shippingNameInput.value.trim(),
+                email: shippingEmail || 'invoicesshans@outlook.com',
+                address: DOM.shippingAddressInput.value.trim(),
+                phone: DOM.shippingPhoneInput.value.trim()
+            };
+        }
+
+        if (selectedProducts.length === 0) {
+            showToastMessage('No products selected.', 'error');
+            return;
+        }
+
+        const comments = DOM.commentsTextarea.value.trim();
+        const salespersonName = DOM.salespersonNameInput.value.trim();
+
+        const customerInfo = {
+            billing: billingInfo,
+            shipping: DOM.sameAsBillingCheckbox.checked ? null : shippingInfo,
+            paymentMethod: 'N/A',
+            comments: comments,
+            salespersonName: salespersonName,
+            timestamp: Date.now().toString() // Add timestamp to track when this quotation was created
+        };
+
+        const selectedCompany = JSON.parse(selectedCompanyCookie);
+        setCookie('customerInfo', JSON.stringify(customerInfo), 1);
+        setCookie('selectedProducts', JSON.stringify(selectedProducts), 1);
+        setCookie('subtotalAmount', JSON.stringify(DOM.subtotalAmountSpan.textContent), 1);
+        setCookie('taxAmount', JSON.stringify(DOM.taxAmountSpan.textContent), 1);
+        setCookie('totalAmount', JSON.stringify(DOM.totalAmountSpan.textContent), 1);
+        setCookie('selectedCompany', JSON.stringify(selectedCompany), 1);
+        console.log('All cookies set, redirecting to quotation.html');
+
+        window.location.href = 'quotation.html';
+    }
+
+    function generateInvoice() {
+        console.log('Starting generateInvoice function');
+        const selectedCompanyCookie = getCookie('selectedCompany');
+        if (!selectedCompanyCookie) {
+            showToastMessage('Please select a company before generating an invoice.', 'error');
+            return;
+        }
+
+        // Always ensure email has the default value if empty
+        const customerEmail = DOM.customerEmailInput.value.trim();
+        const billingInfo = {
+            name: DOM.customerNameInput.value.trim(),
+            email: customerEmail || 'invoicesshans@outlook.com',
+            address: DOM.customerAddressInput.value.trim(),
+            phone: DOM.customerPhoneInput.value.trim()
+        };
+
+        let shippingInfo = null;
+        if (!DOM.sameAsBillingCheckbox.checked) {
+            // Always ensure shipping email has the default value if empty
+            const shippingEmail = DOM.shippingEmailInput.value.trim();
+            shippingInfo = {
+                name: DOM.shippingNameInput.value.trim(),
+                email: shippingEmail || 'invoicesshans@outlook.com',
+                address: DOM.shippingAddressInput.value.trim(),
+                phone: DOM.shippingPhoneInput.value.trim()
+            };
+        }
+
+        if (selectedProducts.length === 0) {
+            showToastMessage('No products selected.', 'error');
+            return;
+        }
+
+        const paymentMethod = DOM.paymentMethodSelect.value;
+        const comments = DOM.commentsTextarea.value.trim();
+        const salespersonName = DOM.salespersonNameInput.value.trim();
+
+        const customerInfo = {
+            billing: billingInfo,
+            shipping: DOM.sameAsBillingCheckbox.checked ? null : shippingInfo,
+            paymentMethod: paymentMethod,
+            comments: comments,
+            salespersonName: salespersonName
+        };
+
+        const selectedCompany = JSON.parse(selectedCompanyCookie);
+        setCookie('customerInfo', JSON.stringify(customerInfo), 1);
+        setCookie('selectedProducts', JSON.stringify(selectedProducts), 1);
+        setCookie('subtotalAmount', JSON.stringify(DOM.subtotalAmountSpan.textContent), 1);
+        setCookie('taxAmount', JSON.stringify(DOM.taxAmountSpan.textContent), 1);
+        setCookie('totalAmount', JSON.stringify(DOM.totalAmountSpan.textContent), 1);
+        setCookie('selectedCompany', JSON.stringify(selectedCompany), 1);
+        console.log('All cookies set, redirecting to invoice.html');
+
+        window.location.href = 'invoice.html';
+    }
+
+    function toggleShippingInfo() {
+        if (DOM.sameAsBillingCheckbox.checked) {
+            DOM.shippingInfoDiv.classList.add('hidden');
+        } else {
+            DOM.shippingInfoDiv.classList.remove('hidden');
+        }
+    }
+
+    function setCompanyInfo() {
+        const selectedCompanyKey = DOM.companySelect.value;
+        if (!selectedCompanyKey || !companies[selectedCompanyKey]) {
+            showToastMessage('Please select a valid company.', 'error');
+            return;
+        }
+        const selectedCompany = companies[selectedCompanyKey];
+        setCookie('selectedCompany', JSON.stringify({
+            key: selectedCompanyKey,
+            name: selectedCompany.name,
+            bankingInformation: selectedCompany.bankingInformation
+        }), 1);
+    }
+
+    DOM.companySelect.addEventListener('change', setCompanyInfo);
+
+    // Recalculate net/tax for each product if the checkbox changes
+    DOM.taxCheckbox.addEventListener('change', () => {
+        updateSelectedProductsTable();
+    });
+
+    // Function to load existing order data when returning from document pages
+    function loadExistingOrderData() {
+        // Check if we're in edit mode (coming back from a document page)
+        const isEditingOrder = sessionStorage.getItem('editingOrder') === 'true';
+
+        if (isEditingOrder) {
+            // Clear the editing flag
+            sessionStorage.removeItem('editingOrder');
+
+            // Load customer info
+            const customerInfoCookie = getCookie('customerInfo');
+            if (customerInfoCookie) {
+                const customerInfo = JSON.parse(customerInfoCookie);
+
+                // Fill in customer information
+                DOM.customerNameInput.value = customerInfo.billing.name || '';
+                DOM.customerAddressInput.value = customerInfo.billing.address || '';
+                DOM.customerEmailInput.value = customerInfo.billing.email || '';
+                DOM.customerPhoneInput.value = customerInfo.billing.phone || '';
+
+                // Handle shipping info
+                if (customerInfo.shipping) {
+                    DOM.sameAsBillingCheckbox.checked = false;
+                    DOM.shippingInfoDiv.classList.remove('hidden');
+                    DOM.shippingNameInput.value = customerInfo.shipping.name || '';
+                    DOM.shippingAddressInput.value = customerInfo.shipping.address || '';
+                    DOM.shippingEmailInput.value = customerInfo.shipping.email || '';
+                    DOM.shippingPhoneInput.value = customerInfo.shipping.phone || '';
+                } else {
+                    DOM.sameAsBillingCheckbox.checked = true;
+                    DOM.shippingInfoDiv.classList.add('hidden');
+                }
+
+                // Set payment method
+                if (customerInfo.paymentMethod) {
+                    DOM.paymentMethodSelect.value = customerInfo.paymentMethod;
+                }
+
+                // Set comments
+                if (customerInfo.comments) {
+                    DOM.commentsTextarea.value = customerInfo.comments;
+                }
+
+                // Set salesperson name
+                if (customerInfo.salespersonName) {
+                    DOM.salespersonNameInput.value = customerInfo.salespersonName;
+                }
+            }
+
+            // Load selected products
+            const selectedProductsCookie = getCookie('selectedProducts');
+            if (selectedProductsCookie) {
+                selectedProducts = JSON.parse(selectedProductsCookie);
+                updateSelectedProductsTable();
+            }
+
+            // Show a message to the user
+            showToastMessage('Order loaded for editing. You can modify products and details before generating a new document.', 'info');
+        }
+    }
+
+    // Add polyfill for AbortController if not available
+    if (typeof AbortController === 'undefined') {
+        window.AbortController = function() {
+            this.signal = {
+                aborted: false
+            };
+            this.abort = function() {
+                this.signal.aborted = true;
+            };
+        };
+    }
+
+    // Add polyfill for fetch if not available
+    if (typeof fetch === 'undefined') {
+        window.fetch = function(url, options) {
+            return new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                xhr.open(options.method || 'GET', url);
+
+                if (options.headers) {
+                    Object.keys(options.headers).forEach(key => {
+                        xhr.setRequestHeader(key, options.headers[key]);
+                    });
+                }
+
+                xhr.onload = function() {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        resolve({
+                            ok: true,
+                            status: xhr.status,
+                            json: () => Promise.resolve(JSON.parse(xhr.responseText))
+                        });
+                    } else {
+                        reject({
+                            ok: false,
+                            status: xhr.status,
+                            statusText: xhr.statusText
+                        });
+                    }
+                };
+
+                xhr.onerror = function() {
+                    reject({
+                        ok: false,
+                        status: 0,
+                        statusText: 'Network Error'
+                    });
+                };
+
+                if (options.signal) {
+                    options.signal.addEventListener('abort', () => {
+                        xhr.abort();
+                        reject({
+                            name: 'AbortError',
+                            message: 'The operation was aborted'
+                        });
+                    });
+                }
+
+                xhr.send(options.body);
+            });
+        };
+    }
+</script>
+
+</body>
+</html>
