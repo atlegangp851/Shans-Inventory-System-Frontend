@@ -84,6 +84,68 @@
             background-color: #1e6e41;
         }
 
+        .backup-button {
+            background-color: #6f42c1;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 10px;
+            transition: background-color 0.3s ease;
+        }
+
+        .backup-button:hover {
+            background-color: #5a2d91;
+        }
+
+        .backup-button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+
+        /* Toast notification styles */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            background-color: #333;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.3s ease;
+            max-width: 400px;
+            word-wrap: break-word;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .toast.success {
+            background-color: #28a745;
+        }
+
+        .toast.error {
+            background-color: #dc3545;
+        }
+
+        .toast.info {
+            background-color: #17a2b8;
+        }
+
         .search-bar {
             width: 300px;
             transition: all 0.3s ease;
@@ -373,6 +435,9 @@
     </style>
 </head>
 <body>
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
     <div class="container">
         <a href="index.html" style="text-decoration: none; color: #007BFF; font-size: 16px; margin-right: 20px;">&larr; Back to Home</a>
         <h1>Sales Dashboard</h1>
@@ -381,6 +446,7 @@
                 <button class="view-toggle">Toggle View</button>
                 <button class="action-button print-button" id="print-button">Print</button>
                 <button class="action-button excel-button" id="save-to-excel">Export to Excel</button>
+                <button class="action-button backup-button" id="test-cloudinary" style="background-color: #17a2b8;">Test Cloudinary</button>
             </div>
             <div class="controls-right">
                 <input type="text" class="search-bar" placeholder="Search sales by any field...">
@@ -562,7 +628,20 @@
 
                 const monthHeader = document.createElement('div');
                 monthHeader.className = 'month-header';
-                monthHeader.textContent = monthYear;
+                monthHeader.style.display = 'flex';
+                monthHeader.style.justifyContent = 'space-between';
+                monthHeader.style.alignItems = 'center';
+
+                const monthTitle = document.createElement('span');
+                monthTitle.textContent = monthYear;
+                monthHeader.appendChild(monthTitle);
+
+                const backupButton = document.createElement('button');
+                backupButton.className = 'backup-button';
+                backupButton.textContent = 'Backup to Cloud';
+                backupButton.onclick = () => backupMonthToCloudinary(monthYear, sales);
+                monthHeader.appendChild(backupButton);
+
                 monthSection.appendChild(monthHeader);
 
                 // Create table container for horizontal scrolling
@@ -916,6 +995,276 @@
             filterAndRender(query);
         }, 300));
 
+        // Backend API configuration
+        const BACKUP_CONFIG = {
+            backupEndpoint: 'https://shans-backend-1.onrender.com/api/backup/backup-sales-data',
+            excelUploadEndpoint: 'https://shans-backend-1.onrender.com/api/backup/upload-excel-backup', // NEW: Excel upload endpoint
+            listBackupsEndpoint: 'https://shans-backend-1.onrender.com/api/backup/list-backups',
+            testConnectionEndpoint: 'https://shans-backend-1.onrender.com/api/backup/test-connection'
+        };
+
+        // Helper function to convert blob to base64
+        function blobToBase64(blob) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+        }
+
+        // Helper function to format date
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
+
+        // Toast notification function
+        function showToast(message, type = 'info', duration = 5000) {
+            const toastContainer = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+
+            toastContainer.appendChild(toast);
+
+            // Trigger animation
+            setTimeout(() => toast.classList.add('show'), 100);
+
+            // Remove toast after duration
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        }
+
+        // NEW: Enhanced backup function that creates Excel on frontend first
+        async function backupMonthToCloudinary(monthYear, salesData) {
+            const button = event.target;
+            const originalText = button.textContent;
+
+            try {
+                // Disable button and show loading state
+                button.disabled = true;
+                button.textContent = 'Preparing...';
+                showToast(`🔄 Preparing Excel backup for ${monthYear}...`, 'info', 3000);
+
+                // Get authentication token
+                const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+
+                if (!token) {
+                    throw new Error('Authentication required. Please log in again.');
+                }
+
+                // Step 1: Create Excel file on frontend
+                button.textContent = 'Creating Excel...';
+                showToast(`📊 Creating Excel file for ${monthYear}...`, 'info', 3000);
+
+                const flattenedData = salesData.flatMap(sale =>
+                    sale.items.map(item => {
+                        // Use the EXACT same calculation logic as the table display
+                        const quantity = parseFloat(item.quantity) || 0;
+                        const taxPerProduct = parseFloat(item.tax_per_product) || 0;
+                        const totalPrice = parseFloat(item.total_price) || 0;
+                        const unitCost = parseFloat(item.unit_cost) || 0;
+
+                        // Use the actual unit price from the sale (negotiated/discounted price)
+                        const unitPrice = parseFloat(item.unit_price_excluding_tax) || (quantity > 0 ? totalPrice / quantity : 0);
+
+                        // Calculate profit entirely on the frontend (same as table)
+                        const profitPerUnit = unitPrice - unitCost;
+                        const totalProfit = profitPerUnit * quantity;
+
+                        return {
+                            "Reference Number": sale.reference_number,
+                            "Date": formatDate(sale.date),
+                            "Client Name": sale.billing_name,
+                            "Billing Address": sale.billing_address,
+                            "Billing Email": sale.billing_email,
+                            "Billing Phone": sale.billing_phone || 'N/A',
+                            "Salesperson": sale.salesperson_name || 'N/A',
+                            "Company": sale.company_name || 'Shans Accessories PTY LTD',
+                            "Item Purchase": item.item_name,
+                            "Room": item.room_name || 'N/A',
+                            "Quantity": quantity,
+                            "Unit Cost (R)": Math.round(unitCost),
+                            "Unit Price (R)": Math.round(unitPrice),
+                            "Profit/Unit (R)": Math.round(profitPerUnit),
+                            "Tax per Unit (R)": Math.round(taxPerProduct),
+                            "Payment Method": sale.payment_method,
+                            "Total (R)": Math.round(totalPrice),
+                            "Total Profit (R)": Math.round(totalProfit)
+                        };
+                    })
+                );
+
+                // Create Excel workbook
+                const worksheet = XLSX.utils.json_to_sheet(flattenedData);
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, `Sales ${monthYear}`);
+
+                // Generate Excel file as blob
+                const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+                const excelBlob = new Blob([excelBuffer], {
+                    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                });
+
+                // Step 2: Upload Excel file to backend
+                button.textContent = 'Uploading...';
+                showToast(`📤 Uploading Excel backup for ${monthYear} to cloud storage...`, 'info', 3000);
+
+                // Create FormData with the Excel file
+                const formData = new FormData();
+                const timestamp = new Date().toISOString().split('T')[0];
+                const filename = `Sales_Backup_${monthYear.replace(/\s+/g, '_')}_${timestamp}.xlsx`;
+                formData.append('excelFile', excelBlob, filename);
+                formData.append('monthYear', monthYear);
+
+                // Upload to backend
+                console.log('Uploading to:', BACKUP_CONFIG.excelUploadEndpoint);
+                console.log('Token available:', !!token);
+                console.log('FormData entries:', Array.from(formData.entries()).map(([key, value]) => [key, value instanceof File ? `File: ${value.name}` : value]));
+
+                const response = await fetch(BACKUP_CONFIG.excelUploadEndpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                        // Don't set Content-Type - let browser set it with boundary for FormData
+                    },
+                    body: formData
+                });
+
+                console.log('Response status:', response.status);
+                console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
+                // Check if response is JSON
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    const textResponse = await response.text();
+                    console.error('Non-JSON response:', textResponse);
+                    throw new Error(`Server returned non-JSON response (${response.status}): ${textResponse.substring(0, 200)}...`);
+                }
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || `Backup failed: ${response.statusText}`);
+                }
+
+                // Show success message
+                showToast(
+                    `✅ Excel backup successful! File "${result.filename}" has been saved to cloud storage. ${flattenedData.length} records backed up.`,
+                    'success',
+                    7000
+                );
+                console.log('Excel backup details:', result);
+
+            } catch (error) {
+                console.error('Excel backup failed:', error);
+
+                // If the new endpoint fails, try the original backup method as fallback
+                if (error.message.includes('404') || error.message.includes('Not Found')) {
+                    try {
+                        button.textContent = 'Trying fallback...';
+                        showToast(`🔄 Trying alternative backup method...`, 'info', 3000);
+
+                        // Use original backup endpoint as fallback
+                        const fallbackResponse = await fetch(BACKUP_CONFIG.backupEndpoint, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: JSON.stringify({
+                                monthYear: monthYear,
+                                salesData: salesData
+                            })
+                        });
+
+                        const fallbackResult = await fallbackResponse.json();
+
+                        if (!fallbackResponse.ok) {
+                            throw new Error(fallbackResult.error || `Fallback backup failed: ${fallbackResponse.statusText}`);
+                        }
+
+                        showToast(
+                            `✅ Backup successful (fallback method)! File "${fallbackResult.filename}" has been saved to cloud storage. ${fallbackResult.recordCount} records backed up.`,
+                            'success',
+                            7000
+                        );
+                        console.log('Fallback backup details:', fallbackResult);
+                        return; // Exit successfully
+
+                    } catch (fallbackError) {
+                        console.error('Fallback backup also failed:', fallbackError);
+                        showToast(`❌ Both backup methods failed. Please contact support.`, 'error', 8000);
+                        return;
+                    }
+                }
+
+                // Handle specific error types
+                if (error.message.includes('Authentication')) {
+                    showToast(`🔒 ${error.message}`, 'error', 8000);
+                } else if (error.message.includes('Only Excel files')) {
+                    showToast(`❌ File format error: ${error.message}`, 'error', 8000);
+                } else {
+                    showToast(`❌ Excel backup failed: ${error.message}. Please try again or contact support.`, 'error', 8000);
+                }
+            } finally {
+                // Re-enable button
+                button.disabled = false;
+                button.textContent = originalText;
+            }
+        }
+
+        // Test backend connection
+        async function testCloudinaryConnection() {
+            const button = document.getElementById('test-cloudinary');
+            const originalText = button.textContent;
+
+            try {
+                button.disabled = true;
+                button.textContent = 'Testing...';
+                showToast('🔧 Testing backup system...', 'info', 3000);
+
+                // Get authentication token
+                const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+
+                if (!token) {
+                    throw new Error('Authentication required. Please log in.');
+                }
+
+                const response = await fetch(BACKUP_CONFIG.testConnectionEndpoint, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || 'Test failed');
+                }
+
+                showToast('✅ Backup system test successful! The system is ready to use.', 'success', 7000);
+                console.log('Test result:', result);
+
+            } catch (error) {
+                console.error('Test failed:', error);
+                showToast(`❌ Test failed: ${error.message}. Please check your setup.`, 'error', 8000);
+            } finally {
+                button.disabled = false;
+                button.textContent = originalText;
+            }
+        }
+
+        // Add event listeners
+        document.getElementById('test-cloudinary').addEventListener('click', testCloudinaryConnection);
         document.addEventListener('DOMContentLoaded', fetchSalesData);
     </script>
 </body>
