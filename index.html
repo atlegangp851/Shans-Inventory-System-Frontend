@@ -827,7 +827,6 @@
     let selectedProducts = [];
     let allProducts = [];
     let newProductCounter = 1;
-    let isFetchingProducts = false; // Prevent multiple simultaneous fetches
 
     // API_BASE_URL is now defined in auth-utils.js
     const CURRENCY_SYMBOL = 'R';
@@ -882,13 +881,7 @@
 
     // Optimized product fetching with pagination
     async function fetchAllProducts() {
-      // Prevent multiple simultaneous fetch requests
-      if (isFetchingProducts || isLoading) {
-        return;
-      }
-
       try {
-        isFetchingProducts = true;
         isLoading = true;
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
@@ -906,20 +899,19 @@
         }
 
         const newProducts = await response.json();
-
+        
         if (newProducts.length < PRODUCTS_PER_PAGE) {
           hasMoreProducts = false;
         }
-
-        // Prevent duplicate products by checking item_code
-        const existingItemCodes = new Set(allProducts.map(p => p.item_code));
-        const uniqueNewProducts = newProducts.filter(p => !existingItemCodes.has(p.item_code));
-
-        allProducts = [...allProducts, ...uniqueNewProducts];
+        
+        allProducts = [...allProducts, ...newProducts];
         currentPage++;
 
-        // Don't automatically update UI - let the caller decide
-        // This prevents the circular calling issue
+        // Only update UI if user is actively searching
+        const searchTerm = DOM.productSearchInput.value.toLowerCase().trim();
+        if (searchTerm.length > 0) {
+          displayFilteredProducts();
+        }
       } catch (error) {
         console.error('Error fetching products:', error);
         if (error.name === 'AbortError') {
@@ -929,7 +921,6 @@
         }
         throw error; // Re-throw to be caught by the caller
       } finally {
-        isFetchingProducts = false;
         isLoading = false;
       }
     }
@@ -942,7 +933,7 @@
     }, DEBOUNCE_DELAY);
 
     // Simple and reliable product display
-    async function displayFilteredProducts() {
+    function displayFilteredProducts() {
       const searchTerm = DOM.productSearchInput.value.toLowerCase().trim();
 
       // Clear existing products
@@ -957,29 +948,6 @@
         product.item_name && product.item_name.toLowerCase().includes(searchTerm)
       );
 
-      // If we have few results and more products are available, try to load more
-      if (filteredProducts.length < 5 && hasMoreProducts && !isLoading) {
-        try {
-          await fetchAllProducts();
-          // After loading more products, re-filter and display
-          const newFilteredProducts = allProducts.filter(product =>
-            product.item_name && product.item_name.toLowerCase().includes(searchTerm)
-          );
-          displayProductsInList(newFilteredProducts);
-        } catch (error) {
-          // If fetching fails, just display what we have
-          displayProductsInList(filteredProducts);
-        }
-      } else {
-        displayProductsInList(filteredProducts);
-      }
-    }
-
-    // Separate function to actually display products in the list
-    function displayProductsInList(filteredProducts) {
-      // Clear existing products
-      DOM.productList.innerHTML = '';
-
       if (filteredProducts.length === 0) {
         const li = document.createElement('li');
         li.textContent = allProducts.length === 0 ? 'Loading products...' : 'No products found';
@@ -991,17 +959,8 @@
       // Create document fragment for better performance
       const fragment = document.createDocumentFragment();
 
-      // Use a Set to track already displayed products to prevent duplicates
-      const displayedProducts = new Set();
-
       // Simple approach: show each filtered product directly
       filteredProducts.forEach(product => {
-        // Skip if we've already displayed this product
-        if (displayedProducts.has(product.item_code)) {
-          return;
-        }
-        displayedProducts.add(product.item_code);
-
         const li = document.createElement('li');
 
         const productNameDiv = document.createElement('div');
@@ -1024,6 +983,11 @@
       });
 
       DOM.productList.appendChild(fragment);
+
+      // Load more products if needed
+      if (hasMoreProducts && !isLoading && DOM.productList.scrollHeight <= DOM.productList.clientHeight + 100) {
+        fetchAllProducts();
+      }
     }
 
     // Optimized event listeners
@@ -1154,8 +1118,6 @@
       allProducts = [];
       currentPage = 1;
       hasMoreProducts = true;
-      isFetchingProducts = false;
-      isLoading = false;
       DOM.productList.innerHTML = '';
       DOM.selectedProductsBody.innerHTML = '';
       updateSelectedProductsTable();
@@ -1179,8 +1141,6 @@
       allProducts = [];
       currentPage = 1;
       hasMoreProducts = true;
-      isFetchingProducts = false;
-      isLoading = false;
       
       // Restart initialization
       initializeApp();
