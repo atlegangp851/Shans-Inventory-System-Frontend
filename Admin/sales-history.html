@@ -446,7 +446,6 @@
                 <button class="view-toggle">Toggle View</button>
                 <button class="action-button print-button" id="print-button">Print</button>
                 <button class="action-button excel-button" id="save-to-excel">Export to Excel</button>
-                <button class="action-button backup-button" id="test-cloudinary" style="background-color: #17a2b8;">Test Cloudinary</button>
             </div>
             <div class="controls-right">
                 <input type="text" class="search-bar" placeholder="Search sales by any field...">
@@ -550,7 +549,7 @@
 
         async function fetchSalesData() {
             try {
-                const response = await fetch('https://shans-backend-1.onrender.com/api/sales');
+                const response = await fetch('https://shans-backend.onrender.com/api/sales');
                 if (!response.ok) {
                     throw new Error('Network response was not ok.');
                 }
@@ -558,7 +557,7 @@
                 console.log('Raw data from API:', data);
 
                 // Fetch all products to get room information
-                const productsResponse = await fetch('https://shans-backend-1.onrender.com/api/products');
+                const productsResponse = await fetch('https://shans-backend.onrender.com/api/products');
                 if (!productsResponse.ok) {
                     throw new Error('Failed to fetch products data.');
                 }
@@ -997,10 +996,10 @@
 
         // Backend API configuration
         const BACKUP_CONFIG = {
-            backupEndpoint: 'https://shans-backend-1.onrender.com/api/backup/backup-sales-data',
-            excelUploadEndpoint: 'https://shans-backend-1.onrender.com/api/backup/upload-excel-backup', // NEW: Excel upload endpoint
-            listBackupsEndpoint: 'https://shans-backend-1.onrender.com/api/backup/list-backups',
-            testConnectionEndpoint: 'https://shans-backend-1.onrender.com/api/backup/test-connection'
+            backupEndpoint: 'https://shans-backend.onrender.com/api/backup/backup-sales-data',
+            excelUploadEndpoint: 'https://shans-backend.onrender.com/api/backup/upload-excel-backup', // NEW: Excel upload endpoint
+            listBackupsEndpoint: 'https://shans-backend.onrender.com/api/backup/list-backups',
+            testConnectionEndpoint: 'https://shans-backend.onrender.com/api/backup/test-connection'
         };
 
         // Helper function to convert blob to base64
@@ -1221,50 +1220,9 @@
             }
         }
 
-        // Test backend connection
-        async function testCloudinaryConnection() {
-            const button = document.getElementById('test-cloudinary');
-            const originalText = button.textContent;
 
-            try {
-                button.disabled = true;
-                button.textContent = 'Testing...';
-                showToast('🔧 Testing backup system...', 'info', 3000);
-
-                // Get authentication token
-                const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
-
-                if (!token) {
-                    throw new Error('Authentication required. Please log in.');
-                }
-
-                const response = await fetch(BACKUP_CONFIG.testConnectionEndpoint, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-
-                const result = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(result.error || 'Test failed');
-                }
-
-                showToast('✅ Backup system test successful! The system is ready to use.', 'success', 7000);
-                console.log('Test result:', result);
-
-            } catch (error) {
-                console.error('Test failed:', error);
-                showToast(`❌ Test failed: ${error.message}. Please check your setup.`, 'error', 8000);
-            } finally {
-                button.disabled = false;
-                button.textContent = originalText;
-            }
-        }
 
         // Add event listeners
-        document.getElementById('test-cloudinary').addEventListener('click', testCloudinaryConnection);
         document.addEventListener('DOMContentLoaded', fetchSalesData);
     </script>
 </body>

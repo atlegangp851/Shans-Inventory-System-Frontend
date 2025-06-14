@@ -1,5 +1,5 @@
 // Shared authentication utilities for user-facing pages
-const API_BASE_URL = 'https://shans-backend-1.onrender.com/api';
+const API_BASE_URL = 'https://shans-backend.onrender.com/api';
 
 // Storage utility with fallback
 const storage = {

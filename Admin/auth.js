@@ -1,5 +1,5 @@
 // Authentication utility for admin pages
-const API_BASE_URL = 'https://shans-backend-1.onrender.com/api';
+const API_BASE_URL = 'https://shans-backend.onrender.com/api';
 
 // Check authentication status
 function checkAuthStatus() {

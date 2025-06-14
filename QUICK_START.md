@@ -42,7 +42,7 @@ npm start
 | User Dashboard | `index.html` | Main sales interface |
 | Admin Dashboard | `Admin/index.html` | Administrative interface |
 | Login | `login.html` | Unified authentication |
-| API | `https://shans-backend-1.onrender.com/api` | Backend API |
+| API | `https://shans-backend.onrender.com/api` | Backend API |
 
 ## 🔑 Default Accounts
 

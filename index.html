@@ -899,12 +899,16 @@
         }
 
         const newProducts = await response.json();
-        
+
         if (newProducts.length < PRODUCTS_PER_PAGE) {
           hasMoreProducts = false;
         }
-        
-        allProducts = [...allProducts, ...newProducts];
+
+        // Filter out duplicates by checking item_code
+        const existingItemCodes = new Set(allProducts.map(p => p.item_code));
+        const uniqueNewProducts = newProducts.filter(product => !existingItemCodes.has(product.item_code));
+
+        allProducts = [...allProducts, ...uniqueNewProducts];
         currentPage++;
 
         // Only update UI if user is actively searching
