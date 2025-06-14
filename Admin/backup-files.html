@@ -989,11 +989,21 @@
                 const monthContainer = document.createElement('div');
                 monthContainer.className = 'month-container';
 
-                // Sort months within the year
+                // Sort months within the year (newest month first: June before May, etc.)
                 const sortedMonths = Object.keys(groupedBackups[year]).sort((a, b) => {
-                    const dateA = new Date(a + ' 1, ' + year);
-                    const dateB = new Date(b + ' 1, ' + year);
-                    return dateB - dateA;
+                    // Parse month names to get month indices (January=0, February=1, ..., December=11)
+                    const getMonthIndex = (monthYearStr) => {
+                        // Extract month name from strings like "June 2024" or "June_2024"
+                        const monthName = monthYearStr.split(/[\s_]/)[0];
+                        const monthIndex = new Date(Date.parse(monthName + " 1, 2000")).getMonth();
+                        return monthIndex;
+                    };
+
+                    const monthIndexA = getMonthIndex(a);
+                    const monthIndexB = getMonthIndex(b);
+
+                    // Sort by month index descending (June=5, May=4, so June comes first)
+                    return monthIndexB - monthIndexA;
                 });
 
                 sortedMonths.forEach(monthYear => {
@@ -1007,6 +1017,7 @@
                     const backupGrid = document.createElement('div');
                     backupGrid.className = 'backup-grid';
 
+                    // Display backup files within the month (no additional sorting needed)
                     groupedBackups[year][monthYear].forEach(backup => {
                         const backupCard = createBackupCard(backup);
                         backupGrid.appendChild(backupCard);

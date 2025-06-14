@@ -285,6 +285,20 @@
             gap: 10px;
         }
 
+        /* Mobile-specific summary that appears at the top */
+        .month-summary-mobile {
+            background-color: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            margin-top: 10px;
+            margin-bottom: 15px;
+            padding: 15px 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            gap: 10px;
+        }
+
         .summary-item {
             display: flex;
             justify-content: space-between;
@@ -408,9 +422,16 @@
                 margin-bottom: 15px;
             }
 
+            /* Hide the regular summary at the bottom on mobile */
             .month-summary {
+                display: none !important;
+            }
+
+            /* Show the mobile summary at the top on mobile */
+            .month-summary-mobile {
+                display: flex !important;
                 margin-top: 10px;
-                margin-bottom: 20px;
+                margin-bottom: 15px;
             }
 
             .summary-item {
@@ -643,6 +664,13 @@
 
                 monthSection.appendChild(monthHeader);
 
+                // Create mobile summary section (will be shown only on mobile)
+                const mobileSummarySection = document.createElement('div');
+                mobileSummarySection.className = 'month-summary-mobile';
+
+                // We'll populate this after calculating the totals
+                monthSection.appendChild(mobileSummarySection);
+
                 // Create table container for horizontal scrolling
                 const tableContainer = document.createElement('div');
                 tableContainer.className = 'table-container';
@@ -732,10 +760,8 @@
                 tableContainer.appendChild(table);
                 monthSection.appendChild(tableContainer);
 
-                // Create a summary section outside the table
-                const summarySection = document.createElement('div');
-                summarySection.className = 'month-summary';
-                summarySection.innerHTML = `
+                // Create the summary content
+                const summaryContent = `
                     <div class="summary-item">
                         <span class="summary-label">Total Tax for ${monthYear}:</span>
                         <span class="summary-value">R ${Math.round(monthTotalTax).toLocaleString()}</span>
@@ -749,6 +775,14 @@
                         <span class="summary-value">R ${Math.round(monthTotal).toLocaleString()}</span>
                     </div>
                 `;
+
+                // Populate the mobile summary (shown at top on mobile)
+                mobileSummarySection.innerHTML = summaryContent;
+
+                // Create a summary section at the bottom (shown on desktop)
+                const summarySection = document.createElement('div');
+                summarySection.className = 'month-summary';
+                summarySection.innerHTML = summaryContent;
                 monthSection.appendChild(summarySection);
                 tablesContainer.appendChild(monthSection);
             }
@@ -772,6 +806,49 @@
                 monthHeader.className = 'month-header';
                 monthHeader.textContent = monthYear;
                 cardView.appendChild(monthHeader);
+
+                // Calculate totals first for mobile summary
+                const monthlyTotal = sales.reduce((total, sale) => {
+                    return total + sale.items.reduce((itemTotal, item) => {
+                        return itemTotal + (parseFloat(item.total_price) || 0);
+                    }, 0);
+                }, 0);
+
+                const monthlyTaxTotal = sales.reduce((total, sale) => {
+                    return total + sale.items.reduce((itemTotal, item) => {
+                        const quantity = parseFloat(item.quantity) || 0;
+                        const taxPerProduct = parseFloat(item.tax_per_product) || 0;
+                        return itemTotal + (quantity * taxPerProduct);
+                    }, 0);
+                }, 0);
+
+                const monthlyProfitTotal = sales.reduce((total, sale) => {
+                    return total + sale.items.reduce((itemTotal, item) => {
+                        // Calculate profit on the frontend for each item
+                        const quantity = parseFloat(item.quantity) || 0;
+                        const unitPrice = parseFloat(item.unit_price_excluding_tax) || 0;
+                        const unitCost = parseFloat(item.unit_cost) || 0;
+                        const profitPerUnit = unitPrice - unitCost;
+                        const itemProfit = profitPerUnit * quantity;
+                        return itemTotal + itemProfit;
+                    }, 0);
+                }, 0);
+
+                // Add mobile summary card at the top (will be shown first on mobile)
+                const mobileSummaryCard = document.createElement('div');
+                mobileSummaryCard.className = 'card mobile-summary-card';
+                mobileSummaryCard.innerHTML = `
+                    <h3>📊 Monthly Totals for ${monthYear}</h3>
+                    <p><strong>Total Tax:</strong> <span>R ${Math.round(monthlyTaxTotal).toLocaleString()}</span></p>
+                    <p style="padding: 8px; background-color: #e6ffe6; border-left: 4px solid #28a745; border-radius: 4px; margin: 10px 0;">
+                        <strong>Total Profit:</strong>
+                        <span style="font-weight: bold; color: #28a745; font-size: 16px;">R ${Math.round(monthlyProfitTotal).toLocaleString()}</span>
+                    </p>
+                    <p><strong>Total Sales:</strong> <span style="font-weight: bold; color: #0066cc; font-size: 16px;">R ${Math.round(monthlyTotal).toLocaleString()}</span></p>
+                `;
+                mobileSummaryCard.style.backgroundColor = '#f0f7ff';
+                mobileSummaryCard.style.border = '2px solid #007BFF';
+                cardView.appendChild(mobileSummaryCard);
 
                 sales.forEach(sale => {
                     sale.items.forEach(item => {
@@ -818,45 +895,7 @@
                     });
                 });
 
-                const monthlyTotal = sales.reduce((total, sale) => {
-                    return total + sale.items.reduce((itemTotal, item) => {
-                        return itemTotal + (parseFloat(item.total_price) || 0);
-                    }, 0);
-                }, 0);
 
-                const monthlyTaxTotal = sales.reduce((total, sale) => {
-                    return total + sale.items.reduce((itemTotal, item) => {
-                        const quantity = parseFloat(item.quantity) || 0;
-                        const taxPerProduct = parseFloat(item.tax_per_product) || 0;
-                        return itemTotal + (quantity * taxPerProduct);
-                    }, 0);
-                }, 0);
-
-                const monthlyProfitTotal = sales.reduce((total, sale) => {
-                    return total + sale.items.reduce((itemTotal, item) => {
-                        // Calculate profit on the frontend for each item
-                        const quantity = parseFloat(item.quantity) || 0;
-                        const unitPrice = parseFloat(item.unit_price_excluding_tax) || 0;
-                        const unitCost = parseFloat(item.unit_cost) || 0;
-                        const profitPerUnit = unitPrice - unitCost;
-                        const itemProfit = profitPerUnit * quantity;
-                        return itemTotal + itemProfit;
-                    }, 0);
-                }, 0);
-
-                const totalCard = document.createElement('div');
-                totalCard.className = 'card';
-                totalCard.innerHTML = `
-                    <h3>Monthly Totals for ${monthYear}</h3>
-                    <p><strong>Total Tax:</strong> <span>R ${Math.round(monthlyTaxTotal).toLocaleString()}</span></p>
-                    <p style="padding: 8px; background-color: #e6ffe6; border-left: 4px solid #28a745; border-radius: 4px; margin: 10px 0;">
-                        <strong>Total Profit:</strong>
-                        <span style="font-weight: bold; color: #28a745; font-size: 16px;">R ${Math.round(monthlyProfitTotal).toLocaleString()}</span>
-                    </p>
-                    <p><strong>Total Sales:</strong> <span style="font-weight: bold; color: #0066cc; font-size: 16px;">R ${Math.round(monthlyTotal).toLocaleString()}</span></p>
-                `;
-                totalCard.style.backgroundColor = '#f8f9fa';
-                cardView.appendChild(totalCard);
             }
         }
 
