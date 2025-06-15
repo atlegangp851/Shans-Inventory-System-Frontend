@@ -36,7 +36,7 @@
       100% { transform: rotate(360deg) translateZ(0); }
     }
 
-    /* Enhanced loading screen - more visible and prominent */
+    /* Enhanced loading screen - positioned at top for better visibility */
     #loadingScreen {
       position: fixed;
       top: 0;
@@ -47,8 +47,9 @@
       z-index: 99999; /* Higher z-index to ensure it's on top */
       display: flex;
       flex-direction: column;
-      justify-content: center;
+      justify-content: flex-start; /* Changed from center to flex-start */
       align-items: center;
+      padding-top: 80px; /* Add top padding to position content at top */
       transform: translateZ(0);
       will-change: transform;
       backdrop-filter: blur(2px); /* Add subtle blur effect */
@@ -110,6 +111,29 @@
       background-color: #357abd;
       transform: translateY(-1px);
       box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+
+    /* Mobile responsive adjustments for loading screen */
+    @media (max-width: 768px) {
+      #loadingScreen {
+        padding-top: 60px; /* Reduce top padding on mobile */
+      }
+
+      #loadingScreen .spinner {
+        width: 60px; /* Slightly smaller spinner on mobile */
+        height: 60px;
+        border-width: 8px;
+      }
+
+      #loadingScreen p {
+        font-size: 16px; /* Slightly smaller text on mobile */
+        padding: 0 20px; /* Add horizontal padding for better readability */
+      }
+
+      #loadingScreen .error-message {
+        font-size: 14px;
+        max-width: 90%; /* Use more screen width on mobile */
+      }
     }
 
     /* Optimize table rendering */
