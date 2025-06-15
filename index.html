@@ -851,6 +851,7 @@
     let selectedProducts = [];
     let allProducts = [];
     let newProductCounter = 1;
+    let isSelectingProduct = false;
 
     // API_BASE_URL is now defined in auth-utils.js
     const CURRENCY_SYMBOL = 'R';
@@ -924,6 +925,8 @@
 
         const newProducts = await response.json();
 
+
+
         if (newProducts.length < PRODUCTS_PER_PAGE) {
           hasMoreProducts = false;
         }
@@ -933,6 +936,8 @@
         const uniqueNewProducts = newProducts.filter(product => !existingItemCodes.has(product.item_code));
 
         allProducts = [...allProducts, ...uniqueNewProducts];
+
+
         currentPage++;
 
         // Only update UI if user is actively searching
@@ -988,7 +993,7 @@
       const fragment = document.createDocumentFragment();
 
       // Simple approach: show each filtered product directly
-      filteredProducts.forEach(product => {
+      filteredProducts.forEach((product, index) => {
         const li = document.createElement('li');
 
         const productNameDiv = document.createElement('div');
@@ -1005,7 +1010,13 @@
         li.appendChild(productDetailsDiv);
 
         // Add click event listener
-        li.addEventListener('click', () => selectProduct(product));
+        li.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          isSelectingProduct = true;
+          selectProduct(product);
+          isSelectingProduct = false;
+        });
 
         fragment.appendChild(li);
       });
@@ -1023,10 +1034,12 @@
 
     // Clear dropdown when user clicks away or clears the search
     DOM.productSearchInput.addEventListener('blur', () => {
-      // Small delay to allow clicking on dropdown items
+      // Delay to allow clicking on dropdown items
       setTimeout(() => {
-        DOM.productList.innerHTML = '';
-      }, 150);
+        if (!isSelectingProduct) {
+          DOM.productList.innerHTML = '';
+        }
+      }, 500);
     });
 
     // Clear dropdown when search is cleared
@@ -1079,10 +1092,21 @@
       // Product name cell
       const nameCell = document.createElement('div');
       nameCell.className = 'div-table-cell product-column';
-      nameCell.textContent = product.name;
-      if (product.is_new) {
-        nameCell.innerHTML += '<span class="new-product-label">(NEW)</span>';
+
+      // Create the product name with room information
+      let nameContent = product.name;
+
+      // Add room information if available and not 'N/A'
+      if (product.room_name && product.room_name !== 'N/A') {
+        nameContent += ` <span style="color: #0066cc; font-weight: bold; margin-left: 8px;">(${product.room_name})</span>`;
       }
+
+      // Add NEW label if it's a new product
+      if (product.is_new) {
+        nameContent += '<span class="new-product-label">(NEW)</span>';
+      }
+
+      nameCell.innerHTML = nameContent;
       row.appendChild(nameCell);
 
       // Quantity cell
@@ -1159,17 +1183,17 @@
       const loadingScreen = document.getElementById('loadingScreen');
       const errorMessage = loadingScreen.querySelector('.error-message');
       const retryButton = loadingScreen.querySelector('.retry-button');
-      
+
       // Reset loading screen
       errorMessage.style.display = 'none';
       retryButton.style.display = 'none';
       loadingScreen.querySelector('p').textContent = 'Loading products, please wait...';
-      
+
       // Clear any existing data
       allProducts = [];
       currentPage = 1;
       hasMoreProducts = true;
-      
+
       // Restart initialization
       initializeApp();
     }
@@ -1179,11 +1203,11 @@
       const loadingScreen = document.getElementById('loadingScreen');
       const errorMessage = loadingScreen.querySelector('.error-message');
       const retryButton = loadingScreen.querySelector('.retry-button');
-      
+
       try {
         // Show loading screen
         loadingScreen.style.display = 'flex';
-        
+
         const isAuthenticated = await initAuth({
           requireAuth: true,
           showLoading: true
@@ -1222,7 +1246,7 @@
 
         loadExistingOrderData();
         updateSelectedProductsTable();
-        
+
         // Hide loading screen on success
         loadingScreen.style.display = 'none';
       } catch (error) {
@@ -1336,6 +1360,8 @@
       DOM.roomInput.classList.remove('hidden');
       DOM.roomLabel.classList.remove('hidden');
     }
+
+
 
     function addSelectedProduct() {
       const productName = DOM.productSearchInput.value.trim();
@@ -1807,13 +1833,15 @@
       };
     }
 
+
+
     // Add polyfill for fetch if not available
     if (typeof fetch === 'undefined') {
       window.fetch = function(url, options) {
         return new Promise((resolve, reject) => {
           const xhr = new XMLHttpRequest();
           xhr.open(options.method || 'GET', url);
-          
+
           if (options.headers) {
             Object.keys(options.headers).forEach(key => {
               xhr.setRequestHeader(key, options.headers[key]);
