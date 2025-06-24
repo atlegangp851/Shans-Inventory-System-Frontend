@@ -158,6 +158,68 @@
             box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
         }
 
+        /* Filter Controls Styling */
+        .filter-controls {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .filter-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: end;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 150px;
+        }
+
+        .filter-group label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--text-color);
+            font-size: 14px;
+        }
+
+        .filter-select {
+            padding: 8px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+        }
+
+        .clear-filters-btn {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+            height: fit-content;
+        }
+
+        .clear-filters-btn:hover {
+            background-color: #5a6268;
+        }
+
         .month-section {
             margin-bottom: 40px;
         }
@@ -403,6 +465,20 @@
                 width: 100%;
             }
 
+            /* Mobile filter controls */
+            .filter-row {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .filter-group {
+                min-width: 100%;
+            }
+
+            .filter-select {
+                width: 100%;
+            }
+
             .table-container {
                 overflow-x: auto;
                 max-width: 100%;
@@ -470,6 +546,39 @@
             </div>
             <div class="controls-right">
                 <input type="text" class="search-bar" placeholder="Search sales by any field...">
+            </div>
+        </div>
+
+        <!-- Filter Controls -->
+        <div class="filter-controls">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="company-filter">Company Name:</label>
+                    <select id="company-filter" class="filter-select">
+                        <option value="">All Companies</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="payment-filter">Payment Method:</label>
+                    <select id="payment-filter" class="filter-select">
+                        <option value="">All Methods</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="salesperson-filter">Salesperson:</label>
+                    <select id="salesperson-filter" class="filter-select">
+                        <option value="">All Salespersons</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="month-filter">Sales Month:</label>
+                    <select id="month-filter" class="filter-select">
+                        <option value="">All Months</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <button id="clear-filters" class="clear-filters-btn">Clear Filters</button>
+                </div>
             </div>
         </div>
         <div id="tables-container">
@@ -565,8 +674,17 @@
         const viewToggle = document.querySelector('.view-toggle');
         const searchBar = document.querySelector('.search-bar');
 
+        // Filter elements
+        const companyFilter = document.getElementById('company-filter');
+        const paymentFilter = document.getElementById('payment-filter');
+        const salespersonFilter = document.getElementById('salesperson-filter');
+        const monthFilter = document.getElementById('month-filter');
+        const clearFiltersBtn = document.getElementById('clear-filters');
+
         let allSalesData = [];
         let groupedSalesData = {};
+        let filteredSalesData = [];
+        let monthlyExpenses = {}; // Store expense totals by month
 
         async function fetchSalesData() {
             try {
@@ -613,9 +731,12 @@
                 });
 
                 allSalesData = data;
-                groupDataByMonth(allSalesData);
+                filteredSalesData = [...allSalesData];
+                populateFilterDropdowns();
+                await fetchMonthlyExpenses();
+                groupDataByMonth(filteredSalesData);
                 renderTables(groupedSalesData);
-                renderCards(allSalesData);
+                renderCards(filteredSalesData);
             } catch (error) {
                 console.error('Error fetching sales data:', error);
                 tablesContainer.innerHTML = '<p style="color: red;">Failed to load sales data. Please try again later.</p>';
@@ -632,6 +753,147 @@
                 }
                 groupedSalesData[monthYear].push(item);
             });
+        }
+
+        function populateFilterDropdowns() {
+            // Get unique values for each filter
+            const companies = [...new Set(allSalesData.map(sale => sale.company_name || 'Shans Accessories PTY LTD'))].sort();
+            const paymentMethods = [...new Set(allSalesData.map(sale => sale.payment_method))].filter(method => method).sort();
+            const salespersons = [...new Set(allSalesData.map(sale => sale.salesperson_name))].filter(person => person).sort();
+            const months = [...new Set(allSalesData.map(sale => {
+                const date = new Date(sale.date);
+                return date.toLocaleString('default', { month: 'long', year: 'numeric' });
+            }))].sort((a, b) => new Date(a) - new Date(b));
+
+            // Populate company filter
+            companyFilter.innerHTML = '<option value="">All Companies</option>';
+            companies.forEach(company => {
+                const option = document.createElement('option');
+                option.value = company;
+                option.textContent = company;
+                companyFilter.appendChild(option);
+            });
+
+            // Populate payment method filter
+            paymentFilter.innerHTML = '<option value="">All Methods</option>';
+            paymentMethods.forEach(method => {
+                const option = document.createElement('option');
+                option.value = method;
+                option.textContent = method;
+                paymentFilter.appendChild(option);
+            });
+
+            // Populate salesperson filter
+            salespersonFilter.innerHTML = '<option value="">All Salespersons</option>';
+            salespersons.forEach(person => {
+                const option = document.createElement('option');
+                option.value = person;
+                option.textContent = person;
+                salespersonFilter.appendChild(option);
+            });
+
+            // Populate month filter
+            monthFilter.innerHTML = '<option value="">All Months</option>';
+            months.forEach(month => {
+                const option = document.createElement('option');
+                option.value = month;
+                option.textContent = month;
+                monthFilter.appendChild(option);
+            });
+        }
+
+        async function fetchMonthlyExpenses() {
+            try {
+                console.log('Fetching month-specific expenses...');
+
+                // Get unique months from sales data
+                const uniqueMonths = [...new Set(allSalesData.map(sale => {
+                    const date = new Date(sale.date);
+                    return date.toLocaleString('default', { month: 'long', year: 'numeric' });
+                }))];
+
+                monthlyExpenses = {};
+
+                // For each month, fetch expenses specific to that month
+                // This will include recurring expenses (appear in all months) + non-recurring expenses (only in their specific month)
+                for (const monthYear of uniqueMonths) {
+                    try {
+                        // Parse month and year from monthYear string (e.g., "January 2024")
+                        const date = new Date(monthYear + ' 1'); // Add day to make it a valid date
+                        const year = date.getFullYear();
+                        const month = date.getMonth() + 1; // getMonth() returns 0-11, we need 1-12
+
+                        console.log(`Fetching expenses for ${monthYear} (year: ${year}, month: ${month})`);
+
+                        // Validate the date parsing
+                        if (isNaN(year) || isNaN(month) || month < 1 || month > 12) {
+                            console.error(`Invalid date parsing for ${monthYear}: year=${year}, month=${month}`);
+                            monthlyExpenses[monthYear] = 0;
+                            continue;
+                        }
+
+                        // Fetch expenses for this specific month using the existing API endpoint
+                        const response = await fetch(`https://shans-backend.onrender.com/api/expenses?year=${year}&month=${month}`);
+
+                        if (!response.ok) {
+                            throw new Error(`Failed to fetch expenses for ${monthYear}: ${response.status} ${response.statusText}`);
+                        }
+
+                        const monthExpenses = await response.json();
+                        console.log(`Expenses for ${monthYear}:`, monthExpenses);
+
+                        // Separate recurring and non-recurring expenses for debugging
+                        const recurringExpenses = monthExpenses.filter(expense =>
+                            expense.is_recurring || expense.recurring_template_id
+                        );
+                        const nonRecurringExpenses = monthExpenses.filter(expense =>
+                            !expense.is_recurring && !expense.recurring_template_id
+                        );
+
+                        const recurringTotal = recurringExpenses.reduce((total, expense) => {
+                            return total + parseFloat(expense.amount || 0);
+                        }, 0);
+
+                        const nonRecurringTotal = nonRecurringExpenses.reduce((total, expense) => {
+                            return total + parseFloat(expense.amount || 0);
+                        }, 0);
+
+                        // Calculate total for this month
+                        const monthTotal = monthExpenses.reduce((total, expense) => {
+                            const amount = parseFloat(expense.amount || 0);
+                            return total + amount;
+                        }, 0);
+
+                        monthlyExpenses[monthYear] = monthTotal;
+
+                        console.log(`=== EXPENSE BREAKDOWN FOR ${monthYear} ===`);
+                        console.log(`Recurring expenses: R${recurringTotal} (${recurringExpenses.length} items)`);
+                        console.log(`Non-recurring expenses: R${nonRecurringTotal} (${nonRecurringExpenses.length} items)`);
+                        console.log(`Total expenses: R${monthTotal} (${monthExpenses.length} total items)`);
+                        console.log(`=======================================`);
+
+                    } catch (monthError) {
+                        console.error(`Error fetching expenses for ${monthYear}:`, monthError);
+                        monthlyExpenses[monthYear] = 0;
+                    }
+                }
+
+                console.log('Final monthly expenses object:', monthlyExpenses);
+
+            } catch (error) {
+                console.error('Error in fetchMonthlyExpenses:', error);
+
+                // Fallback: set all monthly expenses to 0
+                const uniqueMonths = [...new Set(allSalesData.map(sale => {
+                    const date = new Date(sale.date);
+                    return date.toLocaleString('default', { month: 'long', year: 'numeric' });
+                }))];
+
+                monthlyExpenses = {};
+                for (const monthYear of uniqueMonths) {
+                    monthlyExpenses[monthYear] = 0;
+                }
+            }
         }
 
         function renderTables(groupedData) {
@@ -738,13 +1000,13 @@
                             <td>${sanitizeHTML(item.item_name)}</td>
                             <td>${sanitizeHTML(item.room_name || 'N/A')}</td>
                             <td>${quantity.toLocaleString()}</td>
-                            <td>R ${Math.round(unitCost).toLocaleString()}</td>
-                            <td>R ${Math.round(unitPrice).toLocaleString()}</td>
-                            <td style="color: #28a745; font-weight: bold;">R ${Math.round(profitPerUnit).toLocaleString()}</td>
-                            <td>R ${Math.round(taxPerProduct).toLocaleString()}</td>
+                            <td>R ${unitCost.toFixed(2)}</td>
+                            <td>R ${unitPrice.toFixed(2)}</td>
+                            <td style="color: #28a745; font-weight: bold;">R ${profitPerUnit.toFixed(2)}</td>
+                            <td>R ${taxPerProduct.toFixed(2)}</td>
                             <td>${sanitizeHTML(sale.payment_method)}</td>
-                            <td>R ${Math.round(totalPrice).toLocaleString()}</td>
-                            <td style="color: #28a745; font-weight: bold;">R ${Math.round(totalProfit).toLocaleString()}</td>
+                            <td>R ${totalPrice.toFixed(2)}</td>
+                            <td style="color: #28a745; font-weight: bold;">R ${totalProfit.toFixed(2)}</td>
                         `;
                         tbody.appendChild(row);
 
@@ -760,19 +1022,33 @@
                 tableContainer.appendChild(table);
                 monthSection.appendChild(tableContainer);
 
+                // Get monthly expenses (month-specific: recurring + non-recurring for this month only)
+                const monthExpenses = monthlyExpenses[monthYear] || 0;
+                const netProfit = monthTotalProfit - monthExpenses;
+
+
+
                 // Create the summary content
                 const summaryContent = `
                     <div class="summary-item">
                         <span class="summary-label">Total Tax for ${monthYear}:</span>
-                        <span class="summary-value">R ${Math.round(monthTotalTax).toLocaleString()}</span>
+                        <span class="summary-value">R ${monthTotalTax.toFixed(2)}</span>
                     </div>
                     <div class="summary-item profit-total">
-                        <span class="summary-label">Total Profit for ${monthYear}:</span>
-                        <span class="summary-value">R ${Math.round(monthTotalProfit).toLocaleString()}</span>
+                        <span class="summary-label">Gross Profit for ${monthYear}:</span>
+                        <span class="summary-value">R ${monthTotalProfit.toFixed(2)}</span>
+                    </div>
+                    <div class="summary-item" style="background-color: #fff3cd; border-left: 4px solid #ffc107;">
+                        <span class="summary-label">Total Expenses for ${monthYear}:</span>
+                        <span class="summary-value">R ${monthExpenses.toFixed(2)}</span>
+                    </div>
+                    <div class="summary-item" style="background-color: ${netProfit >= 0 ? '#d4edda' : '#f8d7da'}; border-left: 4px solid ${netProfit >= 0 ? '#28a745' : '#dc3545'};">
+                        <span class="summary-label">Net Profit for ${monthYear}:</span>
+                        <span class="summary-value" style="color: ${netProfit >= 0 ? '#28a745' : '#dc3545'};">R ${netProfit.toFixed(2)}</span>
                     </div>
                     <div class="summary-item grand-total">
-                        <span class="summary-label">Grand Total for ${monthYear}:</span>
-                        <span class="summary-value">R ${Math.round(monthTotal).toLocaleString()}</span>
+                        <span class="summary-label">Grand Total Sales for ${monthYear}:</span>
+                        <span class="summary-value">R ${monthTotal.toFixed(2)}</span>
                     </div>
                 `;
 
@@ -834,17 +1110,31 @@
                     }, 0);
                 }, 0);
 
+                // Get monthly expenses for card view (month-specific: recurring + non-recurring for this month only)
+                const monthExpenses = monthlyExpenses[monthYear] || 0;
+                const netProfit = monthlyProfitTotal - monthExpenses;
+
+
+
                 // Add mobile summary card at the top (will be shown first on mobile)
                 const mobileSummaryCard = document.createElement('div');
                 mobileSummaryCard.className = 'card mobile-summary-card';
                 mobileSummaryCard.innerHTML = `
                     <h3>📊 Monthly Totals for ${monthYear}</h3>
-                    <p><strong>Total Tax:</strong> <span>R ${Math.round(monthlyTaxTotal).toLocaleString()}</span></p>
+                    <p><strong>Total Tax:</strong> <span>R ${monthlyTaxTotal.toFixed(2)}</span></p>
                     <p style="padding: 8px; background-color: #e6ffe6; border-left: 4px solid #28a745; border-radius: 4px; margin: 10px 0;">
-                        <strong>Total Profit:</strong>
-                        <span style="font-weight: bold; color: #28a745; font-size: 16px;">R ${Math.round(monthlyProfitTotal).toLocaleString()}</span>
+                        <strong>Gross Profit:</strong>
+                        <span style="font-weight: bold; color: #28a745; font-size: 16px;">R ${monthlyProfitTotal.toFixed(2)}</span>
                     </p>
-                    <p><strong>Total Sales:</strong> <span style="font-weight: bold; color: #0066cc; font-size: 16px;">R ${Math.round(monthlyTotal).toLocaleString()}</span></p>
+                    <p style="padding: 8px; background-color: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px; margin: 10px 0;">
+                        <strong>Total Expenses for ${monthYear}:</strong>
+                        <span style="font-weight: bold; color: #856404; font-size: 16px;">R ${monthExpenses.toFixed(2)}</span>
+                    </p>
+                    <p style="padding: 8px; background-color: ${netProfit >= 0 ? '#d4edda' : '#f8d7da'}; border-left: 4px solid ${netProfit >= 0 ? '#28a745' : '#dc3545'}; border-radius: 4px; margin: 10px 0;">
+                        <strong>Net Profit:</strong>
+                        <span style="font-weight: bold; color: ${netProfit >= 0 ? '#28a745' : '#dc3545'}; font-size: 18px;">R ${netProfit.toFixed(2)}</span>
+                    </p>
+                    <p><strong>Total Sales:</strong> <span style="font-weight: bold; color: #0066cc; font-size: 16px;">R ${monthlyTotal.toFixed(2)}</span></p>
                 `;
                 mobileSummaryCard.style.backgroundColor = '#f0f7ff';
                 mobileSummaryCard.style.border = '2px solid #007BFF';
@@ -880,16 +1170,16 @@
                             <p><strong>Item:</strong> <span>${sanitizeHTML(item.item_name)}</span></p>
                             <p><strong>Room:</strong> <span>${sanitizeHTML(item.room_name || 'N/A')}</span></p>
                             <p><strong>Quantity:</strong> <span>${quantity.toLocaleString()}</span></p>
-                            <p><strong>Unit Price:</strong> <span>R ${Math.round(unitPrice).toLocaleString()}</span></p>
-                            <p><strong>Unit Cost:</strong> <span>R ${Math.round(unitCost).toLocaleString()}</span></p>
-                            <p><strong>Profit per Unit:</strong> <span style="color: #28a745;">R ${Math.round(profitPerUnit).toLocaleString()}</span></p>
-                            <p><strong>Tax per Unit:</strong> <span>R ${Math.round(taxPerProduct).toLocaleString()}</span></p>
-                            <p><strong>Total Value:</strong> <span>R ${Math.round(unitPrice * quantity).toLocaleString()}</span></p>
-                            <p><strong>Total Cost:</strong> <span>R ${Math.round(unitCost * quantity).toLocaleString()}</span></p>
-                            <p><strong>Total Profit:</strong> <span style="color: #28a745;">R ${Math.round(totalProfit).toLocaleString()}</span></p>
-                            <p><strong>Total Tax:</strong> <span>R ${Math.round(taxPerProduct * quantity).toLocaleString()}</span></p>
+                            <p><strong>Unit Price:</strong> <span>R ${unitPrice.toFixed(2)}</span></p>
+                            <p><strong>Unit Cost:</strong> <span>R ${unitCost.toFixed(2)}</span></p>
+                            <p><strong>Profit per Unit:</strong> <span style="color: #28a745;">R ${profitPerUnit.toFixed(2)}</span></p>
+                            <p><strong>Tax per Unit:</strong> <span>R ${taxPerProduct.toFixed(2)}</span></p>
+                            <p><strong>Total Value:</strong> <span>R ${(unitPrice * quantity).toFixed(2)}</span></p>
+                            <p><strong>Total Cost:</strong> <span>R ${(unitCost * quantity).toFixed(2)}</span></p>
+                            <p><strong>Total Profit:</strong> <span style="color: #28a745;">R ${totalProfit.toFixed(2)}</span></p>
+                            <p><strong>Total Tax:</strong> <span>R ${(taxPerProduct * quantity).toFixed(2)}</span></p>
                             <p><strong>Payment Method:</strong> <span>${sanitizeHTML(sale.payment_method)}</span></p>
-                            <p><strong>Total Price:</strong> <span style="font-weight: bold; color: #0066cc;">R ${Math.round(totalPrice).toLocaleString()}</span></p>
+                            <p><strong>Total Price:</strong> <span style="font-weight: bold; color: #0066cc;">R ${totalPrice.toFixed(2)}</span></p>
                         `;
                         cardView.appendChild(card);
                     });
@@ -900,12 +1190,12 @@
         }
 
         function saveToExcel() {
-            if (allSalesData.length === 0) {
+            if (filteredSalesData.length === 0) {
                 alert('No data available to save!');
                 return;
             }
 
-            const flattenedData = allSalesData.flatMap(sale =>
+            const flattenedData = filteredSalesData.flatMap(sale =>
                 sale.items.map(item => {
                     const quantity = parseFloat(item.quantity) || 0;
                     const totalPrice = parseFloat(item.total_price) || 0;
@@ -936,16 +1226,16 @@
                         "Item Purchased": item.item_name,
                         "Room": item.room_name || 'N/A',
                         "Quantity": quantity,
-                        "Unit Price (R)": Math.round(unitPrice),
-                        "Unit Cost (R)": Math.round(unitCost),
-                        "Profit per Unit (R)": Math.round(profitPerUnit),
-                        "Tax per Unit (R)": Math.round(parseFloat(item.tax_per_product) || 0),
-                        "Total Value (R)": Math.round(totalRetailValue),
-                        "Total Cost (R)": Math.round(totalCost),
-                        "Total Profit (R)": Math.round(totalProfit),
-                        "Total Tax (R)": Math.round(parseFloat(item.tax_per_product || 0) * quantity),
+                        "Unit Price (R)": unitPrice.toFixed(2),
+                        "Unit Cost (R)": unitCost.toFixed(2),
+                        "Profit per Unit (R)": profitPerUnit.toFixed(2),
+                        "Tax per Unit (R)": (parseFloat(item.tax_per_product) || 0).toFixed(2),
+                        "Total Value (R)": totalRetailValue.toFixed(2),
+                        "Total Cost (R)": totalCost.toFixed(2),
+                        "Total Profit (R)": totalProfit.toFixed(2),
+                        "Total Tax (R)": (parseFloat(item.tax_per_product || 0) * quantity).toFixed(2),
                         "Payment Method": sale.payment_method,
-                        "Total Price (R)": Math.round(totalPrice)
+                        "Total Price (R)": totalPrice.toFixed(2)
                     };
                 })
             );
@@ -978,29 +1268,60 @@
             window.print();
         }
 
-        function filterAndRender(query) {
-            const filteredData = allSalesData.filter(sale =>
-                sale.reference_number.toLowerCase().includes(query.toLowerCase()) ||
-                sale.date.toLowerCase().includes(query.toLowerCase()) ||
-                sale.billing_name.toLowerCase().includes(query.toLowerCase()) ||
-                sale.billing_address.toLowerCase().includes(query.toLowerCase()) ||
-                sale.billing_email.toLowerCase().includes(query.toLowerCase()) ||
-                (sale.billing_phone && sale.billing_phone.toLowerCase().includes(query.toLowerCase())) ||
-                (sale.salesperson_name && sale.salesperson_name.toLowerCase().includes(query.toLowerCase())) ||
-                (sale.company_name && sale.company_name.toLowerCase().includes(query.toLowerCase())) ||
-                sale.payment_method.toLowerCase().includes(query.toLowerCase()) ||
-                sale.items.some(item =>
-                    item.item_name.toLowerCase().includes(query.toLowerCase()) ||
-                    (item.room_name && item.room_name.toLowerCase().includes(query.toLowerCase())) ||
-                    String(item.quantity).includes(query) ||
-                    String(item.tax_per_product).includes(query) ||
-                    String(item.total_price).includes(query)
-                )
-            );
+        function applyAllFilters() {
+            const searchQuery = searchBar.value.trim().toLowerCase();
+            const selectedCompany = companyFilter.value;
+            const selectedPayment = paymentFilter.value;
+            const selectedSalesperson = salespersonFilter.value;
+            const selectedMonth = monthFilter.value;
 
-            groupDataByMonth(filteredData);
+            filteredSalesData = allSalesData.filter(sale => {
+                // Text search filter
+                const matchesSearch = !searchQuery || (
+                    sale.reference_number.toLowerCase().includes(searchQuery) ||
+                    sale.date.toLowerCase().includes(searchQuery) ||
+                    sale.billing_name.toLowerCase().includes(searchQuery) ||
+                    sale.billing_address.toLowerCase().includes(searchQuery) ||
+                    sale.billing_email.toLowerCase().includes(searchQuery) ||
+                    (sale.billing_phone && sale.billing_phone.toLowerCase().includes(searchQuery)) ||
+                    (sale.salesperson_name && sale.salesperson_name.toLowerCase().includes(searchQuery)) ||
+                    (sale.company_name && sale.company_name.toLowerCase().includes(searchQuery)) ||
+                    sale.payment_method.toLowerCase().includes(searchQuery) ||
+                    sale.items.some(item =>
+                        item.item_name.toLowerCase().includes(searchQuery) ||
+                        (item.room_name && item.room_name.toLowerCase().includes(searchQuery)) ||
+                        String(item.quantity).includes(searchQuery) ||
+                        String(item.tax_per_product).includes(searchQuery) ||
+                        String(item.total_price).includes(searchQuery)
+                    )
+                );
+
+                // Company filter
+                const matchesCompany = !selectedCompany || (sale.company_name || 'Shans Accessories PTY LTD') === selectedCompany;
+
+                // Payment method filter
+                const matchesPayment = !selectedPayment || sale.payment_method === selectedPayment;
+
+                // Salesperson filter
+                const matchesSalesperson = !selectedSalesperson || sale.salesperson_name === selectedSalesperson;
+
+                // Month filter
+                const matchesMonth = !selectedMonth || (() => {
+                    const saleDate = new Date(sale.date);
+                    const saleMonthYear = saleDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+                    return saleMonthYear === selectedMonth;
+                })();
+
+                return matchesSearch && matchesCompany && matchesPayment && matchesSalesperson && matchesMonth;
+            });
+
+            groupDataByMonth(filteredSalesData);
             renderTables(groupedSalesData);
-            renderCards(filteredData);
+            renderCards(filteredSalesData);
+        }
+
+        function filterAndRender(query) {
+            applyAllFilters();
         }
 
         function sanitizeHTML(str) {
@@ -1032,6 +1353,22 @@
             const query = e.target.value.trim();
             filterAndRender(query);
         }, 300));
+
+        // Filter event listeners
+        companyFilter.addEventListener('change', applyAllFilters);
+        paymentFilter.addEventListener('change', applyAllFilters);
+        salespersonFilter.addEventListener('change', applyAllFilters);
+        monthFilter.addEventListener('change', applyAllFilters);
+
+        // Clear filters functionality
+        clearFiltersBtn.addEventListener('click', () => {
+            searchBar.value = '';
+            companyFilter.value = '';
+            paymentFilter.value = '';
+            salespersonFilter.value = '';
+            monthFilter.value = '';
+            applyAllFilters();
+        });
 
         // Backend API configuration
         const BACKUP_CONFIG = {
@@ -1129,13 +1466,13 @@
                             "Item Purchase": item.item_name,
                             "Room": item.room_name || 'N/A',
                             "Quantity": quantity,
-                            "Unit Cost (R)": Math.round(unitCost),
-                            "Unit Price (R)": Math.round(unitPrice),
-                            "Profit/Unit (R)": Math.round(profitPerUnit),
-                            "Tax per Unit (R)": Math.round(taxPerProduct),
+                            "Unit Cost (R)": unitCost.toFixed(2),
+                            "Unit Price (R)": unitPrice.toFixed(2),
+                            "Profit/Unit (R)": profitPerUnit.toFixed(2),
+                            "Tax per Unit (R)": taxPerProduct.toFixed(2),
                             "Payment Method": sale.payment_method,
-                            "Total (R)": Math.round(totalPrice),
-                            "Total Profit (R)": Math.round(totalProfit)
+                            "Total (R)": totalPrice.toFixed(2),
+                            "Total Profit (R)": totalProfit.toFixed(2)
                         };
                     })
                 );
@@ -1163,10 +1500,6 @@
                 formData.append('monthYear', monthYear);
 
                 // Upload to backend
-                console.log('Uploading to:', BACKUP_CONFIG.excelUploadEndpoint);
-                console.log('Token available:', !!token);
-                console.log('FormData entries:', Array.from(formData.entries()).map(([key, value]) => [key, value instanceof File ? `File: ${value.name}` : value]));
-
                 const response = await fetch(BACKUP_CONFIG.excelUploadEndpoint, {
                     method: 'POST',
                     headers: {
@@ -1176,14 +1509,10 @@
                     body: formData
                 });
 
-                console.log('Response status:', response.status);
-                console.log('Response headers:', Object.fromEntries(response.headers.entries()));
-
                 // Check if response is JSON
                 const contentType = response.headers.get('content-type');
                 if (!contentType || !contentType.includes('application/json')) {
                     const textResponse = await response.text();
-                    console.error('Non-JSON response:', textResponse);
                     throw new Error(`Server returned non-JSON response (${response.status}): ${textResponse.substring(0, 200)}...`);
                 }
 
@@ -1199,10 +1528,8 @@
                     'success',
                     7000
                 );
-                console.log('Excel backup details:', result);
 
             } catch (error) {
-                console.error('Excel backup failed:', error);
 
                 // If the new endpoint fails, try the original backup method as fallback
                 if (error.message.includes('404') || error.message.includes('Not Found')) {

@@ -244,7 +244,7 @@
       background-color: #81b0e6;
     }
     .button-group {
-      display: flex;
+      display: flex;aC
       flex-wrap: wrap;
       gap: 10px;
     }
@@ -707,7 +707,8 @@
   <div class="container">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
       <h1 style="margin: 0;">Receipt and Quotation Generator</h1>
-      <div style="display: flex; align-items: center;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <a href="convert-to-receipt.html" class="admin-nav-button" style="background-color: #FF9800;">Convert to Receipt</a>
         <a href="Admin/index.html" id="adminDashboardBtn" class="admin-nav-button hidden">Admin Dashboard</a>
         <button onclick="logout()" style="background-color: #e74c3c; padding: 8px 16px; font-size: 14px;">Logout</button>
       </div>
@@ -721,6 +722,7 @@
         <option value="" disabled selected>Select a company</option>
         <option value="company1">Shans Accessories PTY LTD</option>
         <option value="company2">Shans Autosport PTY LTD</option>
+        <option value="company3">Shans Motorstyle PTY LTD</option>
       </select>
     </div>
 
@@ -1288,6 +1290,16 @@
           Business Account<br>
           Capitec Current Account<br>
           Account: 1052498876
+        `
+      },
+      company3: {
+        name: "Shans Motorstyle PTY LTD",
+        bankingInformation: `
+          SHANS MOTORSTYLE (PTY) LTD<br>
+          Gold Business Account<br>
+          Account Number: 63160266871<br>
+          Branch Code: 250655<br>
+          Swift Code: FIRNZAJJ
         `
       }
     };

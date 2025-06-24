@@ -1,0 +1,2593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#ffffff">
+    <meta name="format-detection" content="telephone=no">
+    <title>Expenses Management - Shans Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="../Assets/performance.css">
+    <script src="../Assets/performance.js"></script>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .back-link {
+            text-decoration: none;
+            color: #007BFF;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .back-link:hover {
+            color: #0056b3;
+        }
+
+        h1 {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 2em;
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .summary-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+            border-left: 4px solid;
+        }
+
+        .summary-card h3 {
+            margin: 0 0 10px 0;
+            font-size: 1.1em;
+            color: #666;
+        }
+
+        .summary-card .amount {
+            font-size: 1.8em;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .summary-card.total {
+            border-left-color: #2c3e50;
+        }
+
+        .summary-card.total .amount {
+            color: #2c3e50;
+        }
+
+        .category-tabs {
+            display: flex;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            overflow-x: auto;
+        }
+
+        .category-tab {
+            flex: 1;
+            padding: 15px 20px;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 500;
+            color: #666;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            min-width: 120px;
+        }
+
+        .category-tab:first-child {
+            border-radius: 10px 0 0 10px;
+        }
+
+        .category-tab:last-child {
+            border-radius: 0 10px 10px 0;
+        }
+
+        .category-tab.active {
+            background: #f8f9fa;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .category-tab:hover {
+            background: #f8f9fa;
+        }
+
+        .expense-section {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .section-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #2c3e50;
+            margin: 0;
+        }
+
+        .add-expense-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.3s ease;
+        }
+
+        .add-expense-btn:hover {
+            background: #218838;
+        }
+
+        .expenses-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .expenses-table th,
+        .expenses-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .expenses-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .expenses-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .amount-cell {
+            font-weight: 600;
+            color: #e74c3c;
+        }
+
+        .date-cell {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .actions-cell {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .edit-btn {
+            background: #007bff;
+            color: white;
+        }
+
+        .edit-btn:hover {
+            background: #0056b3;
+        }
+
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+        }
+
+        .delete-btn:hover {
+            background: #c82333;
+        }
+
+        .no-expenses {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .no-expenses i {
+            font-size: 3em;
+            margin-bottom: 15px;
+            color: #ddd;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal h2 {
+            margin: 0 0 20px 0;
+            color: #2c3e50;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+
+        /* Status Message */
+        .status-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 6px;
+            color: white;
+            font-weight: 500;
+            z-index: 1001;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+
+        .status-message.show {
+            transform: translateX(0);
+        }
+
+        .status-message.success {
+            background: #28a745;
+        }
+
+        .status-message.error {
+            background: #dc3545;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            h1 {
+                font-size: 1.5em;
+            }
+
+            .category-tabs {
+                flex-direction: column;
+            }
+
+            .category-tab {
+                border-radius: 0 !important;
+                border-bottom: 1px solid #eee;
+            }
+
+            .category-tab:last-child {
+                border-bottom: none;
+            }
+
+            .expenses-table {
+                font-size: 14px;
+            }
+
+            .expenses-table th,
+            .expenses-table td {
+                padding: 8px;
+            }
+
+            .modal {
+                padding: 20px;
+                margin: 20px;
+            }
+
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .actions-cell {
+                flex-direction: column;
+            }
+
+            /* Smart upload mobile styles */
+            .upload-mode-toggle {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+
+            .mode-info {
+                text-align: center;
+            }
+
+            .btn-manual-entry {
+                align-self: center;
+            }
+
+            .extracted-data-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .extraction-actions {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .extraction-actions .btn {
+                width: 100%;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Month Selector Styles */
+        .month-selector {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .month-selector label {
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+        }
+
+        .month-selector select {
+            padding: 8px 12px;
+            border: 2px solid #e1e8ed;
+            border-radius: 6px;
+            font-size: 14px;
+            min-width: 120px;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        /* Checkbox Styles */
+        .checkbox-label {
+            display: flex !important;
+            align-items: center;
+            cursor: pointer;
+            font-weight: normal !important;
+            margin-bottom: 0 !important;
+        }
+
+        .checkbox-label input[type="checkbox"] {
+            margin-right: 10px;
+            transform: scale(1.2);
+        }
+
+        /* Recurring indicator in table */
+        .recurring-badge {
+            background: #28a745;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        /* Media Upload Styles */
+        .media-upload-container {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            background: #fafafa;
+        }
+
+        .media-upload-area {
+            cursor: pointer;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .media-upload-area:hover {
+            background: #f0f0f0;
+            border-color: #007bff;
+        }
+
+        .media-upload-area i {
+            font-size: 2em;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .media-upload-area p {
+            margin: 10px 0 5px 0;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .media-upload-area small {
+            color: #666;
+            font-size: 12px;
+            display: block;
+            margin-top: 3px;
+        }
+
+        .media-upload-area .pdf-note {
+            color: #007bff;
+            font-style: italic;
+            margin-top: 5px;
+        }
+
+        .media-preview {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .preview-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-remove-media {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.3s ease;
+        }
+
+        .btn-remove-media:hover {
+            background: #c82333;
+        }
+
+        .upload-progress {
+            margin-top: 15px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 5px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #007bff;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        #progressText {
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* Media indicator in table */
+        .media-indicator {
+            color: #007bff;
+            cursor: pointer;
+            margin-left: 8px;
+        }
+
+        .media-indicator:hover {
+            color: #0056b3;
+        }
+
+        /* Media Preview Modal */
+        .media-preview-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .media-preview-content {
+            position: relative;
+            max-width: 90%;
+            max-height: 90%;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .media-preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .media-preview-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+        }
+
+        .media-preview-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: #666;
+            padding: 5px;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .media-preview-close:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .media-preview-body {
+            text-align: center;
+            max-height: 70vh;
+            overflow: auto;
+        }
+
+        .media-preview-image {
+            max-width: 100%;
+            max-height: 70vh;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .media-preview-pdf {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            padding: 40px;
+        }
+
+        .media-preview-pdf i {
+            font-size: 4em;
+            color: #e74c3c;
+        }
+
+        .media-preview-pdf-name {
+            font-size: 1.1em;
+            font-weight: 500;
+            color: #333;
+            margin: 0;
+        }
+
+        .media-preview-actions {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .media-action-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .media-action-btn.download {
+            background: #007bff;
+            color: white;
+        }
+
+        .media-action-btn.download:hover {
+            background: #0056b3;
+        }
+
+        /* Smart Upload Styles */
+        .upload-mode-toggle {
+            background: #e8f4fd;
+            border: 1px solid #bee5eb;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .mode-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .mode-info i {
+            color: #007bff;
+            font-size: 1.2em;
+        }
+
+        .mode-info span {
+            color: #495057;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .btn-manual-entry {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .btn-manual-entry:hover {
+            background: #5a6268;
+        }
+
+        .extraction-progress {
+            margin-top: 15px;
+        }
+
+        .extracted-data-section {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 15px;
+        }
+
+        .extracted-data-section h4 {
+            margin: 0 0 15px 0;
+            color: #495057;
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .extracted-data-section h4 i {
+            color: #28a745;
+        }
+
+        .extracted-data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .extracted-field {
+            background: white;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+        }
+
+        .extracted-field label {
+            display: block;
+            font-weight: 600;
+            color: #495057;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .extracted-field span {
+            color: #212529;
+            font-size: 14px;
+            word-break: break-word;
+        }
+
+        .extraction-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .extraction-actions .btn {
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+
+        /* Manual mode styles */
+        .manual-mode .upload-mode-toggle {
+            background: #fff3cd;
+            border-color: #ffeaa7;
+        }
+
+        .manual-mode .mode-info i {
+            color: #856404;
+        }
+
+        .manual-mode .mode-info span {
+            color: #856404;
+        }
+
+        .manual-mode .btn-manual-entry {
+            background: #28a745;
+        }
+
+        .manual-mode .btn-manual-entry:hover {
+            background: #218838;
+        }
+
+        /* Hidden form fields in smart mode */
+        .smart-mode .form-group:not(#mediaUploadSection):not(#companyNameSection) {
+            display: none !important;
+        }
+
+        .smart-mode #companyNameSection {
+            display: block !important;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <a href="index.html" class="back-link">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+        <h1>Expense Management</h1>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="summary-cards" id="summaryCards">
+        <div class="summary-card total">
+            <h3>Total Expenses</h3>
+            <p class="amount" id="totalAmount">R 0.00</p>
+        </div>
+    </div>
+
+    <!-- Month/Year Selector -->
+    <div class="month-selector">
+        <label for="monthSelect">View Month:</label>
+        <select id="monthSelect">
+            <option value="">All Time</option>
+        </select>
+        <label for="yearSelect">Year:</label>
+        <select id="yearSelect">
+            <option value="">All Years</option>
+        </select>
+        <!-- Removed the Generate Recurring Expenses button -->
+    </div>
+
+    <!-- Category Tabs -->
+    <div class="category-tabs" id="categoryTabs">
+        <!-- Tabs will be dynamically generated -->
+    </div>
+
+    <!-- Expense Section -->
+    <div class="expense-section">
+        <div class="section-header">
+            <h2 class="section-title" id="sectionTitle">All Expenses</h2>
+            <button class="add-expense-btn" id="addExpenseBtn">
+                <i class="fas fa-plus"></i> Add Expense
+            </button>
+        </div>
+
+        <div id="expensesContent">
+            <div class="loading">
+                <div class="spinner"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Expense Modal -->
+<div class="modal-overlay" id="expenseModal">
+    <div class="modal">
+        <h2 id="modalTitle">Add New Expense</h2>
+        <form id="expenseForm">
+            <div class="form-group">
+                <label for="expenseCategory">Category *</label>
+                <select id="expenseCategory" required>
+                    <option value="">Select a category</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="expenseName">Expense Name *</label>
+                <input type="text" id="expenseName" required placeholder="e.g., Office Supplies, Stapler">
+            </div>
+
+            <div class="form-group">
+                <label for="expenseAmount">Amount (R) *</label>
+                <input type="number" id="expenseAmount" step="0.01" min="0" required placeholder="0.00">
+            </div>
+
+            <div class="form-group">
+                <label for="expenseDate">Date *</label>
+                <input type="date" id="expenseDate" required>
+            </div>
+
+            <div class="form-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="isRecurring">
+                    <span class="checkmark"></span>
+                    Recurring Expense (will be added to each new month automatically)
+                </label>
+            </div>
+
+            <div class="form-group">
+                <label for="expenseDescription">Description</label>
+                <textarea id="expenseDescription" placeholder="Optional description or notes"></textarea>
+            </div>
+
+            <!-- Media Upload Section for Operating Expenses -->
+            <div class="form-group" id="mediaUploadSection" style="display: none;">
+                <label for="expenseMedia">Receipt/Slip Upload</label>
+
+                <!-- Mode Toggle -->
+                <div class="upload-mode-toggle" id="uploadModeToggle">
+                    <div class="mode-info">
+                        <i class="fas fa-magic"></i>
+                        <span>Smart scanning will automatically extract company name, amount, and item details from your receipt</span>
+                    </div>
+                    <button type="button" class="btn-manual-entry" id="manualEntryBtn">
+                        <i class="fas fa-keyboard"></i> Manual Entry
+                    </button>
+                </div>
+
+                <!-- Smart Upload Area -->
+                <div class="media-upload-container" id="smartUploadContainer">
+                    <input type="file" id="expenseMedia" accept="image/*,.pdf" style="display: none;">
+                    <div class="media-upload-area" id="mediaUploadArea">
+                        <i class="fas fa-brain"></i>
+                        <p>Upload receipt for smart scanning</p>
+                        <small>AI will extract company name, amount, and item details automatically</small>
+                        <small><strong>Supports:</strong> Images (JPG, PNG, GIF, WebP) and <strong>PDF files</strong> (Max 10MB)</small>
+                        <small class="pdf-note">📄 PDF files will be converted to images for AI analysis</small>
+                    </div>
+                    <div class="media-preview" id="mediaPreview" style="display: none;">
+                        <div class="preview-content">
+                            <img id="previewImage" style="display: none; max-width: 200px; max-height: 200px; border-radius: 5px;">
+                            <div id="previewPdf" style="display: none;">
+                                <i class="fas fa-file-pdf" style="font-size: 48px; color: #e74c3c;"></i>
+                                <p id="pdfFileName"></p>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-remove-media" id="removeMediaBtn">
+                            <i class="fas fa-times"></i> Remove
+                        </button>
+                    </div>
+
+                    <!-- Extraction Progress -->
+                    <div class="extraction-progress" id="extractionProgress" style="display: none;">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="extractionProgressFill"></div>
+                        </div>
+                        <span id="extractionProgressText">Analyzing receipt...</span>
+                    </div>
+
+                    <!-- Upload Progress -->
+                    <div class="upload-progress" id="uploadProgress" style="display: none;">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <span id="progressText">Uploading...</span>
+                    </div>
+                </div>
+
+                <!-- Extracted Data Display -->
+                <div class="extracted-data-section" id="extractedDataSection" style="display: none;">
+                    <h4><i class="fas fa-robot"></i> Extracted Information</h4>
+                    <div class="extracted-data-grid">
+                        <div class="extracted-field">
+                            <label>Company Name:</label>
+                            <span id="extractedCompany">-</span>
+                        </div>
+                        <div class="extracted-field">
+                            <label>Amount:</label>
+                            <span id="extractedAmount">-</span>
+                        </div>
+                        <div class="extracted-field">
+                            <label>Item/Service:</label>
+                            <span id="extractedItem">-</span>
+                        </div>
+                        <div class="extracted-field">
+                            <label>Confidence:</label>
+                            <span id="extractedConfidence">-</span>
+                        </div>
+                    </div>
+                    <div class="extraction-actions">
+                        <button type="button" class="btn btn-secondary" id="reExtractBtn">
+                            <i class="fas fa-redo"></i> Re-scan
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="switchToManualBtn">
+                            <i class="fas fa-keyboard"></i> Switch to Manual
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Company Name Field (for extracted data) -->
+            <div class="form-group" id="companyNameSection" style="display: none;">
+                <label for="companyName">Company Name</label>
+                <input type="text" id="companyName" placeholder="Company/Store name (extracted from receipt)">
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" id="cancelBtn">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="saveBtn">Save Expense</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Status Message -->
+<div class="status-message" id="statusMessage"></div>
+
+<!-- Media Preview Modal -->
+<div id="mediaPreviewModal" class="media-preview-modal">
+    <div class="media-preview-content">
+        <div class="media-preview-header">
+            <h3 id="mediaPreviewTitle" class="media-preview-title">Receipt/Slip Preview</h3>
+            <button id="mediaPreviewClose" class="media-preview-close">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="media-preview-body">
+            <div id="mediaPreviewImageContainer" style="display: none;">
+                <img id="mediaPreviewImage" class="media-preview-image" alt="Receipt/Slip">
+            </div>
+            <div id="mediaPreviewPdfContainer" class="media-preview-pdf" style="display: none;">
+                <i class="fas fa-file-pdf"></i>
+                <p id="mediaPreviewPdfName" class="media-preview-pdf-name">Receipt.pdf</p>
+                <p style="color: #666; font-size: 14px;">PDF files cannot be previewed directly. Use the actions below to view or download.</p>
+            </div>
+        </div>
+        <div class="media-preview-actions">
+            <a id="mediaDownloadBtn" class="media-action-btn download" href="#" download>
+                <i class="fas fa-download"></i> Download
+            </a>
+        </div>
+    </div>
+</div>
+
+<script src="auth.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+    let currentCategory = null;
+    let categories = [];
+    let expenses = [];
+    let editingExpenseId = null;
+    let currentMonth = null;
+    let currentYear = null;
+    let selectedMediaFile = null;
+    let uploadedMediaUrl = null;
+    let isManualMode = false;
+    let extractedData = null;
+    let isExtracting = false;
+
+    // API_BASE_URL is already defined in auth.js
+
+    // DOM Elements
+    const categoryTabs = document.getElementById('categoryTabs');
+    const expensesContent = document.getElementById('expensesContent');
+    const sectionTitle = document.getElementById('sectionTitle');
+    const addExpenseBtn = document.getElementById('addExpenseBtn');
+    const expenseModal = document.getElementById('expenseModal');
+    const expenseForm = document.getElementById('expenseForm');
+    const modalTitle = document.getElementById('modalTitle');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const statusMessage = document.getElementById('statusMessage');
+    const summaryCards = document.getElementById('summaryCards');
+    const totalAmount = document.getElementById('totalAmount');
+    const monthSelect = document.getElementById('monthSelect');
+    const yearSelect = document.getElementById('yearSelect');
+
+    // Media upload elements
+    const mediaUploadSection = document.getElementById('mediaUploadSection');
+    const expenseMedia = document.getElementById('expenseMedia');
+    const mediaUploadArea = document.getElementById('mediaUploadArea');
+    const mediaPreview = document.getElementById('mediaPreview');
+    const previewImage = document.getElementById('previewImage');
+    const previewPdf = document.getElementById('previewPdf');
+    const pdfFileName = document.getElementById('pdfFileName');
+    const removeMediaBtn = document.getElementById('removeMediaBtn');
+    const uploadProgress = document.getElementById('uploadProgress');
+    const progressFill = document.getElementById('progressFill');
+    const progressText = document.getElementById('progressText');
+
+    // Media preview modal elements
+    const mediaPreviewModal = document.getElementById('mediaPreviewModal');
+    const mediaPreviewClose = document.getElementById('mediaPreviewClose');
+    const mediaPreviewTitle = document.getElementById('mediaPreviewTitle');
+    const mediaPreviewImage = document.getElementById('mediaPreviewImage');
+    const mediaPreviewImageContainer = document.getElementById('mediaPreviewImageContainer');
+    const mediaPreviewPdfContainer = document.getElementById('mediaPreviewPdfContainer');
+    const mediaPreviewPdfName = document.getElementById('mediaPreviewPdfName');
+    const mediaDownloadBtn = document.getElementById('mediaDownloadBtn');
+
+    // Smart upload elements
+    const uploadModeToggle = document.getElementById('uploadModeToggle');
+    const manualEntryBtn = document.getElementById('manualEntryBtn');
+    const smartUploadContainer = document.getElementById('smartUploadContainer');
+    const extractionProgress = document.getElementById('extractionProgress');
+    const extractionProgressFill = document.getElementById('extractionProgressFill');
+    const extractionProgressText = document.getElementById('extractionProgressText');
+    const extractedDataSection = document.getElementById('extractedDataSection');
+    const extractedCompany = document.getElementById('extractedCompany');
+    const extractedAmount = document.getElementById('extractedAmount');
+    const extractedItem = document.getElementById('extractedItem');
+    const extractedConfidence = document.getElementById('extractedConfidence');
+    const reExtractBtn = document.getElementById('reExtractBtn');
+    const switchToManualBtn = document.getElementById('switchToManualBtn');
+    const companyNameSection = document.getElementById('companyNameSection');
+    const companyName = document.getElementById('companyName');
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', async function() {
+        if (!checkAuthStatus()) return;
+
+        initializeMonthYearSelectors();
+        await loadCategories();
+        await loadExpenseTotals();
+        await loadExpenses();
+        setupEventListeners();
+    });
+
+    // Setup event listeners
+    function setupEventListeners() {
+        addExpenseBtn.addEventListener('click', openAddModal);
+        cancelBtn.addEventListener('click', closeModal);
+        expenseForm.addEventListener('submit', handleFormSubmit);
+        monthSelect.addEventListener('change', handleMonthYearChange);
+        yearSelect.addEventListener('change', handleMonthYearChange);
+
+        // Category change listener to show/hide media upload
+        document.getElementById('expenseCategory').addEventListener('change', handleCategoryChange);
+
+        // Media upload event listeners
+        mediaUploadArea.addEventListener('click', () => expenseMedia.click());
+        expenseMedia.addEventListener('change', handleFileSelect);
+        removeMediaBtn.addEventListener('click', removeSelectedMedia);
+
+        // Smart upload event listeners
+        manualEntryBtn.addEventListener('click', toggleManualMode);
+        reExtractBtn.addEventListener('click', reExtractData);
+        switchToManualBtn.addEventListener('click', switchToManualMode);
+
+        // Media preview modal event listeners
+        mediaPreviewClose.addEventListener('click', closeMediaPreview);
+        mediaPreviewModal.addEventListener('click', function(e) {
+            if (e.target === mediaPreviewModal) {
+                closeMediaPreview();
+            }
+        });
+
+        // Close modal when clicking outside
+        expenseModal.addEventListener('click', function(e) {
+            if (e.target === expenseModal) {
+                closeModal();
+            }
+        });
+    }
+
+    // Load expense categories
+    async function loadCategories() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/expense-categories`);
+            if (!response.ok) throw new Error('Failed to fetch categories');
+
+            categories = await response.json();
+            renderCategoryTabs();
+            populateCategorySelect();
+        } catch (error) {
+            console.error('Error loading categories:', error);
+            showStatusMessage('Failed to load expense categories', 'error');
+        }
+    }
+
+    // Load expense totals
+    async function loadExpenseTotals() {
+        try {
+            let url = `${API_BASE_URL}/expenses/totals`;
+            const params = new URLSearchParams();
+
+            // Pass current year and month to respect month isolation
+            if (currentYear && currentMonth) {
+                params.append('year', currentYear);
+                params.append('month', currentMonth);
+            }
+
+            if (params.toString()) {
+                url += `?${params.toString()}`;
+            }
+
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Failed to fetch totals');
+
+            const data = await response.json();
+            renderSummaryCards(data);
+        } catch (error) {
+            console.error('Error loading expense totals:', error);
+            showStatusMessage('Failed to load expense totals', 'error');
+        }
+    }
+
+    // Load expenses with smart duplicate handling
+    async function loadExpenses(categoryId = null) {
+        try {
+            let url = `${API_BASE_URL}/expenses`;
+            const params = new URLSearchParams();
+
+            if (categoryId) {
+                params.append('category_id', categoryId);
+            }
+
+            if (currentYear && currentMonth) {
+                params.append('year', currentYear);
+                params.append('month', currentMonth);
+            }
+
+            if (params.toString()) {
+                url += `?${params.toString()}`;
+            }
+
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Failed to fetch expenses');
+
+            let fetchedExpenses = await response.json();
+
+            if (currentYear && currentMonth) {
+                // When viewing a specific month, we need to be smart about duplicates
+                // Group expenses by name, category, and amount to detect potential duplicates
+                const expenseGroups = new Map();
+
+                fetchedExpenses.forEach(expense => {
+                    const key = `${expense.name}-${expense.category_id}-${expense.amount}`;
+                    if (!expenseGroups.has(key)) {
+                        expenseGroups.set(key, []);
+                    }
+                    expenseGroups.get(key).push(expense);
+                });
+
+                expenses = [];
+
+                expenseGroups.forEach(group => {
+                    if (group.length === 1) {
+                        // Only one expense with this combination, include it
+                        expenses.push(group[0]);
+                    } else {
+                        // Multiple expenses with same name/category/amount - potential duplicates
+                        // Prioritize: 1) Generated monthly expense, 2) Regular expense, 3) Template
+                        const generated = group.find(e => e.recurring_template_id && !e.is_recurring);
+                        const regular = group.find(e => !e.is_recurring && !e.recurring_template_id);
+                        const template = group.find(e => e.is_recurring && !e.recurring_template_id);
+
+                        if (generated) {
+                            // If there's a generated monthly expense, show that
+                            expenses.push(generated);
+                        } else if (regular) {
+                            // If there's a regular one-time expense, show that
+                            expenses.push(regular);
+                        } else if (template) {
+                            // If only template exists, show it (user might not have generated monthly expenses yet)
+                            expenses.push(template);
+                        } else {
+                            // Fallback: show the first one
+                            expenses.push(group[0]);
+                        }
+                    }
+                });
+            } else {
+                // When viewing "All Time", show everything but avoid template/generated duplicates
+                const expenseGroups = new Map();
+
+                fetchedExpenses.forEach(expense => {
+                    const key = `${expense.name}-${expense.category_id}-${expense.amount}`;
+                    if (!expenseGroups.has(key)) {
+                        expenseGroups.set(key, []);
+                    }
+                    expenseGroups.get(key).push(expense);
+                });
+
+                expenses = [];
+
+                expenseGroups.forEach(group => {
+                    if (group.length === 1) {
+                        // Only one expense, include it
+                        expenses.push(group[0]);
+                    } else {
+                        // Multiple expenses - prefer template for management purposes
+                        const template = group.find(e => e.is_recurring && !e.recurring_template_id);
+                        const regular = group.find(e => !e.is_recurring && !e.recurring_template_id);
+
+                        if (template) {
+                            // Show template for management
+                            expenses.push(template);
+                            // Also show any regular non-recurring expenses that aren't duplicates
+                            group.forEach(expense => {
+                                if (!expense.is_recurring && !expense.recurring_template_id &&
+                                    !expenses.some(e => e.id === expense.id)) {
+                                    expenses.push(expense);
+                                }
+                            });
+                        } else {
+                            // No template, show all unique expenses
+                            group.forEach(expense => {
+                                if (!expenses.some(e => e.id === expense.id)) {
+                                    expenses.push(expense);
+                                }
+                            });
+                        }
+                    }
+                });
+            }
+
+            renderExpenses();
+        } catch (error) {
+            console.error('Error loading expenses:', error);
+            showStatusMessage('Failed to load expenses', 'error');
+        }
+    }
+
+    // Render category tabs
+    function renderCategoryTabs() {
+        const allTab = `
+                <button class="category-tab ${currentCategory === null ? 'active' : ''}"
+                        onclick="selectCategory(null)">
+                    All Categories
+                </button>
+            `;
+
+        const categoryTabs = categories.map(category => `
+                <button class="category-tab ${currentCategory === category.id ? 'active' : ''}"
+                        onclick="selectCategory(${category.id})"
+                        style="border-left: 4px solid ${category.color};">
+                    ${category.name}
+                </button>
+            `).join('');
+
+        document.getElementById('categoryTabs').innerHTML = allTab + categoryTabs;
+    }
+
+    // Render summary cards
+    function renderSummaryCards(data) {
+        totalAmount.textContent = `R ${parseFloat(data.grandTotal).toFixed(2)}`;
+
+        const categoryCards = data.categories.map(category => `
+                <div class="summary-card" style="border-left-color: ${category.color};">
+                    <h3>${category.name}</h3>
+                    <p class="amount" style="color: ${category.color};">R ${parseFloat(category.total_amount).toFixed(2)}</p>
+                    <small>${category.expense_count} expense${category.expense_count !== 1 ? 's' : ''}</small>
+                </div>
+            `).join('');
+
+        summaryCards.innerHTML = `
+                <div class="summary-card total">
+                    <h3>Total Expenses</h3>
+                    <p class="amount" id="totalAmount">R ${parseFloat(data.grandTotal).toFixed(2)}</p>
+                </div>
+                ${categoryCards}
+            `;
+    }
+
+    // Render expenses table
+    function renderExpenses() {
+        if (expenses.length === 0) {
+            expensesContent.innerHTML = `
+                    <div class="no-expenses">
+                        <i class="fas fa-receipt"></i>
+                        <h3>No expenses found</h3>
+                        <p>Start by adding your first expense using the button above.</p>
+                    </div>
+                `;
+            return;
+        }
+
+        const tableHTML = `
+                <table class="expenses-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Category</th>
+                            <th>Amount</th>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${expenses.map(expense => {
+            // Show recurring badge for all recurring items
+            let badge = '';
+            if (expense.is_recurring || expense.recurring_template_id) {
+                badge = '<span class="recurring-badge">Recurring</span>';
+            }
+
+            return `
+                                <tr>
+                                    <td>
+                                        ${expense.name}
+                                        ${badge}
+                                        ${expense.media_url ? `<span class="media-indicator" onclick="showMediaPreview('${expense.media_url}', '${expense.name}')" title="View receipt/slip"><i class="fas fa-paperclip"></i></span>` : ''}
+                                    </td>
+                                    <td>
+                                        <span style="display: inline-block; width: 12px; height: 12px; background: ${expense.category_color}; border-radius: 50%; margin-right: 8px;"></span>
+                                        ${expense.category_name}
+                                    </td>
+                                    <td class="amount-cell">R ${parseFloat(expense.amount).toFixed(2)}</td>
+                                    <td class="date-cell">${formatDate(expense.expense_date)}</td>
+                                    <td>${expense.description || '-'}</td>
+                                    <td class="actions-cell">
+                                        <button class="action-btn edit-btn" onclick="editExpense(${expense.id})">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </button>
+                                        <button class="action-btn delete-btn" onclick="deleteExpense(${expense.id})">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                            `;
+        }).join('')}
+                    </tbody>
+                </table>
+            `;
+
+        expensesContent.innerHTML = tableHTML;
+    }
+
+    // Select category
+    function selectCategory(categoryId) {
+        currentCategory = categoryId;
+
+        if (categoryId === null) {
+            sectionTitle.textContent = 'All Expenses';
+        } else {
+            const category = categories.find(c => c.id === categoryId);
+            sectionTitle.textContent = `${category.name} Expenses`;
+        }
+
+        renderCategoryTabs();
+        loadExpenses(categoryId);
+    }
+
+    // Populate category select in modal
+    function populateCategorySelect() {
+        const select = document.getElementById('expenseCategory');
+        select.innerHTML = '<option value="">Select a category</option>' +
+            categories.map(category => `
+                    <option value="${category.id}">${category.name}</option>
+                `).join('');
+    }
+
+    // Open add modal
+    function openAddModal() {
+        editingExpenseId = null;
+        modalTitle.textContent = 'Add New Expense';
+        document.getElementById('saveBtn').textContent = 'Save Expense';
+        expenseForm.reset();
+
+        // Reset media upload state
+        resetMediaUpload();
+        resetSmartMode();
+
+        // Set today's date as default
+        document.getElementById('expenseDate').value = new Date().toISOString().split('T')[0];
+
+        // Pre-select current category if viewing a specific category
+        if (currentCategory) {
+            document.getElementById('expenseCategory').value = currentCategory;
+            handleCategoryChange(); // Show/hide media upload section
+        }
+
+        expenseModal.style.display = 'flex';
+    }
+
+    // Edit expense
+    function editExpense(expenseId) {
+        const expense = expenses.find(e => e.id === expenseId);
+        if (!expense) return;
+
+        editingExpenseId = expenseId;
+        modalTitle.textContent = 'Edit Expense';
+        document.getElementById('saveBtn').textContent = 'Update Expense';
+
+        // Reset media upload state first
+        resetMediaUpload();
+
+        // Populate form
+        document.getElementById('expenseCategory').value = expense.category_id;
+        document.getElementById('expenseName').value = expense.name;
+        document.getElementById('expenseAmount').value = expense.amount;
+        document.getElementById('expenseDate').value = expense.expense_date;
+        document.getElementById('expenseDescription').value = expense.description || '';
+        document.getElementById('isRecurring').checked = expense.is_recurring || false;
+
+        // Handle media upload section and existing media
+        handleCategoryChange();
+        if (expense.media_url) {
+            uploadedMediaUrl = expense.media_url;
+            showExistingMedia(expense.media_url);
+        }
+
+        expenseModal.style.display = 'flex';
+    }
+
+    // Close modal
+    function closeModal() {
+        expenseModal.style.display = 'none';
+        editingExpenseId = null;
+        expenseForm.reset();
+        resetMediaUpload();
+        resetSmartMode();
+    }
+
+    // Handle form submit
+    async function handleFormSubmit(e) {
+        e.preventDefault();
+
+        const formData = {
+            category_id: parseInt(document.getElementById('expenseCategory').value),
+            name: document.getElementById('expenseName').value.trim(),
+            amount: parseFloat(document.getElementById('expenseAmount').value),
+            expense_date: document.getElementById('expenseDate').value,
+            description: document.getElementById('expenseDescription').value.trim(),
+            is_recurring: document.getElementById('isRecurring').checked
+        };
+
+        // Add company name if available (from smart extraction)
+        const companyNameValue = document.getElementById('companyName').value.trim();
+        if (companyNameValue) {
+            formData.description = formData.description ?
+                `${formData.description} (Company: ${companyNameValue})` :
+                `Company: ${companyNameValue}`;
+        }
+
+        if (!formData.category_id || !formData.name || !formData.amount || !formData.expense_date) {
+            showStatusMessage('Please fill in all required fields', 'error');
+            return;
+        }
+
+        try {
+            // Handle media upload for operating expenses
+            const selectedCategory = categories.find(c => c.id === formData.category_id);
+            if (selectedCategory && selectedCategory.name.toLowerCase() === 'operating expenses') {
+                if (selectedMediaFile) {
+                    // New file selected, upload it
+                    const mediaUrl = await uploadMedia(formData.name, formData.expense_date);
+                    if (mediaUrl) {
+                        formData.media_url = mediaUrl;
+                    }
+                } else if (uploadedMediaUrl) {
+                    // Keep existing media URL
+                    formData.media_url = uploadedMediaUrl;
+                }
+            }
+
+            const token = localStorage.getItem('authToken');
+            const url = editingExpenseId
+                ? `${API_BASE_URL}/expenses/${editingExpenseId}`
+                : `${API_BASE_URL}/expenses`;
+
+            const method = editingExpenseId ? 'PUT' : 'POST';
+
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to save expense');
+            }
+
+            const message = editingExpenseId ? 'Expense updated successfully!' : 'Expense added successfully!';
+            showStatusMessage(message, 'success');
+
+            closeModal();
+            await loadExpenses(currentCategory);
+            await loadExpenseTotals();
+
+        } catch (error) {
+            console.error('Error saving expense:', error);
+            showStatusMessage(error.message, 'error');
+        }
+    }
+
+    // Delete expense
+    async function deleteExpense(expenseId) {
+        // Check if we're viewing a specific month and if this is a recurring expense
+        const expense = expenses.find(e => e.id === expenseId);
+        const isRecurring = expense && (expense.is_recurring || expense.recurring_template_id);
+
+        let confirmMessage = 'Are you sure you want to delete this expense?';
+
+        if (isRecurring && currentYear && currentMonth) {
+            confirmMessage = `This is a recurring expense. Do you want to remove it from ${getMonthName(currentMonth)} ${currentYear} only?\n\n` +
+                           `• Click OK to remove from this month only (will remain in other months)\n` +
+                           `• Click Cancel to abort`;
+        } else if (isRecurring) {
+            confirmMessage = 'This is a recurring expense template. Deleting it will remove it from ALL months. Are you sure?';
+        }
+
+        if (!confirm(confirmMessage)) {
+            return;
+        }
+
+        try {
+            const token = localStorage.getItem('authToken');
+
+            // Build URL with month isolation parameters if viewing specific month
+            let url = `${API_BASE_URL}/expenses/${expenseId}`;
+            if (currentYear && currentMonth) {
+                url += `?year=${currentYear}&month=${currentMonth}`;
+            }
+
+            const response = await fetch(url, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to delete expense');
+            }
+
+            const result = await response.json();
+            showStatusMessage(result.message || 'Expense deleted successfully!', 'success');
+            await loadExpenses(currentCategory);
+            await loadExpenseTotals();
+
+        } catch (error) {
+            console.error('Error deleting expense:', error);
+            showStatusMessage(error.message, 'error');
+        }
+    }
+
+    // Helper function to get month name
+    function getMonthName(monthNumber) {
+        const months = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ];
+        return months[monthNumber - 1];
+    }
+
+    // Utility functions
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-ZA', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
+    }
+
+    function showStatusMessage(message, type) {
+        statusMessage.textContent = message;
+        statusMessage.className = `status-message ${type}`;
+        statusMessage.classList.add('show');
+
+        setTimeout(() => {
+            statusMessage.classList.remove('show');
+        }, 3000);
+    }
+
+    // Initialize month and year selectors
+    function initializeMonthYearSelectors() {
+        const currentDate = new Date();
+        const currentYearValue = currentDate.getFullYear();
+        const currentMonthValue = currentDate.getMonth() + 1;
+
+        // Populate month selector
+        const months = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ];
+
+        months.forEach((month, index) => {
+            const option = document.createElement('option');
+            option.value = index + 1;
+            option.textContent = month;
+            if (index + 1 === currentMonthValue) {
+                option.selected = true;
+                currentMonth = index + 1;
+            }
+            monthSelect.appendChild(option);
+        });
+
+        // Populate year selector (current year and previous 2 years, next 1 year)
+        for (let year = currentYearValue - 2; year <= currentYearValue + 1; year++) {
+            const option = document.createElement('option');
+            option.value = year;
+            option.textContent = year;
+            if (year === currentYearValue) {
+                option.selected = true;
+                currentYear = year;
+            }
+            yearSelect.appendChild(option);
+        }
+    }
+
+    // Handle month/year change
+    function handleMonthYearChange() {
+        const selectedMonth = monthSelect.value;
+        const selectedYear = yearSelect.value;
+
+        if (selectedMonth && selectedYear) {
+            currentMonth = parseInt(selectedMonth);
+            currentYear = parseInt(selectedYear);
+            sectionTitle.textContent = `Expenses for ${monthSelect.options[monthSelect.selectedIndex].text} ${selectedYear}`;
+        } else {
+            currentMonth = null;
+            currentYear = null;
+            sectionTitle.textContent = currentCategory ?
+                `${categories.find(c => c.id === currentCategory).name} Expenses` :
+                'All Expenses';
+        }
+
+        loadExpenses(currentCategory);
+        loadExpenseTotals();
+    }
+
+    // Handle category change to show/hide media upload section
+    function handleCategoryChange() {
+        const selectedCategoryId = parseInt(document.getElementById('expenseCategory').value);
+        const selectedCategory = categories.find(c => c.id === selectedCategoryId);
+
+        // Show media upload section only for "Operating Expenses" category
+        if (selectedCategory && selectedCategory.name.toLowerCase() === 'operating expenses') {
+            mediaUploadSection.style.display = 'block';
+
+            // Initialize smart mode by default
+            if (!isManualMode) {
+                initializeSmartMode();
+            }
+        } else {
+            mediaUploadSection.style.display = 'none';
+            resetMediaUpload();
+            resetSmartMode();
+        }
+    }
+
+    // Handle file selection
+    function handleFileSelect(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        // Validate file size (10MB limit)
+        if (file.size > 10 * 1024 * 1024) {
+            showStatusMessage('File size must be less than 10MB', 'error');
+            return;
+        }
+
+        selectedMediaFile = file;
+        showFilePreview(file);
+
+        // If in smart mode, automatically extract data
+        if (!isManualMode) {
+            // Check if it's a PDF and convert to image first
+            if (file.type === 'application/pdf') {
+                convertPDFToImageAndExtract(file);
+            } else {
+                extractDataFromFile(file);
+            }
+        }
+    }
+
+    // Show file preview
+    function showFilePreview(file) {
+        mediaUploadArea.style.display = 'none';
+        mediaPreview.style.display = 'block';
+
+        if (file.type.startsWith('image/')) {
+            // Show image preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImage.src = e.target.result;
+                previewImage.style.display = 'block';
+                previewPdf.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        } else if (file.type === 'application/pdf') {
+            // Show PDF preview
+            previewImage.style.display = 'none';
+            previewPdf.style.display = 'block';
+            pdfFileName.textContent = file.name;
+        }
+    }
+
+    // Show existing media from URL
+    function showExistingMedia(mediaUrl) {
+        mediaUploadArea.style.display = 'none';
+        mediaPreview.style.display = 'block';
+
+        // Determine if it's an image or PDF based on URL
+        const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(mediaUrl);
+        const isPdf = /\.pdf$/i.test(mediaUrl);
+
+        if (isImage) {
+            previewImage.src = mediaUrl;
+            previewImage.style.display = 'block';
+            previewPdf.style.display = 'none';
+        } else if (isPdf) {
+            previewImage.style.display = 'none';
+            previewPdf.style.display = 'block';
+            // Extract filename from URL
+            const urlParts = mediaUrl.split('/');
+            const filename = urlParts[urlParts.length - 1];
+            pdfFileName.textContent = filename || 'Receipt.pdf';
+        } else {
+            // Fallback for unknown file types
+            previewImage.style.display = 'none';
+            previewPdf.style.display = 'block';
+            pdfFileName.textContent = 'Uploaded Receipt';
+        }
+    }
+
+    // Remove selected media
+    function removeSelectedMedia() {
+        selectedMediaFile = null;
+        uploadedMediaUrl = null;
+        expenseMedia.value = '';
+
+        mediaUploadArea.style.display = 'block';
+        mediaPreview.style.display = 'none';
+        uploadProgress.style.display = 'none';
+
+        previewImage.src = '';
+        previewImage.style.display = 'none';
+        previewPdf.style.display = 'none';
+        pdfFileName.textContent = '';
+    }
+
+    // Reset media upload state
+    function resetMediaUpload() {
+        removeSelectedMedia();
+        mediaUploadSection.style.display = 'none';
+    }
+
+    // Upload media to server
+    async function uploadMedia(expenseName, expenseDate) {
+        if (!selectedMediaFile) return null;
+
+        try {
+            // Show upload progress
+            uploadProgress.style.display = 'block';
+            progressFill.style.width = '0%';
+            progressText.textContent = 'Uploading...';
+
+            const formData = new FormData();
+            formData.append('media', selectedMediaFile);
+            formData.append('expenseName', expenseName);
+            formData.append('expenseDate', expenseDate);
+
+            const token = localStorage.getItem('authToken');
+            const response = await fetch(`${API_BASE_URL}/expense-media/upload`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                body: formData
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Upload failed');
+            }
+
+            // Simulate progress for better UX
+            progressFill.style.width = '50%';
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            const result = await response.json();
+
+            progressFill.style.width = '100%';
+            progressText.textContent = 'Upload complete!';
+
+            setTimeout(() => {
+                uploadProgress.style.display = 'none';
+            }, 1000);
+
+            return result.mediaUrl;
+
+        } catch (error) {
+            uploadProgress.style.display = 'none';
+            console.error('Media upload error:', error);
+            showStatusMessage(`Media upload failed: ${error.message}`, 'error');
+            return null;
+        }
+    }
+
+    // Show media preview modal
+    function showMediaPreview(mediaUrl, expenseName) {
+        if (!mediaUrl) return;
+
+        // Set the title
+        mediaPreviewTitle.textContent = `${expenseName} - Receipt/Slip`;
+
+        // Determine if it's an image or PDF based on URL or content type
+        const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(mediaUrl) || mediaUrl.includes('/image/');
+        const isPdf = /\.pdf$/i.test(mediaUrl) || mediaUrl.includes('/raw/') || mediaUrl.includes('application/pdf');
+
+        // Create proper filename with extension
+        let downloadFilename = expenseName.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_');
+        let fileExtension = '';
+
+        if (isImage) {
+            // Show image preview
+            mediaPreviewImage.src = mediaUrl;
+            mediaPreviewImageContainer.style.display = 'block';
+            mediaPreviewPdfContainer.style.display = 'none';
+
+            // Determine image extension from URL
+            const imageMatch = mediaUrl.match(/\.(jpg|jpeg|png|gif|webp)/i);
+            fileExtension = imageMatch ? imageMatch[1].toLowerCase() : 'jpg';
+            downloadFilename += `_receipt.${fileExtension}`;
+
+        } else if (isPdf) {
+            // Show PDF preview
+            mediaPreviewImageContainer.style.display = 'none';
+            mediaPreviewPdfContainer.style.display = 'block';
+
+            // Extract filename from URL
+            const urlParts = mediaUrl.split('/');
+            const filename = urlParts[urlParts.length - 1];
+            mediaPreviewPdfName.textContent = filename || 'Receipt.pdf';
+
+            fileExtension = 'pdf';
+            downloadFilename += `_receipt.${fileExtension}`;
+
+        } else {
+            // Fallback for unknown file types - assume PDF
+            mediaPreviewImageContainer.style.display = 'none';
+            mediaPreviewPdfContainer.style.display = 'block';
+            mediaPreviewPdfName.textContent = 'Uploaded Receipt';
+
+            fileExtension = 'pdf';
+            downloadFilename += `_receipt.${fileExtension}`;
+        }
+
+        // Extract public ID from Cloudinary URL for our custom download endpoint
+        let publicId = '';
+        let fileType = isPdf ? 'pdf' : 'image';
+
+        // Extract public ID from Cloudinary URL
+        const urlMatch = mediaUrl.match(/\/operating_expenses\/([^\.]+)/);
+        if (urlMatch) {
+            publicId = urlMatch[1];
+        }
+
+        // Set download link
+        if (publicId) {
+            // Use our custom download endpoint with proper headers
+            const downloadUrl = `${API_BASE_URL}/expense-media/serve/${publicId}?type=${fileType}&name=${encodeURIComponent(expenseName)}`;
+
+            // For authenticated downloads, we need to handle this with JavaScript
+            mediaDownloadBtn.onclick = function(e) {
+                e.preventDefault();
+                downloadFileWithAuth(downloadUrl, downloadFilename);
+            };
+            mediaDownloadBtn.href = '#';
+        } else {
+            // Fallback to direct Cloudinary URL
+            mediaDownloadBtn.href = mediaUrl;
+            mediaDownloadBtn.download = downloadFilename;
+            mediaDownloadBtn.onclick = null;
+        }
+
+        // Show the modal
+        mediaPreviewModal.style.display = 'flex';
+    }
+
+    // Close media preview modal
+    function closeMediaPreview() {
+        mediaPreviewModal.style.display = 'none';
+
+        // Clear image src to free memory
+        mediaPreviewImage.src = '';
+
+        // Hide both containers
+        mediaPreviewImageContainer.style.display = 'none';
+        mediaPreviewPdfContainer.style.display = 'none';
+    }
+
+    // Download file with authentication
+    async function downloadFileWithAuth(url, filename) {
+        try {
+            const token = localStorage.getItem('authToken');
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to download file');
+            }
+
+            // Get the blob from the response
+            const blob = await response.blob();
+
+            // Create a temporary URL for the blob
+            const blobUrl = window.URL.createObjectURL(blob);
+
+            // Create a temporary anchor element and trigger download
+            const tempLink = document.createElement('a');
+            tempLink.href = blobUrl;
+            tempLink.download = filename;
+            tempLink.style.display = 'none';
+
+            document.body.appendChild(tempLink);
+            tempLink.click();
+            document.body.removeChild(tempLink);
+
+            // Clean up the blob URL
+            window.URL.revokeObjectURL(blobUrl);
+
+        } catch (error) {
+            console.error('Download error:', error);
+            showStatusMessage('Failed to download file', 'error');
+        }
+    }
+
+    // PDF to Image Conversion Functions
+
+    // Convert PDF to image on frontend then extract data
+    async function convertPDFToImageAndExtract(pdfFile) {
+        if (isExtracting) return;
+
+        try {
+            isExtracting = true;
+
+            // Show conversion progress
+            extractionProgress.style.display = 'block';
+            extractionProgressFill.style.width = '0%';
+            extractionProgressText.textContent = 'Converting PDF to image...';
+
+            // Hide previous results
+            extractedDataSection.style.display = 'none';
+
+            console.log('Converting PDF to image on frontend...');
+
+            // Read PDF file as array buffer
+            const arrayBuffer = await pdfFile.arrayBuffer();
+
+            extractionProgressFill.style.width = '20%';
+            extractionProgressText.textContent = 'Loading PDF...';
+
+            // Load PDF with PDF.js
+            const pdf = await pdfjsLib.getDocument({
+                data: arrayBuffer,
+                verbosity: 0
+            }).promise;
+
+            console.log('PDF loaded, pages:', pdf.numPages);
+
+            extractionProgressFill.style.width = '40%';
+            extractionProgressText.textContent = 'Rendering PDF page...';
+
+            // Get first page
+            const page = await pdf.getPage(1);
+            const viewport = page.getViewport({ scale: 2.0 }); // High resolution
+
+            // Create canvas
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+
+            // Render PDF page to canvas
+            await page.render({
+                canvasContext: context,
+                viewport: viewport
+            }).promise;
+
+            extractionProgressFill.style.width = '60%';
+            extractionProgressText.textContent = 'Converting to image...';
+
+            // Convert canvas to blob
+            const imageBlob = await new Promise(resolve => {
+                canvas.toBlob(resolve, 'image/jpeg', 0.9);
+            });
+
+            console.log('PDF converted to image successfully. Size:', imageBlob.size, 'bytes');
+
+            extractionProgressFill.style.width = '80%';
+            extractionProgressText.textContent = 'Analyzing converted image with AI...';
+
+            // Create a new File object from the blob
+            const imageFile = new File([imageBlob], 'converted_receipt.jpg', {
+                type: 'image/jpeg'
+            });
+
+            // Now extract data from the converted image
+            await extractDataFromConvertedImage(imageFile);
+
+        } catch (error) {
+            console.error('PDF to image conversion error:', error);
+            extractionProgress.style.display = 'none';
+            showStatusMessage(`PDF conversion failed: ${error.message}`, 'error');
+
+            // Show manual mode option
+            extractedDataSection.style.display = 'block';
+            extractedDataSection.innerHTML = `
+                <div style="text-align: center; padding: 20px;">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 2em; color: #ffc107; margin-bottom: 10px;"></i>
+                    <h4>PDF Conversion Failed</h4>
+                    <p>Unable to convert PDF to image. This may be a corrupted or protected PDF.</p>
+                    <button type="button" class="btn btn-primary" onclick="switchToManualMode()">
+                        <i class="fas fa-keyboard"></i> Switch to Manual Entry
+                    </button>
+                </div>
+            `;
+        } finally {
+            isExtracting = false;
+        }
+    }
+
+    // Extract data from converted image
+    async function extractDataFromConvertedImage(imageFile) {
+        try {
+            // Create form data for the converted image
+            const formData = new FormData();
+            formData.append('media', imageFile);
+
+            const token = localStorage.getItem('authToken');
+            const response = await fetch(`${API_BASE_URL}/expense-media/extract-data`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                body: formData
+            });
+
+            extractionProgressFill.style.width = '100%';
+            extractionProgressText.textContent = 'PDF conversion and analysis complete!';
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to extract data from converted image');
+            }
+
+            const result = await response.json();
+            extractedData = result.data;
+
+            // Hide progress after a short delay
+            setTimeout(() => {
+                extractionProgress.style.display = 'none';
+            }, 1000);
+
+            // Add a note that this was converted from PDF
+            if (extractedData) {
+                extractedData.isPdfConverted = true;
+                extractedData.note = 'PDF successfully converted to image and analyzed with AI';
+            }
+
+            // Display extracted data
+            displayExtractedData(extractedData);
+
+            // Pre-fill form fields
+            prefillFormFields(extractedData);
+
+            // Show success message
+            showStatusMessage('PDF converted and analyzed successfully!', 'success');
+
+        } catch (error) {
+            console.error('Converted image extraction error:', error);
+            extractionProgress.style.display = 'none';
+            showStatusMessage(`Analysis failed: ${error.message}`, 'error');
+
+            // Show manual mode option
+            extractedDataSection.style.display = 'block';
+            extractedDataSection.innerHTML = `
+                <div style="text-align: center; padding: 20px;">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 2em; color: #ffc107; margin-bottom: 10px;"></i>
+                    <h4>Analysis Failed</h4>
+                    <p>PDF was converted but AI analysis failed. Please use manual entry.</p>
+                    <button type="button" class="btn btn-primary" onclick="switchToManualMode()">
+                        <i class="fas fa-keyboard"></i> Switch to Manual Entry
+                    </button>
+                </div>
+            `;
+        }
+    }
+
+    // Smart Upload Functions
+
+    // Initialize smart mode
+    function initializeSmartMode() {
+        isManualMode = false;
+        document.body.classList.remove('manual-mode');
+        document.body.classList.add('smart-mode');
+
+        // Update UI text
+        manualEntryBtn.innerHTML = '<i class="fas fa-keyboard"></i> Manual Entry';
+        uploadModeToggle.querySelector('.mode-info span').textContent =
+            'Smart scanning will automatically extract company name, amount, and item details from your receipt';
+
+        // Hide form fields except upload and company name
+        hideFormFields();
+
+        // Reset extraction state
+        resetExtractionState();
+    }
+
+    // Toggle manual mode
+    function toggleManualMode() {
+        if (isManualMode) {
+            initializeSmartMode();
+        } else {
+            switchToManualMode();
+        }
+    }
+
+    // Switch to manual mode
+    function switchToManualMode() {
+        isManualMode = true;
+        document.body.classList.remove('smart-mode');
+        document.body.classList.add('manual-mode');
+
+        // Update UI text
+        manualEntryBtn.innerHTML = '<i class="fas fa-brain"></i> Smart Scan';
+        uploadModeToggle.querySelector('.mode-info span').textContent =
+            'Manual entry mode - fill in all fields manually';
+
+        // Show all form fields
+        showFormFields();
+
+        // Hide extraction results
+        extractedDataSection.style.display = 'none';
+        companyNameSection.style.display = 'none';
+    }
+
+    // Hide form fields in smart mode
+    function hideFormFields() {
+        document.getElementById('expenseName').closest('.form-group').style.display = 'none';
+        document.getElementById('expenseAmount').closest('.form-group').style.display = 'none';
+        document.getElementById('expenseDate').closest('.form-group').style.display = 'none';
+        document.getElementById('isRecurring').closest('.form-group').style.display = 'none';
+        document.getElementById('expenseDescription').closest('.form-group').style.display = 'none';
+    }
+
+    // Show form fields in manual mode
+    function showFormFields() {
+        document.getElementById('expenseName').closest('.form-group').style.display = 'block';
+        document.getElementById('expenseAmount').closest('.form-group').style.display = 'block';
+        document.getElementById('expenseDate').closest('.form-group').style.display = 'block';
+        document.getElementById('isRecurring').closest('.form-group').style.display = 'block';
+        document.getElementById('expenseDescription').closest('.form-group').style.display = 'block';
+    }
+
+    // Extract data from uploaded file using secure backend endpoint
+    async function extractDataFromFile(file) {
+        if (isExtracting) return;
+
+        try {
+            isExtracting = true;
+
+            // Show extraction progress
+            extractionProgress.style.display = 'block';
+            extractionProgressFill.style.width = '0%';
+            extractionProgressText.textContent = 'Analyzing receipt...';
+
+            // Hide previous results
+            extractedDataSection.style.display = 'none';
+
+            // Create form data for secure processing
+            const formData = new FormData();
+            formData.append('media', file);
+
+            // Show appropriate progress based on file type
+            const isPDF = file.type === 'application/pdf';
+
+            extractionProgressFill.style.width = '20%';
+            extractionProgressText.textContent = isPDF ? 'Uploading PDF to secure server...' : 'Uploading to secure server...';
+
+            const token = localStorage.getItem('authToken');
+            const response = await fetch(`${API_BASE_URL}/expense-media/extract-data`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                body: formData
+            });
+
+            extractionProgressFill.style.width = '60%';
+            extractionProgressText.textContent = isPDF ? 'Converting PDF to image and processing with AI...' : 'Processing with AI...';
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to extract data');
+            }
+
+            const result = await response.json();
+
+            // Extract data from secure response (no sensitive data exposed)
+            extractedData = result.data;
+
+            extractionProgressFill.style.width = '100%';
+            extractionProgressText.textContent = 'Analysis complete!';
+
+            // Hide progress after a short delay
+            setTimeout(() => {
+                extractionProgress.style.display = 'none';
+            }, 1000);
+
+            // Display extracted data
+            displayExtractedData(extractedData);
+
+            // Pre-fill form fields
+            prefillFormFields(extractedData);
+
+            // Show success message
+            if (extractedData.isMockData) {
+                showStatusMessage('Demo extraction completed (using sample data)', 'success');
+            } else {
+                showStatusMessage('AI extraction completed successfully!', 'success');
+            }
+
+        } catch (error) {
+            console.error('Secure data extraction error:', error);
+            extractionProgress.style.display = 'none';
+            showStatusMessage(`Extraction failed: ${error.message}`, 'error');
+
+            // Show manual mode option with secure fallback
+            extractedDataSection.style.display = 'block';
+            extractedDataSection.innerHTML = `
+                <div style="text-align: center; padding: 20px;">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 2em; color: #ffc107; margin-bottom: 10px;"></i>
+                    <h4>AI Extraction Failed</h4>
+                    <p>Unable to extract data from this receipt automatically. Please use manual entry.</p>
+                    <button type="button" class="btn btn-primary" onclick="switchToManualMode()">
+                        <i class="fas fa-keyboard"></i> Switch to Manual Entry
+                    </button>
+                </div>
+            `;
+        } finally {
+            isExtracting = false;
+        }
+    }
+
+    // Display extracted data
+    function displayExtractedData(data) {
+        if (!data) return;
+
+        extractedCompany.textContent = data.companyName || 'Not detected';
+        extractedAmount.textContent = data.amount ? `R ${data.amount}` : 'Not detected';
+        extractedItem.textContent = data.itemName || 'Not detected';
+        extractedConfidence.textContent = data.confidence ? `${data.confidence}%` : 'Unknown';
+
+        // Show confidence color
+        const confidenceElement = extractedConfidence;
+        if (data.confidence >= 80) {
+            confidenceElement.style.color = '#28a745';
+        } else if (data.confidence >= 60) {
+            confidenceElement.style.color = '#ffc107';
+        } else {
+            confidenceElement.style.color = '#dc3545';
+        }
+
+        // Show appropriate notices based on data type
+        const existingNotice = extractedDataSection.querySelector('.extraction-notice');
+        if (existingNotice) {
+            existingNotice.remove();
+        }
+
+        let noticeHtml = '';
+        let noticeClass = 'extraction-notice';
+
+        if (data.isMockData) {
+            noticeHtml = `
+                <i class="fas fa-info-circle"></i>
+                <span>Demo Mode: This is sample extracted data. OpenAI quota exceeded.</span>
+            `;
+            noticeClass += ' demo-notice';
+        } else if (data.isPdfConverted) {
+            noticeHtml = `
+                <i class="fas fa-magic"></i>
+                <span>PDF Converted: PDF was converted to image and analyzed with AI for optimal results.</span>
+            `;
+            noticeClass += ' pdf-converted-notice';
+        } else if (data.isPdfProcessed) {
+            noticeHtml = `
+                <i class="fas fa-file-pdf"></i>
+                <span>PDF Processed: Data extracted from PDF receipt. For best results, use image formats (JPG, PNG).</span>
+            `;
+            noticeClass += ' pdf-notice';
+        } else if (data.note) {
+            noticeHtml = `
+                <i class="fas fa-lightbulb"></i>
+                <span>${data.note}</span>
+            `;
+            noticeClass += ' info-notice';
+        }
+
+        if (noticeHtml) {
+            const notice = document.createElement('div');
+            notice.className = noticeClass;
+            notice.innerHTML = noticeHtml;
+            notice.style.cssText = `
+                background: ${data.isMockData ? '#fff3cd' : data.isPdfConverted ? '#e8f5e8' : data.isPdfProcessed ? '#e8f4fd' : '#f8f9fa'};
+                border: 1px solid ${data.isMockData ? '#ffeaa7' : data.isPdfConverted ? '#c3e6cb' : data.isPdfProcessed ? '#bee5eb' : '#dee2e6'};
+                border-radius: 6px;
+                padding: 10px;
+                margin-bottom: 15px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-size: 14px;
+                color: ${data.isMockData ? '#856404' : data.isPdfConverted ? '#155724' : data.isPdfProcessed ? '#0c5460' : '#495057'};
+            `;
+
+            extractedDataSection.insertBefore(notice, extractedDataSection.firstChild);
+        }
+
+        extractedDataSection.style.display = 'block';
+
+        // Show company name field if company was detected
+        if (data.companyName) {
+            companyNameSection.style.display = 'block';
+            companyName.value = data.companyName;
+        }
+    }
+
+    // Pre-fill form fields with extracted data
+    function prefillFormFields(data) {
+        if (!data) return;
+
+        if (data.itemName) {
+            document.getElementById('expenseName').value = data.itemName;
+        }
+
+        if (data.amount) {
+            document.getElementById('expenseAmount').value = data.amount;
+        }
+
+        // Set today's date as default if not already set
+        if (!document.getElementById('expenseDate').value) {
+            document.getElementById('expenseDate').value = new Date().toISOString().split('T')[0];
+        }
+    }
+
+    // Re-extract data from current file
+    function reExtractData() {
+        if (selectedMediaFile) {
+            // Check if it's a PDF and convert to image first
+            if (selectedMediaFile.type === 'application/pdf') {
+                convertPDFToImageAndExtract(selectedMediaFile);
+            } else {
+                extractDataFromFile(selectedMediaFile);
+            }
+        }
+    }
+
+    // Reset extraction state
+    function resetExtractionState() {
+        extractedData = null;
+        extractedDataSection.style.display = 'none';
+        extractionProgress.style.display = 'none';
+        companyNameSection.style.display = 'none';
+        companyName.value = '';
+    }
+
+    // Reset smart mode
+    function resetSmartMode() {
+        isManualMode = false;
+        document.body.classList.remove('smart-mode', 'manual-mode');
+        resetExtractionState();
+        showFormFields();
+    }
+
+    // Logout function
+    function logout() {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userInfo');
+        window.location.href = '../login.html';
+    }
+</script>
+</body>
+</html>
