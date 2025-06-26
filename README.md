@@ -103,7 +103,7 @@ npm run dev
 
 ### 6. Access the Application
 - **Frontend**: Open `index.html` in a web browser
-- **API**: Backend runs on `https://shans-backend-1.onrender.com`
+- **API**: Backend runs on `http://localhost:8000`
 
 ## 👤 Default Admin Account
 

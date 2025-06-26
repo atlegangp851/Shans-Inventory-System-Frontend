@@ -922,6 +922,86 @@
         .smart-mode #companyNameSection {
             display: block !important;
         }
+
+        /* Expense Type and Upload Method Styles */
+        .form-help {
+            display: block;
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .category-input-container {
+            position: relative;
+        }
+
+        .upload-method-selection {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .upload-method-btn {
+            flex: 1;
+            padding: 20px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .upload-method-btn:hover {
+            border-color: #007bff;
+            background: #f8f9fa;
+        }
+
+        .upload-method-btn.selected {
+            border-color: #007bff;
+            background: #e3f2fd;
+        }
+
+        .upload-method-btn i {
+            font-size: 24px;
+            color: #007bff;
+        }
+
+        .upload-method-btn span {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .upload-method-btn small {
+            font-size: 11px;
+            color: #666;
+        }
+
+        .btn-small {
+            padding: 5px 10px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+
+        #newCategoryGroup {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #e0e0e0;
+        }
+
+        #newCategoryGroup label {
+            margin-top: 10px;
+            margin-bottom: 5px;
+        }
+
+        #newCategoryGroup label:first-child {
+            margin-top: 0;
+        }
     </style>
 </head>
 <body>
@@ -954,9 +1034,17 @@
         <!-- Removed the Generate Recurring Expenses button -->
     </div>
 
-    <!-- Category Tabs -->
-    <div class="category-tabs" id="categoryTabs">
-        <!-- Tabs will be dynamically generated -->
+    <!-- Expense Type Tabs -->
+    <div class="category-tabs" id="expenseTypeTabs">
+        <button class="category-tab active" onclick="selectExpenseType(null)">
+            All Expenses
+        </button>
+        <button class="category-tab" onclick="selectExpenseType('fixed')">
+            Fixed Expenses
+        </button>
+        <button class="category-tab" onclick="selectExpenseType('variable')">
+            Variable Expenses
+        </button>
     </div>
 
     <!-- Expense Section -->
@@ -981,35 +1069,52 @@
     <div class="modal">
         <h2 id="modalTitle">Add New Expense</h2>
         <form id="expenseForm">
-            <div class="form-group">
-                <label for="expenseCategory">Category *</label>
-                <select id="expenseCategory" required>
-                    <option value="">Select a category</option>
+            <!-- Expense Type Selection -->
+            <div class="form-group" id="expenseTypeGroup">
+                <label for="expenseType">Expense Type *</label>
+                <select id="expenseType" required>
+                    <option value="">Select expense type</option>
+                    <option value="fixed">Fixed Expense (Recurring monthly)</option>
+                    <option value="variable">Variable Expense (One-time)</option>
                 </select>
+                <small class="form-help">Fixed expenses recur every month automatically. Variable expenses are one-time entries.</small>
             </div>
 
-            <div class="form-group">
-                <label for="expenseName">Expense Name *</label>
-                <input type="text" id="expenseName" required placeholder="e.g., Office Supplies, Stapler">
+
+
+            <!-- Upload Method Selection (Variable Expenses Only) -->
+            <div class="form-group" id="uploadMethodGroup" style="display: none;">
+                <label>Upload Method *</label>
+                <div class="upload-method-selection">
+                    <button type="button" id="smartUploadBtn" class="upload-method-btn">
+                        <i class="fas fa-brain"></i>
+                        <span>Smart Upload</span>
+                        <small>AI analyzes receipt automatically</small>
+                    </button>
+                    <button type="button" id="manualUploadBtn" class="upload-method-btn">
+                        <i class="fas fa-keyboard"></i>
+                        <span>Manual Entry</span>
+                        <small>Enter details manually</small>
+                    </button>
+                </div>
             </div>
 
-            <div class="form-group">
-                <label for="expenseAmount">Amount (R) *</label>
-                <input type="number" id="expenseAmount" step="0.01" min="0" required placeholder="0.00">
-            </div>
+            <!-- Form Fields Container -->
+            <div id="formFieldsContainer" style="display: none;">
+                <div class="form-group">
+                    <label for="expenseName">Expense Name *</label>
+                    <input type="text" id="expenseName" required placeholder="e.g., Office Supplies, Stapler">
+                </div>
 
-            <div class="form-group">
-                <label for="expenseDate">Date *</label>
-                <input type="date" id="expenseDate" required>
-            </div>
+                <div class="form-group">
+                    <label for="expenseAmount">Amount (R) *</label>
+                    <input type="number" id="expenseAmount" step="0.01" min="0" required placeholder="0.00">
+                </div>
 
-            <div class="form-group">
-                <label class="checkbox-label">
-                    <input type="checkbox" id="isRecurring">
-                    <span class="checkmark"></span>
-                    Recurring Expense (will be added to each new month automatically)
-                </label>
-            </div>
+                <div class="form-group">
+                    <label for="expenseDate">Date *</label>
+                    <input type="date" id="expenseDate" required>
+                </div>
 
             <div class="form-group">
                 <label for="expenseDescription">Description</label>
@@ -1150,8 +1255,7 @@
 <script src="auth.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
-    let currentCategory = null;
-    let categories = [];
+    let currentExpenseTypeFilter = null;
     let expenses = [];
     let editingExpenseId = null;
     let currentMonth = null;
@@ -1161,11 +1265,13 @@
     let isManualMode = false;
     let extractedData = null;
     let isExtracting = false;
+    let selectedExpenseType = null;
+    let selectedUploadMethod = null;
 
     // API_BASE_URL is already defined in auth.js
 
     // DOM Elements
-    const categoryTabs = document.getElementById('categoryTabs');
+    const expenseTypeTabs = document.getElementById('expenseTypeTabs');
     const expensesContent = document.getElementById('expensesContent');
     const sectionTitle = document.getElementById('sectionTitle');
     const addExpenseBtn = document.getElementById('addExpenseBtn');
@@ -1178,6 +1284,14 @@
     const totalAmount = document.getElementById('totalAmount');
     const monthSelect = document.getElementById('monthSelect');
     const yearSelect = document.getElementById('yearSelect');
+
+    // New expense type elements
+    const expenseType = document.getElementById('expenseType');
+    const expenseTypeGroup = document.getElementById('expenseTypeGroup');
+    const uploadMethodGroup = document.getElementById('uploadMethodGroup');
+    const smartUploadBtn = document.getElementById('smartUploadBtn');
+    const manualUploadBtn = document.getElementById('manualUploadBtn');
+    const formFieldsContainer = document.getElementById('formFieldsContainer');
 
     // Media upload elements
     const mediaUploadSection = document.getElementById('mediaUploadSection');
@@ -1224,8 +1338,7 @@
         if (!checkAuthStatus()) return;
 
         initializeMonthYearSelectors();
-        await loadCategories();
-        await loadExpenseTotals();
+        updateExpenseTypeTabs();
         await loadExpenses();
         setupEventListeners();
     });
@@ -1238,8 +1351,10 @@
         monthSelect.addEventListener('change', handleMonthYearChange);
         yearSelect.addEventListener('change', handleMonthYearChange);
 
-        // Category change listener to show/hide media upload
-        document.getElementById('expenseCategory').addEventListener('change', handleCategoryChange);
+        // New expense type listeners
+        expenseType.addEventListener('change', handleExpenseTypeChange);
+        smartUploadBtn.addEventListener('click', () => selectUploadMethod('smart'));
+        manualUploadBtn.addEventListener('click', () => selectUploadMethod('manual'));
 
         // Media upload event listeners
         mediaUploadArea.addEventListener('click', () => expenseMedia.click());
@@ -1267,56 +1382,32 @@
         });
     }
 
-    // Load expense categories
-    async function loadCategories() {
-        try {
-            const response = await fetch(`${API_BASE_URL}/expense-categories`);
-            if (!response.ok) throw new Error('Failed to fetch categories');
+    // Update expense type tabs
+    function updateExpenseTypeTabs() {
+        const tabs = expenseTypeTabs.querySelectorAll('.category-tab');
+        tabs.forEach(tab => {
+            tab.classList.remove('active');
+        });
 
-            categories = await response.json();
-            renderCategoryTabs();
-            populateCategorySelect();
-        } catch (error) {
-            console.error('Error loading categories:', error);
-            showStatusMessage('Failed to load expense categories', 'error');
+        if (currentExpenseTypeFilter === null) {
+            tabs[0].classList.add('active'); // All Expenses
+        } else if (currentExpenseTypeFilter === 'fixed') {
+            tabs[1].classList.add('active'); // Fixed Expenses
+        } else if (currentExpenseTypeFilter === 'variable') {
+            tabs[2].classList.add('active'); // Variable Expenses
         }
     }
 
-    // Load expense totals
-    async function loadExpenseTotals() {
-        try {
-            let url = `${API_BASE_URL}/expenses/totals`;
-            const params = new URLSearchParams();
 
-            // Pass current year and month to respect month isolation
-            if (currentYear && currentMonth) {
-                params.append('year', currentYear);
-                params.append('month', currentMonth);
-            }
-
-            if (params.toString()) {
-                url += `?${params.toString()}`;
-            }
-
-            const response = await fetch(url);
-            if (!response.ok) throw new Error('Failed to fetch totals');
-
-            const data = await response.json();
-            renderSummaryCards(data);
-        } catch (error) {
-            console.error('Error loading expense totals:', error);
-            showStatusMessage('Failed to load expense totals', 'error');
-        }
-    }
 
     // Load expenses with smart duplicate handling
-    async function loadExpenses(categoryId = null) {
+    async function loadExpenses() {
         try {
             let url = `${API_BASE_URL}/expenses`;
             const params = new URLSearchParams();
 
-            if (categoryId) {
-                params.append('category_id', categoryId);
+            if (currentExpenseTypeFilter) {
+                params.append('expense_type', currentExpenseTypeFilter);
             }
 
             if (currentYear && currentMonth) {
@@ -1420,50 +1511,61 @@
             }
 
             renderExpenses();
+            renderSummaryCards();
         } catch (error) {
             console.error('Error loading expenses:', error);
             showStatusMessage('Failed to load expenses', 'error');
         }
     }
 
-    // Render category tabs
-    function renderCategoryTabs() {
-        const allTab = `
-                <button class="category-tab ${currentCategory === null ? 'active' : ''}"
-                        onclick="selectCategory(null)">
-                    All Categories
-                </button>
-            `;
+    // Select expense type filter
+    function selectExpenseType(expenseType) {
+        currentExpenseTypeFilter = expenseType;
+        updateExpenseTypeTabs();
 
-        const categoryTabs = categories.map(category => `
-                <button class="category-tab ${currentCategory === category.id ? 'active' : ''}"
-                        onclick="selectCategory(${category.id})"
-                        style="border-left: 4px solid ${category.color};">
-                    ${category.name}
-                </button>
-            `).join('');
+        if (expenseType === null) {
+            sectionTitle.textContent = 'All Expenses';
+        } else if (expenseType === 'fixed') {
+            sectionTitle.textContent = 'Fixed Expenses';
+        } else if (expenseType === 'variable') {
+            sectionTitle.textContent = 'Variable Expenses';
+        }
 
-        document.getElementById('categoryTabs').innerHTML = allTab + categoryTabs;
+        loadExpenses();
     }
 
     // Render summary cards
-    function renderSummaryCards(data) {
-        totalAmount.textContent = `R ${parseFloat(data.grandTotal).toFixed(2)}`;
+    function renderSummaryCards() {
+        // Calculate totals from current expenses
+        const fixedTotal = expenses
+            .filter(e => e.expense_type === 'fixed' || e.is_recurring)
+            .reduce((sum, e) => sum + parseFloat(e.amount), 0);
 
-        const categoryCards = data.categories.map(category => `
-                <div class="summary-card" style="border-left-color: ${category.color};">
-                    <h3>${category.name}</h3>
-                    <p class="amount" style="color: ${category.color};">R ${parseFloat(category.total_amount).toFixed(2)}</p>
-                    <small>${category.expense_count} expense${category.expense_count !== 1 ? 's' : ''}</small>
-                </div>
-            `).join('');
+        const variableTotal = expenses
+            .filter(e => e.expense_type === 'variable' || (!e.is_recurring && !e.expense_type))
+            .reduce((sum, e) => sum + parseFloat(e.amount), 0);
+
+        const grandTotal = fixedTotal + variableTotal;
+        const fixedCount = expenses.filter(e => e.expense_type === 'fixed' || e.is_recurring).length;
+        const variableCount = expenses.filter(e => e.expense_type === 'variable' || (!e.is_recurring && !e.expense_type)).length;
+
+        totalAmount.textContent = `R ${grandTotal.toFixed(2)}`;
 
         summaryCards.innerHTML = `
                 <div class="summary-card total">
                     <h3>Total Expenses</h3>
-                    <p class="amount" id="totalAmount">R ${parseFloat(data.grandTotal).toFixed(2)}</p>
+                    <p class="amount">R ${grandTotal.toFixed(2)}</p>
                 </div>
-                ${categoryCards}
+                <div class="summary-card" style="border-left-color: #e74c3c;">
+                    <h3>Fixed Expenses</h3>
+                    <p class="amount" style="color: #e74c3c;">R ${fixedTotal.toFixed(2)}</p>
+                    <small>${fixedCount} expense${fixedCount !== 1 ? 's' : ''}</small>
+                </div>
+                <div class="summary-card" style="border-left-color: #3498db;">
+                    <h3>Variable Expenses</h3>
+                    <p class="amount" style="color: #3498db;">R ${variableTotal.toFixed(2)}</p>
+                    <small>${variableCount} expense${variableCount !== 1 ? 's' : ''}</small>
+                </div>
             `;
     }
 
@@ -1508,8 +1610,8 @@
                                         ${expense.media_url ? `<span class="media-indicator" onclick="showMediaPreview('${expense.media_url}', '${expense.name}')" title="View receipt/slip"><i class="fas fa-paperclip"></i></span>` : ''}
                                     </td>
                                     <td>
-                                        <span style="display: inline-block; width: 12px; height: 12px; background: ${expense.category_color}; border-radius: 50%; margin-right: 8px;"></span>
-                                        ${expense.category_name}
+                                        <span style="display: inline-block; width: 12px; height: 12px; background: ${expense.category_color || '#e74c3c'}; border-radius: 50%; margin-right: 8px;"></span>
+                                        ${expense.category_name || 'Variable Expense'}
                                     </td>
                                     <td class="amount-cell">R ${parseFloat(expense.amount).toFixed(2)}</td>
                                     <td class="date-cell">${formatDate(expense.expense_date)}</td>
@@ -1532,29 +1634,58 @@
         expensesContent.innerHTML = tableHTML;
     }
 
-    // Select category
-    function selectCategory(categoryId) {
-        currentCategory = categoryId;
 
-        if (categoryId === null) {
-            sectionTitle.textContent = 'All Expenses';
+
+    // Handle expense type change
+    function handleExpenseTypeChange() {
+        selectedExpenseType = expenseType.value;
+
+        if (selectedExpenseType) {
+            if (selectedExpenseType === 'variable') {
+                uploadMethodGroup.style.display = 'block';
+                formFieldsContainer.style.display = 'none';
+            } else {
+                // Fixed expense - skip upload method selection
+                uploadMethodGroup.style.display = 'none';
+                formFieldsContainer.style.display = 'block';
+                selectedUploadMethod = 'manual'; // Default to manual for fixed expenses
+            }
         } else {
-            const category = categories.find(c => c.id === categoryId);
-            sectionTitle.textContent = `${category.name} Expenses`;
+            uploadMethodGroup.style.display = 'none';
+            formFieldsContainer.style.display = 'none';
         }
-
-        renderCategoryTabs();
-        loadExpenses(categoryId);
     }
 
-    // Populate category select in modal
-    function populateCategorySelect() {
-        const select = document.getElementById('expenseCategory');
-        select.innerHTML = '<option value="">Select a category</option>' +
-            categories.map(category => `
-                    <option value="${category.id}">${category.name}</option>
-                `).join('');
+    // Handle upload method selection
+    function selectUploadMethod(method) {
+        selectedUploadMethod = method;
+
+        // Update button states
+        smartUploadBtn.classList.toggle('selected', method === 'smart');
+        manualUploadBtn.classList.toggle('selected', method === 'manual');
+
+        // Show form fields
+        formFieldsContainer.style.display = 'block';
+
+        // Configure upload mode and media upload section
+        if (method === 'smart') {
+            isManualMode = false;
+            document.body.classList.add('smart-mode');
+            document.body.classList.remove('manual-mode');
+
+            // Show media upload section for smart upload
+            mediaUploadSection.style.display = 'block';
+        } else {
+            isManualMode = true;
+            document.body.classList.add('manual-mode');
+            document.body.classList.remove('smart-mode');
+
+            // Hide media upload section for manual entry
+            mediaUploadSection.style.display = 'none';
+        }
     }
+
+
 
     // Open add modal
     function openAddModal() {
@@ -1563,6 +1694,19 @@
         document.getElementById('saveBtn').textContent = 'Save Expense';
         expenseForm.reset();
 
+        // Reset all states
+        selectedExpenseType = null;
+        selectedUploadMethod = null;
+
+        // Reset UI
+        expenseTypeGroup.style.display = 'block';
+        uploadMethodGroup.style.display = 'none';
+        formFieldsContainer.style.display = 'none';
+
+        // Remove upload method selection
+        smartUploadBtn.classList.remove('selected');
+        manualUploadBtn.classList.remove('selected');
+
         // Reset media upload state
         resetMediaUpload();
         resetSmartMode();
@@ -1570,11 +1714,7 @@
         // Set today's date as default
         document.getElementById('expenseDate').value = new Date().toISOString().split('T')[0];
 
-        // Pre-select current category if viewing a specific category
-        if (currentCategory) {
-            document.getElementById('expenseCategory').value = currentCategory;
-            handleCategoryChange(); // Show/hide media upload section
-        }
+
 
         expenseModal.style.display = 'flex';
     }
@@ -1591,16 +1731,25 @@
         // Reset media upload state first
         resetMediaUpload();
 
+        // Set expense type and show appropriate sections
+        selectedExpenseType = expense.expense_type || (expense.is_recurring ? 'fixed' : 'variable');
+        expenseType.value = selectedExpenseType;
+
+        // Show all sections for editing
+        expenseTypeGroup.style.display = 'block';
+        formFieldsContainer.style.display = 'block';
+
+        // Hide upload method selection for editing
+        uploadMethodGroup.style.display = 'none';
+        selectedUploadMethod = 'manual'; // Default to manual for editing
+
         // Populate form
-        document.getElementById('expenseCategory').value = expense.category_id;
         document.getElementById('expenseName').value = expense.name;
         document.getElementById('expenseAmount').value = expense.amount;
         document.getElementById('expenseDate').value = expense.expense_date;
         document.getElementById('expenseDescription').value = expense.description || '';
-        document.getElementById('isRecurring').checked = expense.is_recurring || false;
 
-        // Handle media upload section and existing media
-        handleCategoryChange();
+        // Handle existing media
         if (expense.media_url) {
             uploadedMediaUrl = expense.media_url;
             showExistingMedia(expense.media_url);
@@ -1616,20 +1765,42 @@
         expenseForm.reset();
         resetMediaUpload();
         resetSmartMode();
+
+        // Reset new states
+        selectedExpenseType = null;
+        selectedUploadMethod = null;
+
+        // Reset UI
+        expenseTypeGroup.style.display = 'block';
+        uploadMethodGroup.style.display = 'none';
+        formFieldsContainer.style.display = 'none';
+        smartUploadBtn.classList.remove('selected');
+        manualUploadBtn.classList.remove('selected');
+
+        // Remove mode classes
+        document.body.classList.remove('smart-mode', 'manual-mode');
     }
 
     // Handle form submit
     async function handleFormSubmit(e) {
         e.preventDefault();
 
+        // For now, use default category (Operating Expenses) for all expenses
+        // TODO: Implement proper category selection UI
+        // Set category based on expense type: Variable = 1, Fixed = 2
+        const categoryId = selectedExpenseType === 'fixed' ? 2 : 1;
+
         const formData = {
-            category_id: parseInt(document.getElementById('expenseCategory').value),
+            category_id: categoryId,
             name: document.getElementById('expenseName').value.trim(),
             amount: parseFloat(document.getElementById('expenseAmount').value),
             expense_date: document.getElementById('expenseDate').value,
             description: document.getElementById('expenseDescription').value.trim(),
-            is_recurring: document.getElementById('isRecurring').checked
+            expense_type: selectedExpenseType || 'variable',
+            is_recurring: selectedExpenseType === 'fixed' // Fixed expenses are always recurring
         };
+
+        console.log('Form data being submitted:', formData);
 
         // Add company name if available (from smart extraction)
         const companyNameValue = document.getElementById('companyName').value.trim();
@@ -1639,25 +1810,22 @@
                 `Company: ${companyNameValue}`;
         }
 
-        if (!formData.category_id || !formData.name || !formData.amount || !formData.expense_date) {
+        if (!formData.name || !formData.amount || !formData.expense_date) {
             showStatusMessage('Please fill in all required fields', 'error');
             return;
         }
 
         try {
-            // Handle media upload for operating expenses
-            const selectedCategory = categories.find(c => c.id === formData.category_id);
-            if (selectedCategory && selectedCategory.name.toLowerCase() === 'operating expenses') {
-                if (selectedMediaFile) {
-                    // New file selected, upload it
-                    const mediaUrl = await uploadMedia(formData.name, formData.expense_date);
-                    if (mediaUrl) {
-                        formData.media_url = mediaUrl;
-                    }
-                } else if (uploadedMediaUrl) {
-                    // Keep existing media URL
-                    formData.media_url = uploadedMediaUrl;
+            // Handle media upload for smart upload
+            if (selectedUploadMethod === 'smart' && selectedMediaFile) {
+                // New file selected, upload it
+                const mediaUrl = await uploadMedia(formData.name, formData.expense_date);
+                if (mediaUrl) {
+                    formData.media_url = mediaUrl;
                 }
+            } else if (uploadedMediaUrl) {
+                // Keep existing media URL
+                formData.media_url = uploadedMediaUrl;
             }
 
             const token = localStorage.getItem('authToken');
@@ -1685,7 +1853,7 @@
             showStatusMessage(message, 'success');
 
             closeModal();
-            await loadExpenses(currentCategory);
+            await loadExpenses();
             await loadExpenseTotals();
 
         } catch (error) {
@@ -1737,7 +1905,7 @@
 
             const result = await response.json();
             showStatusMessage(result.message || 'Expense deleted successfully!', 'success');
-            await loadExpenses(currentCategory);
+            await loadExpenses();
             await loadExpenseTotals();
 
         } catch (error) {
@@ -1823,34 +1991,19 @@
         } else {
             currentMonth = null;
             currentYear = null;
-            sectionTitle.textContent = currentCategory ?
-                `${categories.find(c => c.id === currentCategory).name} Expenses` :
-                'All Expenses';
-        }
-
-        loadExpenses(currentCategory);
-        loadExpenseTotals();
-    }
-
-    // Handle category change to show/hide media upload section
-    function handleCategoryChange() {
-        const selectedCategoryId = parseInt(document.getElementById('expenseCategory').value);
-        const selectedCategory = categories.find(c => c.id === selectedCategoryId);
-
-        // Show media upload section only for "Operating Expenses" category
-        if (selectedCategory && selectedCategory.name.toLowerCase() === 'operating expenses') {
-            mediaUploadSection.style.display = 'block';
-
-            // Initialize smart mode by default
-            if (!isManualMode) {
-                initializeSmartMode();
+            if (currentExpenseTypeFilter === null) {
+                sectionTitle.textContent = 'All Expenses';
+            } else if (currentExpenseTypeFilter === 'fixed') {
+                sectionTitle.textContent = 'Fixed Expenses';
+            } else if (currentExpenseTypeFilter === 'variable') {
+                sectionTitle.textContent = 'Variable Expenses';
             }
-        } else {
-            mediaUploadSection.style.display = 'none';
-            resetMediaUpload();
-            resetSmartMode();
         }
+
+        loadExpenses();
     }
+
+
 
     // Handle file selection
     function handleFileSelect(event) {
@@ -2349,7 +2502,6 @@
         document.getElementById('expenseName').closest('.form-group').style.display = 'none';
         document.getElementById('expenseAmount').closest('.form-group').style.display = 'none';
         document.getElementById('expenseDate').closest('.form-group').style.display = 'none';
-        document.getElementById('isRecurring').closest('.form-group').style.display = 'none';
         document.getElementById('expenseDescription').closest('.form-group').style.display = 'none';
     }
 
@@ -2358,7 +2510,6 @@
         document.getElementById('expenseName').closest('.form-group').style.display = 'block';
         document.getElementById('expenseAmount').closest('.form-group').style.display = 'block';
         document.getElementById('expenseDate').closest('.form-group').style.display = 'block';
-        document.getElementById('isRecurring').closest('.form-group').style.display = 'block';
         document.getElementById('expenseDescription').closest('.form-group').style.display = 'block';
     }
 
