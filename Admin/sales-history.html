@@ -1191,7 +1191,7 @@
 
         function saveToExcel() {
             if (filteredSalesData.length === 0) {
-                alert('No data available to save!');
+                showStatusMessage('No data available to save!', 'error');
                 return;
             }
 

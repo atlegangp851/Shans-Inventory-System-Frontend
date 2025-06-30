@@ -578,6 +578,167 @@
                 background-color: #c82333;
             }
         }
+
+        /* Confirmation Toast Styles */
+        .confirmation-toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            padding: 24px;
+            z-index: 10000;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            border: 1px solid #e0e0e0;
+        }
+
+        .confirmation-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+        }
+
+        .confirmation-message {
+            font-size: 1.1rem;
+            color: #333;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .confirmation-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .confirm-btn, .cancel-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 80px;
+        }
+
+        .confirm-btn {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .confirm-btn:hover {
+            background-color: #c82333;
+        }
+
+        .cancel-btn {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .cancel-btn:hover {
+            background-color: #5a6268;
+        }
+
+        /* Prompt Toast Styles */
+        .prompt-toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            padding: 24px;
+            z-index: 10000;
+            max-width: 450px;
+            width: 90%;
+            text-align: center;
+            border: 1px solid #e0e0e0;
+        }
+
+        .prompt-message {
+            font-size: 1.1rem;
+            color: #333;
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+
+        .prompt-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+            margin-bottom: 20px;
+            box-sizing: border-box;
+        }
+
+        .prompt-input:focus {
+            outline: none;
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+        }
+
+        .prompt-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .prompt-ok-btn, .prompt-cancel-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 80px;
+        }
+
+        .prompt-ok-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .prompt-ok-btn:hover {
+            background-color: #45a049;
+        }
+
+        .prompt-cancel-btn {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .prompt-cancel-btn:hover {
+            background-color: #5a6268;
+        }
+
+        /* Mobile adjustments for toasts */
+        @media (max-width: 480px) {
+            .confirmation-toast, .prompt-toast {
+                padding: 20px;
+                max-width: 320px;
+            }
+
+            .confirmation-message, .prompt-message {
+                font-size: 1rem;
+            }
+
+            .confirm-btn, .cancel-btn, .prompt-ok-btn, .prompt-cancel-btn {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1298,11 +1459,175 @@
                 }
 
                 /**
+                 * Confirmation toast system for Android WebView compatibility
+                 * @param {string} message - The confirmation message
+                 * @param {function} onConfirm - Callback when user confirms
+                 * @param {function} onCancel - Callback when user cancels
+                 */
+                function showConfirmationToast(message, onConfirm, onCancel = null) {
+                    // Create overlay
+                    const overlay = document.createElement('div');
+                    overlay.className = 'confirmation-overlay';
+
+                    // Create toast
+                    const toast = document.createElement('div');
+                    toast.className = 'confirmation-toast';
+
+                    // Create message
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = 'confirmation-message';
+                    messageDiv.textContent = message;
+
+                    // Create buttons container
+                    const buttonsDiv = document.createElement('div');
+                    buttonsDiv.className = 'confirmation-buttons';
+
+                    // Create confirm button
+                    const confirmBtn = document.createElement('button');
+                    confirmBtn.className = 'confirm-btn';
+                    confirmBtn.textContent = 'Yes';
+                    confirmBtn.onclick = () => {
+                        document.body.removeChild(overlay);
+                        if (onConfirm) onConfirm();
+                    };
+
+                    // Create cancel button
+                    const cancelBtn = document.createElement('button');
+                    cancelBtn.className = 'cancel-btn';
+                    cancelBtn.textContent = 'Cancel';
+                    cancelBtn.onclick = () => {
+                        document.body.removeChild(overlay);
+                        if (onCancel) onCancel();
+                    };
+
+                    // Assemble the toast
+                    buttonsDiv.appendChild(confirmBtn);
+                    buttonsDiv.appendChild(cancelBtn);
+                    toast.appendChild(messageDiv);
+                    toast.appendChild(buttonsDiv);
+                    overlay.appendChild(toast);
+
+                    // Add to page
+                    document.body.appendChild(overlay);
+
+                    // Close on overlay click
+                    overlay.onclick = (e) => {
+                        if (e.target === overlay) {
+                            document.body.removeChild(overlay);
+                            if (onCancel) onCancel();
+                        }
+                    };
+                }
+
+                /**
+                 * Prompt toast system for Android WebView compatibility
+                 * @param {string} message - The prompt message
+                 * @param {string} defaultValue - Default input value
+                 * @param {function} onOk - Callback when user clicks OK (receives input value)
+                 * @param {function} onCancel - Callback when user cancels
+                 */
+                function showPromptToast(message, defaultValue = '', onOk, onCancel = null) {
+                    // Create overlay
+                    const overlay = document.createElement('div');
+                    overlay.className = 'confirmation-overlay';
+
+                    // Create toast
+                    const toast = document.createElement('div');
+                    toast.className = 'prompt-toast';
+
+                    // Create message
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = 'prompt-message';
+                    messageDiv.textContent = message;
+
+                    // Create input
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.className = 'prompt-input';
+                    input.value = defaultValue;
+                    input.placeholder = 'Enter value...';
+
+                    // Create buttons container
+                    const buttonsDiv = document.createElement('div');
+                    buttonsDiv.className = 'prompt-buttons';
+
+                    // Create OK button
+                    const okBtn = document.createElement('button');
+                    okBtn.className = 'prompt-ok-btn';
+                    okBtn.textContent = 'OK';
+                    okBtn.onclick = () => {
+                        const value = input.value.trim();
+                        document.body.removeChild(overlay);
+                        if (onOk) onOk(value);
+                    };
+
+                    // Create cancel button
+                    const cancelBtn = document.createElement('button');
+                    cancelBtn.className = 'prompt-cancel-btn';
+                    cancelBtn.textContent = 'Cancel';
+                    cancelBtn.onclick = () => {
+                        document.body.removeChild(overlay);
+                        if (onCancel) onCancel();
+                    };
+
+                    // Handle Enter key
+                    input.onkeydown = (e) => {
+                        if (e.key === 'Enter') {
+                            okBtn.click();
+                        } else if (e.key === 'Escape') {
+                            cancelBtn.click();
+                        }
+                    };
+
+                    // Assemble the toast
+                    buttonsDiv.appendChild(okBtn);
+                    buttonsDiv.appendChild(cancelBtn);
+                    toast.appendChild(messageDiv);
+                    toast.appendChild(input);
+                    toast.appendChild(buttonsDiv);
+                    overlay.appendChild(toast);
+
+                    // Add to page
+                    document.body.appendChild(overlay);
+
+                    // Focus input and select text
+                    setTimeout(() => {
+                        input.focus();
+                        input.select();
+                    }, 100);
+
+                    // Close on overlay click
+                    overlay.onclick = (e) => {
+                        if (e.target === overlay) {
+                            document.body.removeChild(overlay);
+                            if (onCancel) onCancel();
+                        }
+                    };
+                }
+
+                /**
                  * Function to open the Add Product modal
                  */
                 function openAddModal() {
                     popupOverlay.style.display = 'flex';
                     popupOverlay.setAttribute('aria-hidden', 'false');
+
+                    // Ensure dropdowns are populated when modal opens
+                    setTimeout(() => {
+                        const carBrandSelect = document.getElementById('carBrand');
+                        const carModelSelect = document.getElementById('carModel');
+
+                        if (carBrandSelect && carBrands.length > 0) {
+                            updateSingleCarBrandDropdown(carBrandSelect, 'carBrand');
+                        }
+
+                        // Clear car model dropdown initially (user needs to select brand first)
+                        if (carModelSelect) {
+                            while (carModelSelect.options.length > 1) {
+                                carModelSelect.remove(1);
+                            }
+                        }
+                    }, 100);
                 }
 
                 /**
@@ -1325,6 +1650,42 @@
 
                     editProductOverlay.style.display = 'flex';
                     editProductOverlay.setAttribute('aria-hidden', 'false');
+
+                    // Ensure dropdowns are populated when modal opens
+                    setTimeout(() => {
+                        const editCarBrandSelect = document.getElementById('editCarBrand');
+                        const editCarModelSelect = document.getElementById('editCarModel');
+
+                        if (editCarBrandSelect && carBrands.length > 0) {
+                            updateSingleCarBrandDropdown(editCarBrandSelect, 'editCarBrand');
+                        }
+
+                        // If product has a car brand, populate the models for that brand
+                        if (product.car_brand && editCarModelSelect) {
+                            const brand = carBrands.find(b => b.name === product.car_brand);
+                            if (brand) {
+                                fetchCarModelsByBrand(brand.id).then(brandModels => {
+                                    // Clear existing options except the first one
+                                    while (editCarModelSelect.options.length > 1) {
+                                        editCarModelSelect.remove(1);
+                                    }
+
+                                    // Add options for each model
+                                    brandModels.forEach(model => {
+                                        const option = document.createElement('option');
+                                        option.value = model.name;
+                                        option.textContent = model.name;
+                                        editCarModelSelect.appendChild(option);
+                                    });
+
+                                    // Set the selected model
+                                    if (product.car_model) {
+                                        editCarModelSelect.value = product.car_model;
+                                    }
+                                });
+                            }
+                        }
+                    }, 100);
 
                     // Prefill the form with product data
                     document.getElementById('editItemCode').value = product.item_code;
@@ -1860,23 +2221,26 @@
 
                     if (e.target.classList.contains('delete-button')) {
                         const item_code = e.target.getAttribute('data-item-code');
-                        if (confirm('Are you sure you want to delete this product?')) {
-                            try {
-                                const response = await fetch(`${API_URL}/products/${encodeURIComponent(item_code)}`, {
-                                    method: 'DELETE'
-                                });
-                                if (response.ok) {
-                                    showStatusMessage('Product deleted successfully!', 'success');
-                                    fetchProducts();
-                                } else {
-                                    const errorData = await response.json();
-                                    showStatusMessage(`Error: ${errorData.message}`, 'error');
+                        showConfirmationToast(
+                            'Are you sure you want to delete this product?',
+                            async () => {
+                                try {
+                                    const response = await fetch(`${API_URL}/products/${encodeURIComponent(item_code)}`, {
+                                        method: 'DELETE'
+                                    });
+                                    if (response.ok) {
+                                        showStatusMessage('Product deleted successfully!', 'success');
+                                        fetchProducts();
+                                    } else {
+                                        const errorData = await response.json();
+                                        showStatusMessage(`Error: ${errorData.message}`, 'error');
+                                    }
+                                } catch (error) {
+                                    console.error('Error deleting product:', error);
+                                    showStatusMessage('An error occurred while deleting the product.', 'error');
                                 }
-                            } catch (error) {
-                                console.error('Error deleting product:', error);
-                                showStatusMessage('An error occurred while deleting the product.', 'error');
                             }
-                        }
+                        );
                     }
                 });
 
@@ -1901,23 +2265,26 @@
 
                     if (e.target.classList.contains('delete-button')) {
                         const item_code = e.target.getAttribute('data-item-code');
-                        if (confirm('Are you sure you want to delete this product?')) {
-                            try {
-                                const response = await fetch(`${API_URL}/products/${encodeURIComponent(item_code)}`, {
-                                    method: 'DELETE'
-                                });
-                                if (response.ok) {
-                                    showStatusMessage('Product deleted successfully!', 'success');
-                                    fetchProducts();
-                                } else {
-                                    const errorData = await response.json();
-                                    showStatusMessage(`Error: ${errorData.message}`, 'error');
+                        showConfirmationToast(
+                            'Are you sure you want to delete this product?',
+                            async () => {
+                                try {
+                                    const response = await fetch(`${API_URL}/products/${encodeURIComponent(item_code)}`, {
+                                        method: 'DELETE'
+                                    });
+                                    if (response.ok) {
+                                        showStatusMessage('Product deleted successfully!', 'success');
+                                        fetchProducts();
+                                    } else {
+                                        const errorData = await response.json();
+                                        showStatusMessage(`Error: ${errorData.message}`, 'error');
+                                    }
+                                } catch (error) {
+                                    console.error('Error deleting product:', error);
+                                    showStatusMessage('An error occurred while deleting the product.', 'error');
                                 }
-                            } catch (error) {
-                                console.error('Error deleting product:', error);
-                                showStatusMessage('An error occurred while deleting the product.', 'error');
                             }
-                        }
+                        );
                     }
                 });
 
@@ -2146,29 +2513,34 @@
 
                 async function editCategory(index) {
                     const category = categories[index];
-                    const newName = prompt('Enter new name for category:', category.name);
 
-                    if (newName && newName.trim() !== '') {
-                        try {
-                            // Update the category in the backend
-                            await fetch(`${API_URL}/categories/${category.id}`, {
-                                method: 'PUT',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ name: newName.trim() })
-                            });
+                    showPromptToast(
+                        'Enter new name for category:',
+                        category.name,
+                        async (newName) => {
+                            if (newName && newName.trim() !== '') {
+                                try {
+                                    // Update the category in the backend
+                                    await fetch(`${API_URL}/categories/${category.id}`, {
+                                        method: 'PUT',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ name: newName.trim() })
+                                    });
 
-                            // Refresh categories from the backend
-                            await fetchCategories();
+                                    // Refresh categories from the backend
+                                    await fetchCategories();
 
-                            // Update the table
-                            renderCategoriesTable();
+                                    // Update the table
+                                    renderCategoriesTable();
 
-                            showStatusMessage('Category updated successfully!', 'success');
-                        } catch (error) {
-                            console.error('Error updating category:', error);
-                            showStatusMessage(`Failed to update category: ${error.message}`, 'error');
+                                    showStatusMessage('Category updated successfully!', 'success');
+                                } catch (error) {
+                                    console.error('Error updating category:', error);
+                                    showStatusMessage(`Failed to update category: ${error.message}`, 'error');
+                                }
+                            }
                         }
-                    }
+                    );
                 }
 
                 /**
@@ -2176,29 +2548,34 @@
                  */
                 async function editCarBrand(index) {
                     const brand = carBrands[index];
-                    const newName = prompt('Enter new name for car brand:', brand.name);
 
-                    if (newName && newName.trim() !== '') {
-                        try {
-                            // Update the brand in the backend
-                            await fetch(`${API_URL}/car-brands/${brand.id}`, {
-                                method: 'PUT',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ name: newName.trim() })
-                            });
+                    showPromptToast(
+                        'Enter new name for car brand:',
+                        brand.name,
+                        async (newName) => {
+                            if (newName && newName.trim() !== '') {
+                                try {
+                                    // Update the brand in the backend
+                                    await fetch(`${API_URL}/car-brands/${brand.id}`, {
+                                        method: 'PUT',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ name: newName.trim() })
+                                    });
 
-                            // Refresh brands from the backend
-                            await fetchCarBrands();
+                                    // Refresh brands from the backend
+                                    await fetchCarBrands();
 
-                            // Update the table
-                            renderCarBrandsTable();
+                                    // Update the table
+                                    renderCarBrandsTable();
 
-                            showStatusMessage('Car brand updated successfully!', 'success');
-                        } catch (error) {
-                            console.error('Error updating car brand:', error);
-                            showStatusMessage(`Failed to update car brand: ${error.message}`, 'error');
+                                    showStatusMessage('Car brand updated successfully!', 'success');
+                                } catch (error) {
+                                    console.error('Error updating car brand:', error);
+                                    showStatusMessage(`Failed to update car brand: ${error.message}`, 'error');
+                                }
+                            }
                         }
-                    }
+                    );
                 }
 
                 async function deleteCategory(index) {
@@ -2214,25 +2591,28 @@
                         return;
                     }
 
-                    if (confirm(`Are you sure you want to delete the category "${category.name}"?`)) {
-                        try {
-                            // Delete the category from the backend
-                            await fetch(`${API_URL}/categories/${category.id}`, {
-                                method: 'DELETE'
-                            });
+                    showConfirmationToast(
+                        `Are you sure you want to delete the category "${category.name}"?`,
+                        async () => {
+                            try {
+                                // Delete the category from the backend
+                                await fetch(`${API_URL}/categories/${category.id}`, {
+                                    method: 'DELETE'
+                                });
 
-                            // Refresh categories from the backend
-                            await fetchCategories();
+                                // Refresh categories from the backend
+                                await fetchCategories();
 
-                            // Update the table
-                            renderCategoriesTable();
+                                // Update the table
+                                renderCategoriesTable();
 
-                            showStatusMessage('Category deleted successfully!', 'success');
-                        } catch (error) {
-                            console.error('Error deleting category:', error);
-                            showStatusMessage(`Failed to delete category: ${error.message}`, 'error');
+                                showStatusMessage('Category deleted successfully!', 'success');
+                            } catch (error) {
+                                console.error('Error deleting category:', error);
+                                showStatusMessage(`Failed to delete category: ${error.message}`, 'error');
+                            }
                         }
-                    }
+                    );
                 }
 
                 /**
@@ -2261,25 +2641,28 @@
                         return;
                     }
 
-                    if (confirm(`Are you sure you want to delete the car brand "${brand.name}"?`)) {
-                        try {
-                            // Delete the brand from the backend
-                            await fetch(`${API_URL}/car-brands/${brand.id}`, {
-                                method: 'DELETE'
-                            });
+                    showConfirmationToast(
+                        `Are you sure you want to delete the car brand "${brand.name}"?`,
+                        async () => {
+                            try {
+                                // Delete the brand from the backend
+                                await fetch(`${API_URL}/car-brands/${brand.id}`, {
+                                    method: 'DELETE'
+                                });
 
-                            // Refresh brands from the backend
-                            await fetchCarBrands();
+                                // Refresh brands from the backend
+                                await fetchCarBrands();
 
-                            // Update the table
-                            renderCarBrandsTable();
+                                // Update the table
+                                renderCarBrandsTable();
 
-                            showStatusMessage('Car brand deleted successfully!', 'success');
-                        } catch (error) {
-                            console.error('Error deleting car brand:', error);
-                            showStatusMessage(`Failed to delete car brand: ${error.message}`, 'error');
+                                showStatusMessage('Car brand deleted successfully!', 'success');
+                            } catch (error) {
+                                console.error('Error deleting car brand:', error);
+                                showStatusMessage(`Failed to delete car brand: ${error.message}`, 'error');
+                            }
                         }
-                    }
+                    );
                 }
 
                 /**
@@ -2297,44 +2680,55 @@
                     const brand = carBrands.find(b => b.id === model.brandId);
                     const brandName = brand ? brand.name : 'Unknown';
 
-                    // Prompt for new name
-                    const newName = prompt(`Enter new name for car model (currently: ${model.name})`, model.name);
-                    if (!newName || newName.trim() === '') return;
+                    // Prompt for new name first
+                    showPromptToast(
+                        `Enter new name for car model (currently: ${model.name})`,
+                        model.name,
+                        (newName) => {
+                            if (!newName || newName.trim() === '') return;
 
-                    // Prompt for new brand
-                    const brandOptions = carBrands.map(b => `${b.id}: ${b.name}`).join('\n');
-                    const promptMessage = `Select a brand ID for this model (currently: ${brandName}):\n${brandOptions}`;
-                    const newBrandId = prompt(promptMessage, model.brandId);
-                    if (!newBrandId) return;
+                            // Then prompt for new brand
+                            const brandOptions = carBrands.map(b => `${b.id}: ${b.name}`).join('\n');
+                            const promptMessage = `Select a brand ID for this model (currently: ${brandName}):\n${brandOptions}`;
 
-                    // Check if the brand exists
-                    if (!carBrands.some(b => b.id === newBrandId)) {
-                        showStatusMessage('Invalid brand ID selected.', 'error');
-                        return;
-                    }
+                            showPromptToast(
+                                promptMessage,
+                                model.brandId,
+                                async (newBrandId) => {
+                                    if (!newBrandId) return;
 
-                    try {
-                        // Update the model in the backend
-                        await fetch(`${API_URL}/car-models/${modelId}`, {
-                            method: 'PUT',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                name: newName.trim(),
-                                brand_id: newBrandId
-                            })
-                        });
+                                    // Check if the brand exists
+                                    if (!carBrands.some(b => b.id === newBrandId)) {
+                                        showStatusMessage('Invalid brand ID selected.', 'error');
+                                        return;
+                                    }
 
-                        // Refresh models from the backend
-                        await fetchCarModels();
+                                    try {
+                                        // Update the model in the backend
+                                        await fetch(`${API_URL}/car-models/${modelId}`, {
+                                            method: 'PUT',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({
+                                                name: newName.trim(),
+                                                brand_id: newBrandId
+                                            })
+                                        });
 
-                        // Update the table
-                        renderCarModelsTable();
+                                        // Refresh models from the backend
+                                        await fetchCarModels();
 
-                        showStatusMessage('Car model updated successfully!', 'success');
-                    } catch (error) {
-                        console.error('Error updating car model:', error);
-                        showStatusMessage(`Failed to update car model: ${error.message}`, 'error');
-                    }
+                                        // Update the table
+                                        renderCarModelsTable();
+
+                                        showStatusMessage('Car model updated successfully!', 'success');
+                                    } catch (error) {
+                                        console.error('Error updating car model:', error);
+                                        showStatusMessage(`Failed to update car model: ${error.message}`, 'error');
+                                    }
+                                }
+                            );
+                        }
+                    );
                 }
 
                 /**
@@ -2358,25 +2752,28 @@
                         return;
                     }
 
-                    if (confirm(`Are you sure you want to delete the car model "${model.name}"?`)) {
-                        try {
-                            // Delete the model from the backend
-                            await fetch(`${API_URL}/car-models/${modelId}`, {
-                                method: 'DELETE'
-                            });
+                    showConfirmationToast(
+                        `Are you sure you want to delete the car model "${model.name}"?`,
+                        async () => {
+                            try {
+                                // Delete the model from the backend
+                                await fetch(`${API_URL}/car-models/${modelId}`, {
+                                    method: 'DELETE'
+                                });
 
-                            // Refresh models from the backend
-                            await fetchCarModels();
+                                // Refresh models from the backend
+                                await fetchCarModels();
 
-                            // Update the table
-                            renderCarModelsTable();
+                                // Update the table
+                                renderCarModelsTable();
 
-                            showStatusMessage('Car model deleted successfully!', 'success');
-                        } catch (error) {
-                            console.error('Error deleting car model:', error);
-                            showStatusMessage(`Failed to delete car model: ${error.message}`, 'error');
+                                showStatusMessage('Car model deleted successfully!', 'success');
+                            } catch (error) {
+                                console.error('Error deleting car model:', error);
+                                showStatusMessage(`Failed to delete car model: ${error.message}`, 'error');
+                            }
                         }
-                    }
+                    );
                 }
 
                 /**
@@ -2690,22 +3087,30 @@
                         const carBrandSelect = document.getElementById('carBrand');
                         const editCarBrandSelect = document.getElementById('editCarBrand');
 
-                        if (!carBrandSelect || !editCarBrandSelect) {
-                            console.error('Car brand select elements not found');
-                            return;
+                        // Update each dropdown individually if it exists
+                        if (carBrandSelect) {
+                            updateSingleCarBrandDropdown(carBrandSelect, 'carBrand');
                         }
 
-                        // Store current values to restore them after updating options
-                        const currentValue = carBrandSelect.value;
-                        const currentEditValue = editCarBrandSelect.value;
+                        if (editCarBrandSelect) {
+                            updateSingleCarBrandDropdown(editCarBrandSelect, 'editCarBrand');
+                        }
+                    } catch (error) {
+                        console.error('Error updating car brand dropdowns:', error);
+                    }
+                }
+
+                /**
+                 * Update a single car brand dropdown
+                 */
+                function updateSingleCarBrandDropdown(selectElement, elementName) {
+                    try {
+                        // Store current value to restore it after updating options
+                        const currentValue = selectElement.value;
 
                         // Clear existing options except the first one
-                        while (carBrandSelect.options.length > 1) {
-                            carBrandSelect.remove(1);
-                        }
-
-                        while (editCarBrandSelect.options.length > 1) {
-                            editCarBrandSelect.remove(1);
+                        while (selectElement.options.length > 1) {
+                            selectElement.remove(1);
                         }
 
                         // Add options for each brand
@@ -2713,29 +3118,54 @@
                             const option = document.createElement('option');
                             option.value = brand.name;
                             option.textContent = brand.name;
-
-                            const editOption = document.createElement('option');
-                            editOption.value = brand.name;
-                            editOption.textContent = brand.name;
-
-                            carBrandSelect.appendChild(option);
-                            editCarBrandSelect.appendChild(editOption);
+                            selectElement.appendChild(option);
                         });
 
-                        // Restore previously selected values if they still exist
+                        // Restore previously selected value if it still exists
                         if (currentValue) {
-                            carBrandSelect.value = currentValue;
+                            selectElement.value = currentValue;
                         }
-                        if (currentEditValue) {
-                            editCarBrandSelect.value = currentEditValue;
-                        }
-
-                        console.log('Car brand dropdowns updated with', carBrands.length, 'brands');
-
-                        // Update car models based on selected brand
-                        updateCarModelsBySelectedBrand();
                     } catch (error) {
-                        console.error('Error updating car brand dropdowns:', error);
+                        console.error(`Error updating ${elementName} dropdown:`, error);
+                    }
+                }
+
+                /**
+                 * Update a single car model dropdown for a specific brand
+                 */
+                async function updateSingleCarModelDropdown(selectElement, elementName, brandName) {
+                    try {
+                        // Store current value to restore it after updating options
+                        const currentValue = selectElement.value;
+
+                        // Clear existing options except the first one
+                        while (selectElement.options.length > 1) {
+                            selectElement.remove(1);
+                        }
+
+                        if (brandName) {
+                            // Find the brand ID from the name
+                            const brand = carBrands.find(b => b.name === brandName);
+                            if (brand) {
+                                // Fetch models for this brand
+                                const brandModels = await fetchCarModelsByBrand(brand.id);
+
+                                // Add options for each model
+                                brandModels.forEach(model => {
+                                    const option = document.createElement('option');
+                                    option.value = model.name;
+                                    option.textContent = model.name;
+                                    selectElement.appendChild(option);
+                                });
+
+                                // Restore previously selected value if it still exists
+                                if (currentValue) {
+                                    selectElement.value = currentValue;
+                                }
+                            }
+                        }
+                    } catch (error) {
+                        console.error(`Error updating ${elementName} dropdown:`, error);
                     }
                 }
 
@@ -2850,6 +3280,9 @@
                 /**
                  * Update car models based on selected brand
                  */
+                // Flag to track if event listeners have been added
+                let carBrandEventListenersAdded = false;
+
                 async function updateCarModelsBySelectedBrand() {
                     try {
                         const carBrandSelect = document.getElementById('carBrand');
@@ -2862,8 +3295,10 @@
                             return;
                         }
 
-                        // Add event listeners to update models when brand changes
-                        carBrandSelect.addEventListener('change', async function() {
+                        // Add event listeners only once
+                        if (!carBrandEventListenersAdded) {
+                            // Add event listeners to update models when brand changes
+                            carBrandSelect.addEventListener('change', async function() {
                             const selectedBrand = this.value;
                             if (!selectedBrand) {
                                 // Clear model options if no brand selected
@@ -2925,6 +3360,10 @@
                                 editCarModelSelect.appendChild(option);
                             });
                         });
+
+                        // Mark that event listeners have been added
+                        carBrandEventListenersAdded = true;
+                        }
                     } catch (error) {
                         console.error('Error updating car models by selected brand:', error);
                     }
@@ -3163,6 +3602,9 @@
                     } else {
                         console.warn('Edit car brand overlay not found');
                     }
+
+                    // Set up car model filtering event listeners after DOM is ready
+                    updateCarModelsBySelectedBrand();
                 }, 500);
             });
         </script>
