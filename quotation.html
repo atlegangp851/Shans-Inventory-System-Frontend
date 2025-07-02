@@ -95,6 +95,90 @@
       margin-bottom: 10px;
     }
 
+    /* Reference Number */
+    .reference-number {
+      margin-top: 10px;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    /* Editable Reference Number */
+    .reference-number-container {
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .reference-number-display {
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    .reference-number-edit {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    .reference-number-edit label {
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .reference-number-input {
+      padding: 4px 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 14px;
+      width: 120px;
+    }
+
+    .ref-btn {
+      padding: 4px 8px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      min-width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .ref-edit-btn {
+      background-color: transparent;
+      color: #666;
+      border: 1px solid transparent;
+    }
+
+    .ref-edit-btn:hover {
+      background-color: #f8f9fa;
+      color: #333;
+      border: 1px solid #ddd;
+    }
+
+    .ref-save-btn {
+      background-color: #28a745;
+      color: white;
+    }
+
+    .ref-save-btn:hover {
+      background-color: #1e7e34;
+    }
+
+    .ref-cancel-btn {
+      background-color: #dc3545;
+      color: white;
+    }
+
+    .ref-cancel-btn:hover {
+      background-color: #c82333;
+    }
+
     /* Billing and Shipping */
     .billing-shipping {
       display: flex;
@@ -433,6 +517,25 @@
       .billing-shipping {
         flex-direction: column;
       }
+
+      .reference-number {
+        font-size: 12px;
+      }
+
+      .reference-number-display {
+        font-size: 12px;
+      }
+
+      .reference-number-input {
+        width: 100px;
+        font-size: 12px;
+      }
+
+      .ref-btn {
+        font-size: 10px;
+        min-width: 20px;
+        height: 20px;
+      }
     }
 
     /* Specific adjustments for small screens */
@@ -542,6 +645,25 @@
         flex: 0.5;
         font-size: 13px; /* Increased from 11px to 13px (+2px) */
       }
+
+      .reference-number {
+        font-size: 10px;
+      }
+
+      .reference-number-display {
+        font-size: 10px;
+      }
+
+      .reference-number-input {
+        width: 90px;
+        font-size: 10px;
+      }
+
+      .ref-btn {
+        font-size: 9px;
+        min-width: 18px;
+        height: 18px;
+      }
     }
 
     /* Specific adjustments for very small screens */
@@ -609,6 +731,25 @@
       .price-column {
         flex: 0.4;
         font-size: 12px; /* Increased from 10px to 12px (+2px) */
+      }
+
+      .reference-number {
+        font-size: 9px;
+      }
+
+      .reference-number-display {
+        font-size: 9px;
+      }
+
+      .reference-number-input {
+        width: 80px;
+        font-size: 9px;
+      }
+
+      .ref-btn {
+        font-size: 8px;
+        min-width: 16px;
+        height: 16px;
       }
     }
 
@@ -691,6 +832,16 @@
           <p>61 Civin Drive<br>Bedfordview<br>Johannesburg</p>
           <div class="address-contact">
             <p id="banking-info"></p>
+          </div>
+          <div class="reference-number-container">
+            <span class="reference-number-display" id="reference-number-display">Reference Number: <!-- Dynamic Reference --></span>
+            <div class="reference-number-edit" id="reference-number-edit" style="display: none;">
+              <label for="reference-number-input">Reference Number:</label>
+              <input type="text" id="reference-number-input" class="reference-number-input" maxlength="20" />
+              <button type="button" id="reference-save-btn" class="ref-btn ref-save-btn">✓</button>
+              <button type="button" id="reference-cancel-btn" class="ref-btn ref-cancel-btn">✗</button>
+            </div>
+            <button type="button" id="reference-edit-btn" class="ref-btn ref-edit-btn">✏️</button>
           </div>
         </div>
 
@@ -835,6 +986,89 @@
       return Math.floor(1000000 + Math.random() * 9000000).toString();
     }
 
+    // Reference Number Management Functions
+    let currentReferenceNumber = '';
+
+    function initializeReferenceNumber(referenceNumber) {
+      currentReferenceNumber = referenceNumber;
+      updateReferenceNumberDisplay();
+      setupReferenceNumberEventListeners();
+    }
+
+    function updateReferenceNumberDisplay() {
+      const displayElement = document.getElementById('reference-number-display');
+      displayElement.textContent = 'Reference Number: ' + currentReferenceNumber;
+    }
+
+    function setupReferenceNumberEventListeners() {
+      const editBtn = document.getElementById('reference-edit-btn');
+      const saveBtn = document.getElementById('reference-save-btn');
+      const cancelBtn = document.getElementById('reference-cancel-btn');
+      const input = document.getElementById('reference-number-input');
+
+      editBtn.addEventListener('click', startEditingReferenceNumber);
+      saveBtn.addEventListener('click', saveReferenceNumber);
+      cancelBtn.addEventListener('click', cancelEditingReferenceNumber);
+
+      // Allow saving with Enter key
+      input.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          saveReferenceNumber();
+        } else if (e.key === 'Escape') {
+          cancelEditingReferenceNumber();
+        }
+      });
+    }
+
+    function startEditingReferenceNumber() {
+      const displayElement = document.getElementById('reference-number-display');
+      const editElement = document.getElementById('reference-number-edit');
+      const editBtn = document.getElementById('reference-edit-btn');
+      const input = document.getElementById('reference-number-input');
+
+      displayElement.style.display = 'none';
+      editBtn.style.display = 'none';
+      editElement.style.display = 'flex';
+
+      input.value = currentReferenceNumber;
+      input.focus();
+      input.select();
+    }
+
+    function saveReferenceNumber() {
+      const input = document.getElementById('reference-number-input');
+      const newReference = input.value.trim();
+
+      if (newReference && newReference !== currentReferenceNumber) {
+        currentReferenceNumber = newReference;
+        updateReferenceNumberDisplay();
+
+        // Update the customer info cookie with the new reference number
+        const customerInfoCookie = getCookie('customerInfo');
+        if (customerInfoCookie) {
+          const customerInfo = JSON.parse(customerInfoCookie);
+          customerInfo.referenceNumber = newReference;
+          setCookie('customerInfo', JSON.stringify(customerInfo));
+        }
+      }
+
+      cancelEditingReferenceNumber();
+    }
+
+    function cancelEditingReferenceNumber() {
+      const displayElement = document.getElementById('reference-number-display');
+      const editElement = document.getElementById('reference-number-edit');
+      const editBtn = document.getElementById('reference-edit-btn');
+
+      editElement.style.display = 'none';
+      displayElement.style.display = 'inline';
+      editBtn.style.display = 'inline-flex';
+    }
+
+    function getCurrentReferenceNumber() {
+      return currentReferenceNumber;
+    }
+
     /**
      * Populate the quotation with data from cookies, applying the
      * "tax = 15% of final price" logic (same as the receipt):
@@ -923,6 +1157,10 @@
       // Populate company info
       document.getElementById('company-name').textContent = selectedCompany.name;
       document.getElementById('banking-info').innerHTML = selectedCompany.bankingInformation;
+
+      // Initialize reference number
+      const generatedReference = customerInfo.referenceNumber || generateReferenceNumber();
+      initializeReferenceNumber(generatedReference);
 
       // Billing info
       const billingElement = document.querySelector('.billing p');
@@ -1098,10 +1336,16 @@
         // Check if tax is added
         const isTaxAdded = (taxAmount > 0);
 
+        // Use the current reference number (which may have been edited by the user)
+        const finalReferenceNumber = getCurrentReferenceNumber();
+
+        // Update the display with the final reference number
+        updateReferenceNumberDisplay();
+
         // Build data for the backend, applying the same net=85% / tax=15% logic
         const quotationData = {
           date: new Date().toISOString().slice(0,10),
-          referenceNumber: customerInfo.referenceNumber || generateReferenceNumber(),
+          referenceNumber: finalReferenceNumber,
           company: {
             name: selectedCompany.name,
             bankingInformation: selectedCompany.bankingInformation
@@ -1255,16 +1499,8 @@
         }
       }
 
-      // Get reference number
-      const referenceElement = document.querySelector('.reference-number');
-      let referenceNumber = 'ref';
-      if (referenceElement) {
-        const refText = referenceElement.textContent;
-        const match = refText.match(/Reference Number:\s*([\w-]+)/);
-        if (match && match[1]) {
-          referenceNumber = match[1];
-        }
-      }
+      // Get reference number from current state
+      const referenceNumber = getCurrentReferenceNumber() || 'ref';
 
       // Create dynamic filename
       const filename = `quotation-${clientName}-${referenceNumber}.png`;
