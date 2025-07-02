@@ -333,6 +333,8 @@
             background-color: #f0fff0;
         }
 
+
+
         /* Month Summary Section */
         .month-summary {
             background-color: white;
@@ -538,6 +540,9 @@
     <div class="container">
         <a href="index.html" style="text-decoration: none; color: #007BFF; font-size: 16px; margin-right: 20px;">&larr; Back to Home</a>
         <h1>Sales Dashboard</h1>
+
+
+
         <div class="controls">
             <div class="controls-left">
                 <button class="view-toggle">Toggle View</button>
@@ -755,11 +760,15 @@
                 groupDataByMonth(filteredSalesData);
                 renderTables(groupedSalesData);
                 renderCards(filteredSalesData);
+
+
             } catch (error) {
                 console.error('Error fetching sales data:', error);
                 tablesContainer.innerHTML = '<p style="color: red;">Failed to load sales data. Please try again later.</p>';
             }
         }
+
+
 
         function groupDataByMonth(data) {
             groupedSalesData = {};
@@ -977,6 +986,7 @@
                         <th>Payment Method</th>
                         <th>Total (R)</th>
                         <th>Total Profit (R)</th>
+
                     </tr>
                 `;
                 table.appendChild(thead);
@@ -1025,6 +1035,7 @@
                             <td>${sanitizeHTML(sale.payment_method)}</td>
                             <td>R ${totalPrice.toFixed(2)}</td>
                             <td style="color: #28a745; font-weight: bold;">R ${totalProfit.toFixed(2)}</td>
+
                         `;
                         tbody.appendChild(row);
 
