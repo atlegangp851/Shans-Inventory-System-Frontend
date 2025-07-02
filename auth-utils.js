@@ -1,5 +1,21 @@
 // Shared authentication utilities for user-facing pages
-const API_BASE_URL = 'https://shans-backend.onrender.com/api';
+// Auto-detect environment and set appropriate API URL
+const API_BASE_URL = (() => {
+  const hostname = window.location.hostname;
+
+  // Production environment (Netlify)
+  if (hostname === 'shans-system.netlify.app') {
+    return 'https://shans-backend.onrender.com/api';
+  }
+
+  // Local development
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return 'https://shans-backend.onrender.com/api';
+  }
+
+  // Default fallback to production
+  return 'https://shans-backend.onrender.com/api';
+})();
 
 // Storage utility with fallback
 const storage = {

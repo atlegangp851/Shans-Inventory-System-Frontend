@@ -686,9 +686,27 @@
         let filteredSalesData = [];
         let monthlyExpenses = {}; // Store expense totals by month
 
+        // Auto-detect environment and set appropriate API URL
+        function getApiBaseUrl() {
+          const hostname = window.location.hostname;
+
+          // Production environment (Netlify)
+          if (hostname === 'shans-system.netlify.app') {
+            return 'https://shans-backend.onrender.com/api';
+          }
+
+          // Local development
+          if (hostname === 'localhost' || hostname === '127.0.0.1') {
+            return 'https://shans-backend.onrender.com/api';
+          }
+
+          // Default fallback to production
+          return 'https://shans-backend.onrender.com/api';
+        }
+
         async function fetchSalesData() {
             try {
-                const response = await fetch('https://shans-backend.onrender.com/api/sales');
+                const response = await fetch(`${getApiBaseUrl()}/sales`);
                 if (!response.ok) {
                     throw new Error('Network response was not ok.');
                 }
@@ -696,7 +714,7 @@
                 console.log('Raw data from API:', data);
 
                 // Fetch all products to get room information
-                const productsResponse = await fetch('https://shans-backend.onrender.com/api/products');
+                const productsResponse = await fetch(`${getApiBaseUrl()}/products`);
                 if (!productsResponse.ok) {
                     throw new Error('Failed to fetch products data.');
                 }
@@ -833,7 +851,7 @@
                         }
 
                         // Fetch expenses for this specific month using the existing API endpoint
-                        const response = await fetch(`https://shans-backend.onrender.com/api/expenses?year=${year}&month=${month}`);
+                        const response = await fetch(`${getApiBaseUrl()}/expenses?year=${year}&month=${month}`);
 
                         if (!response.ok) {
                             throw new Error(`Failed to fetch expenses for ${monthYear}: ${response.status} ${response.statusText}`);
@@ -1372,10 +1390,10 @@
 
         // Backend API configuration
         const BACKUP_CONFIG = {
-            backupEndpoint: 'https://shans-backend.onrender.com/api/backup/backup-sales-data',
-            excelUploadEndpoint: 'https://shans-backend.onrender.com/api/backup/upload-excel-backup', // NEW: Excel upload endpoint
-            listBackupsEndpoint: 'https://shans-backend.onrender.com/api/backup/list-backups',
-            testConnectionEndpoint: 'https://shans-backend.onrender.com/api/backup/test-connection'
+            backupEndpoint: `${getApiBaseUrl()}/backup/backup-sales-data`,
+            excelUploadEndpoint: `${getApiBaseUrl()}/backup/upload-excel-backup`, // NEW: Excel upload endpoint
+            listBackupsEndpoint: `${getApiBaseUrl()}/backup/list-backups`,
+            testConnectionEndpoint: `${getApiBaseUrl()}/backup/test-connection`
         };
 
         // Helper function to convert blob to base64
