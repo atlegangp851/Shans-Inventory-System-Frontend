@@ -932,8 +932,12 @@
                     <input type="hidden" id="editItemCode" name="editItemCode">
 
                     <div class="form-group">
-                        <label for="editRoom">Room</label>
-                        <select id="editRoom" name="editRoom" required>
+                        <label for="editRoom">
+                            Room
+                            <span style="color: #666; font-size: 0.9em;">(Change to move product to different room)</span>
+                            <span style="color: #28a745; font-size: 0.8em; margin-left: 5px;">✓ Move between rooms enabled</span>
+                        </label>
+                        <select id="editRoom" name="editRoom" required style="background-color: #f8f9fa; border: 2px solid #007bff;">
                             <option value="">Select a room</option>
                             <!-- Options will be populated dynamically -->
                         </select>
@@ -1663,6 +1667,9 @@
                 function openEditModal(product) {
                     console.log('Opening edit modal with product data:', product);
 
+                    // Store the original room ID for comparison
+                    originalRoomId = product.room_id ? product.room_id.toString() : null;
+
                     editProductOverlay.style.display = 'flex';
                     editProductOverlay.setAttribute('aria-hidden', 'false');
 
@@ -1670,9 +1677,20 @@
                     setTimeout(() => {
                         const editCarBrandSelect = document.getElementById('editCarBrand');
                         const editCarModelSelect = document.getElementById('editCarModel');
+                        const editRoomSelect = document.getElementById('editRoom');
 
                         if (editCarBrandSelect && carBrands.length > 0) {
                             updateSingleCarBrandDropdown(editCarBrandSelect, 'editCarBrand');
+                        }
+
+                        // Ensure room dropdown is populated and set the current room
+                        if (editRoomSelect && product.room_id) {
+                            // Set the current room value
+                            editRoomSelect.value = product.room_id;
+                            // Reset styling to default
+                            editRoomSelect.style.backgroundColor = '#f8f9fa';
+                            editRoomSelect.style.borderColor = '#007bff';
+                            console.log('Set room dropdown to:', product.room_id, 'Available options:', Array.from(editRoomSelect.options).map(opt => ({value: opt.value, text: opt.text})));
                         }
 
                         // If product has a car brand, populate the models for that brand
@@ -1757,6 +1775,13 @@
                     editProductForm.reset();
                     editColourTape.value = '#000000';
                     editColourTapeText.value = '#000000';
+
+                    // Clean up room move message and reset original room ID
+                    const moveMessage = document.getElementById('roomMoveMessage');
+                    if (moveMessage) {
+                        moveMessage.remove();
+                    }
+                    originalRoomId = null;
                 }
 
                 /**
@@ -2130,7 +2155,16 @@
                             // Remove from local cache if it was there
                             localProductCache.removePendingUpdate(item_code);
 
-                            showStatusMessage('Product updated successfully!', 'success');
+                            // Check if room was changed and show appropriate message
+                            const roomChanged = originalRoomId && formData.room_id.toString() !== originalRoomId;
+                            if (roomChanged) {
+                                const newRoomSelect = document.getElementById('editRoom');
+                                const newRoomName = newRoomSelect.options[newRoomSelect.selectedIndex].text;
+                                showStatusMessage(`Product moved to ${newRoomName} successfully!`, 'success');
+                            } else {
+                                showStatusMessage('Product updated successfully!', 'success');
+                            }
+
                             editProductForm.reset();
                             editColourTape.value = '#000000';
                             editColourTapeText.value = '#000000';
@@ -2201,6 +2235,37 @@
                 addProductBlock.addEventListener('click', openAddModal);
                 closePopup.addEventListener('click', closeAddModal);
                 closeEditPopup.addEventListener('click', closeEditModal);
+
+                // Add event listener for room change in edit modal
+                let originalRoomId = null;
+                document.getElementById('editRoom').addEventListener('change', function(e) {
+                    const selectedRoomId = e.target.value;
+                    const selectedRoomText = e.target.options[e.target.selectedIndex].text;
+
+                    if (originalRoomId && selectedRoomId && selectedRoomId !== originalRoomId) {
+                        // Show visual feedback that the product will be moved
+                        e.target.style.backgroundColor = '#fff3cd';
+                        e.target.style.borderColor = '#ffc107';
+
+                        // Add a temporary message
+                        let moveMessage = document.getElementById('roomMoveMessage');
+                        if (!moveMessage) {
+                            moveMessage = document.createElement('div');
+                            moveMessage.id = 'roomMoveMessage';
+                            moveMessage.style.cssText = 'color: #856404; background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 8px; border-radius: 4px; margin-top: 5px; font-size: 0.9em;';
+                            e.target.parentNode.appendChild(moveMessage);
+                        }
+                        moveMessage.textContent = `Product will be moved to: ${selectedRoomText}`;
+                    } else {
+                        // Reset styling if back to original room
+                        e.target.style.backgroundColor = '#f8f9fa';
+                        e.target.style.borderColor = '#007bff';
+                        const moveMessage = document.getElementById('roomMoveMessage');
+                        if (moveMessage) {
+                            moveMessage.remove();
+                        }
+                    }
+                });
 
                 // Close modals by clicking outside
                 popupOverlay.addEventListener('click', function(e) {
