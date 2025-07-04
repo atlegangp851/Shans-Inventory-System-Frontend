@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test: Same Item in Different Rooms</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-section h3 {
+            color: #333;
+            margin-top: 0;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .success {
+            color: #28a745;
+            background-color: #d4edda;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .error {
+            color: #dc3545;
+            background-color: #f8d7da;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .products-list {
+            margin-top: 20px;
+        }
+        .product-item {
+            background: #f8f9fa;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            border-left: 4px solid #007bff;
+        }
+        .instructions {
+            background-color: #e7f3ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Test: Same Item Code in Different Rooms</h1>
+        
+        <div class="instructions">
+            <h3>🎯 Test Instructions</h3>
+            <p>This page demonstrates the new functionality that allows the same item code to exist in different rooms for backup stock management.</p>
+            <ol>
+                <li><strong>Load Rooms:</strong> Click "Load Rooms" to fetch available rooms</li>
+                <li><strong>Add Same Item to Different Rooms:</strong> Use the same item code but select different rooms</li>
+                <li><strong>View Results:</strong> See how the same item can exist in multiple rooms</li>
+                <li><strong>Test Management:</strong> Try editing and deleting specific room instances</li>
+            </ol>
+        </div>
+
+        <div class="test-section">
+            <h3>1. Load Available Rooms</h3>
+            <button onclick="loadRooms()">Load Rooms</button>
+            <div id="roomsStatus"></div>
+            <div id="roomsList"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>2. Add Product to Room</h3>
+            <form id="addProductForm">
+                <div class="form-group">
+                    <label for="itemCode">Item Code:</label>
+                    <input type="text" id="itemCode" placeholder="e.g., TEST-001" required>
+                </div>
+                <div class="form-group">
+                    <label for="roomSelect">Room:</label>
+                    <select id="roomSelect" required>
+                        <option value="">Select a room</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="itemName">Item Name:</label>
+                    <input type="text" id="itemName" placeholder="e.g., Test Product" required>
+                </div>
+                <div class="form-group">
+                    <label for="carBrand">Car Brand:</label>
+                    <input type="text" id="carBrand" placeholder="e.g., Toyota" required>
+                </div>
+                <div class="form-group">
+                    <label for="carModel">Car Model:</label>
+                    <input type="text" id="carModel" placeholder="e.g., Camry" required>
+                </div>
+                <div class="form-group">
+                    <label for="unitPrice">Unit Retail Price:</label>
+                    <input type="number" id="unitPrice" step="0.01" placeholder="100.00" required>
+                </div>
+                <div class="form-group">
+                    <label for="wholesalePrice">Wholesale Price:</label>
+                    <input type="number" id="wholesalePrice" step="0.01" placeholder="80.00" required>
+                </div>
+                <div class="form-group">
+                    <label for="unitCost">Unit Cost:</label>
+                    <input type="number" id="unitCost" step="0.01" placeholder="60.00" required>
+                </div>
+                <div class="form-group">
+                    <label for="supplierCode">Supplier Code:</label>
+                    <input type="text" id="supplierCode" placeholder="SUP-001" required>
+                </div>
+                <div class="form-group">
+                    <label for="availableStock">Available Stock:</label>
+                    <input type="number" id="availableStock" placeholder="10" required>
+                </div>
+                <div class="form-group">
+                    <label for="location">Location:</label>
+                    <input type="text" id="location" placeholder="Shelf A1" required>
+                </div>
+                <div class="form-group">
+                    <label for="colourTape">Colour Tape:</label>
+                    <input type="color" id="colourTape" value="#ff0000">
+                </div>
+                <div class="form-group">
+                    <label for="productCategory">Product Category:</label>
+                    <select id="productCategory" required>
+                        <option value="accessories">Accessories</option>
+                        <option value="parts">Parts</option>
+                        <option value="tools">Tools</option>
+                    </select>
+                </div>
+                <button type="submit">Add Product</button>
+            </form>
+            <div id="addProductStatus"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>3. View Products by Item Code</h3>
+            <div class="form-group">
+                <label for="searchItemCode">Search Item Code:</label>
+                <input type="text" id="searchItemCode" placeholder="Enter item code to search">
+                <button onclick="searchProducts()">Search</button>
+            </div>
+            <div id="searchResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>4. All Products</h3>
+            <button onclick="loadAllProducts()">Load All Products</button>
+            <div id="allProductsStatus"></div>
+            <div id="allProductsList"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://shans-backend.onrender.com/api';
+        let availableRooms = [];
+
+        async function loadRooms() {
+            try {
+                const response = await fetch(`${API_URL}/rooms`);
+                if (!response.ok) throw new Error('Failed to fetch rooms');
+                
+                availableRooms = await response.json();
+                
+                // Update room select dropdown
+                const roomSelect = document.getElementById('roomSelect');
+                roomSelect.innerHTML = '<option value="">Select a room</option>';
+                
+                availableRooms.forEach(room => {
+                    const option = document.createElement('option');
+                    option.value = room.id;
+                    option.textContent = room.name;
+                    roomSelect.appendChild(option);
+                });
+                
+                // Display rooms list
+                const roomsList = document.getElementById('roomsList');
+                roomsList.innerHTML = '<h4>Available Rooms:</h4>' + 
+                    availableRooms.map(room => `<div class="product-item">ID: ${room.id} - ${room.name}</div>`).join('');
+                
+                document.getElementById('roomsStatus').innerHTML = '<div class="success">✅ Loaded ' + availableRooms.length + ' rooms</div>';
+            } catch (error) {
+                document.getElementById('roomsStatus').innerHTML = '<div class="error">❌ Error: ' + error.message + '</div>';
+            }
+        }
+
+        document.getElementById('addProductForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                item_code: document.getElementById('itemCode').value,
+                room_id: parseInt(document.getElementById('roomSelect').value),
+                item_name: document.getElementById('itemName').value,
+                car_brand: document.getElementById('carBrand').value,
+                car_model: document.getElementById('carModel').value,
+                unit_retail_price: parseFloat(document.getElementById('unitPrice').value),
+                wholesale_price: parseFloat(document.getElementById('wholesalePrice').value),
+                unit_cost: parseFloat(document.getElementById('unitCost').value),
+                supplier_code: document.getElementById('supplierCode').value,
+                available_stock: parseInt(document.getElementById('availableStock').value),
+                location: document.getElementById('location').value,
+                colour_tape: document.getElementById('colourTape').value,
+                product_category: document.getElementById('productCategory').value
+            };
+            
+            try {
+                const response = await fetch(`${API_URL}/products`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Failed to add product');
+                }
+                
+                const result = await response.json();
+                const roomName = availableRooms.find(r => r.id === formData.room_id)?.name || 'Unknown';
+                
+                document.getElementById('addProductStatus').innerHTML = 
+                    `<div class="success">✅ Product "${formData.item_code}" added to room "${roomName}" successfully!</div>`;
+                
+                // Clear form
+                document.getElementById('addProductForm').reset();
+                document.getElementById('colourTape').value = '#ff0000';
+                
+            } catch (error) {
+                document.getElementById('addProductStatus').innerHTML = 
+                    `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        });
+
+        async function searchProducts() {
+            const itemCode = document.getElementById('searchItemCode').value.trim();
+            if (!itemCode) {
+                document.getElementById('searchResults').innerHTML = '<div class="error">Please enter an item code</div>';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/products/${encodeURIComponent(itemCode)}`);
+                if (!response.ok) throw new Error('Product not found');
+                
+                const products = await response.json();
+                const productArray = Array.isArray(products) ? products : [products];
+                
+                if (productArray.length === 0) {
+                    document.getElementById('searchResults').innerHTML = '<div class="error">No products found</div>';
+                    return;
+                }
+                
+                const resultsHtml = `
+                    <h4>Found ${productArray.length} instance(s) of "${itemCode}":</h4>
+                    ${productArray.map(product => `
+                        <div class="product-item">
+                            <strong>${product.item_code}</strong> in <strong>${product.room_name}</strong><br>
+                            Name: ${product.item_name}<br>
+                            Stock: ${product.available_stock}<br>
+                            Location: ${product.location}<br>
+                            Room ID: ${product.room_id}
+                        </div>
+                    `).join('')}
+                `;
+                
+                document.getElementById('searchResults').innerHTML = resultsHtml;
+                
+            } catch (error) {
+                document.getElementById('searchResults').innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function loadAllProducts() {
+            try {
+                const response = await fetch(`${API_URL}/products`);
+                if (!response.ok) throw new Error('Failed to fetch products');
+                
+                const products = await response.json();
+                
+                // Group products by item_code
+                const groupedProducts = {};
+                products.forEach(product => {
+                    if (!groupedProducts[product.item_code]) {
+                        groupedProducts[product.item_code] = [];
+                    }
+                    groupedProducts[product.item_code].push(product);
+                });
+                
+                const duplicateItems = Object.entries(groupedProducts).filter(([code, items]) => items.length > 1);
+                
+                let resultsHtml = `<h4>Total Products: ${products.length}</h4>`;
+                
+                if (duplicateItems.length > 0) {
+                    resultsHtml += `<h4>🎯 Items in Multiple Rooms (${duplicateItems.length}):</h4>`;
+                    duplicateItems.forEach(([itemCode, items]) => {
+                        resultsHtml += `
+                            <div class="product-item">
+                                <strong>${itemCode}</strong> - Found in ${items.length} rooms:<br>
+                                ${items.map(item => `• ${item.room_name} (Stock: ${item.available_stock})`).join('<br>')}
+                            </div>
+                        `;
+                    });
+                } else {
+                    resultsHtml += '<div class="success">No duplicate items found yet. Try adding the same item code to different rooms!</div>';
+                }
+                
+                document.getElementById('allProductsList').innerHTML = resultsHtml;
+                document.getElementById('allProductsStatus').innerHTML = '<div class="success">✅ Products loaded successfully</div>';
+                
+            } catch (error) {
+                document.getElementById('allProductsStatus').innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        // Auto-load rooms on page load
+        window.addEventListener('load', loadRooms);
+    </script>
+</body>
+</html>

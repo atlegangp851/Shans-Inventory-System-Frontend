@@ -1103,6 +1103,9 @@
                 document.getElementById('newStock').value = product.available_stock;
                 document.getElementById('updateItemCode').value = product.item_code;
 
+                // Store room_id for the update request
+                document.getElementById('updateItemCode').dataset.roomId = product.room_id;
+
                 // Show the modal
                 stockUpdateModal.style.display = 'flex';
 
@@ -1133,8 +1136,11 @@
                 }
 
                 try {
+                    // Get the room_id from the stored data
+                    const roomId = document.getElementById('updateItemCode').dataset.roomId;
+
                     // First, get the full product details
-                    const productResponse = await fetch(`${API_URL}/products/${encodeURIComponent(itemCode)}`);
+                    const productResponse = await fetch(`${API_URL}/products/${encodeURIComponent(itemCode)}?room_id=${roomId}`);
                     if (!productResponse.ok) {
                         throw new Error('Failed to fetch product details');
                     }
@@ -1160,7 +1166,7 @@
                     };
 
                     // Send the update request
-                    const updateResponse = await fetch(`${API_URL}/products/${encodeURIComponent(itemCode)}`, {
+                    const updateResponse = await fetch(`${API_URL}/products/${encodeURIComponent(itemCode)}?original_room_id=${roomId}`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(updateData)

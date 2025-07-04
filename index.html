@@ -1429,6 +1429,7 @@
       if (product) {
         selectedProducts.push({
           item_code: product.item_code,
+          room_id: product.room_id, // Store room_id for stock updates
           name: productName,
           room_name: product.room_name, // Store room name for reference
           quantity: quantity,
@@ -1441,6 +1442,7 @@
         const item_code = `NEW-${newProductCounter++}`;
         selectedProducts.push({
           item_code: item_code,
+          room_id: null, // No room for new products
           name: productName,
           room_name: 'N/A', // No room for new products
           quantity: quantity,
