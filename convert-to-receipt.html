@@ -2151,6 +2151,66 @@
             });
         }
 
+        // Prompt user for custom date with better UX
+        async function promptForDate() {
+            return new Promise((resolve) => {
+                const today = new Date().toISOString().slice(0, 10);
+                const formattedToday = new Date().toLocaleDateString();
+
+                // Create a more user-friendly prompt
+                const message = `Please enter the date for the receipt:\n\n` +
+                              `Format: YYYY-MM-DD (e.g., ${today})\n` +
+                              `Today's date: ${formattedToday}\n\n` +
+                              `Leave empty to use today's date.`;
+
+                const customDate = prompt(message, today);
+
+                if (customDate === null) {
+                    // User cancelled
+                    resolve(null);
+                    return;
+                }
+
+                if (customDate === '' || customDate.trim() === '') {
+                    // User entered empty string, use today's date
+                    resolve(today);
+                    return;
+                }
+
+                const trimmedDate = customDate.trim();
+
+                // Validate date format
+                const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+                if (!dateRegex.test(trimmedDate)) {
+                    alert('❌ Invalid date format!\n\nPlease use YYYY-MM-DD format (e.g., 2024-03-15)');
+                    resolve(promptForDate()); // Recursive call for retry
+                    return;
+                }
+
+                // Validate that it's a valid date
+                const dateObj = new Date(trimmedDate + 'T00:00:00');
+                if (isNaN(dateObj.getTime())) {
+                    alert('❌ Invalid date!\n\nPlease enter a valid date (e.g., 2024-03-15)');
+                    resolve(promptForDate()); // Recursive call for retry
+                    return;
+                }
+
+                // Check if date is too far in the future (optional validation)
+                const oneYearFromNow = new Date();
+                oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
+
+                if (dateObj > oneYearFromNow) {
+                    const confirmFuture = confirm(`⚠️ The date you entered (${trimmedDate}) is more than a year in the future.\n\nAre you sure you want to use this date?`);
+                    if (!confirmFuture) {
+                        resolve(promptForDate()); // Recursive call for retry
+                        return;
+                    }
+                }
+
+                resolve(trimmedDate);
+            });
+        }
+
         // Convert to receipt
         async function convertToReceipt(type, id) {
             const button = event.target;
@@ -2165,6 +2225,13 @@
             const loadingButtons = document.querySelectorAll('.convert-btn.btn-loading');
             if (loadingButtons.length > 0) {
                 showToastMessage('Please wait for the current conversion to complete.', 'warning');
+                return;
+            }
+
+            // Prompt user for custom date
+            const customDate = await promptForDate();
+            if (customDate === null) {
+                // User cancelled
                 return;
             }
 
@@ -2185,7 +2252,8 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
-                    }
+                    },
+                    body: JSON.stringify({ customDate })
                 });
 
                 const result = await response.json();

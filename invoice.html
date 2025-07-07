@@ -66,6 +66,150 @@
             height: auto;
         }
 
+        /* Date Section Styles */
+        .date-section {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .date-display {
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .date-edit-btn {
+            padding: 6px 12px;
+            font-size: 12px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            min-height: 32px;
+            min-width: 50px;
+        }
+
+        .date-edit-btn:hover {
+            background: #0056b3;
+        }
+
+        .date-edit-btn:focus {
+            outline: 2px solid #007bff;
+            outline-offset: 2px;
+        }
+
+        .date-edit-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
+            max-width: 250px;
+        }
+
+        .date-input {
+            padding: 8px 12px;
+            font-size: 14px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            width: 100%;
+            min-height: 40px;
+            transition: border-color 0.2s ease;
+        }
+
+        .date-input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+        }
+
+        .date-edit-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .date-save-btn, .date-cancel-btn {
+            padding: 8px 16px;
+            font-size: 13px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            min-height: 36px;
+            min-width: 70px;
+            flex: 1;
+        }
+
+        .date-save-btn {
+            background: #28a745;
+            color: white;
+        }
+
+        .date-save-btn:hover {
+            background: #218838;
+        }
+
+        .date-save-btn:focus {
+            outline: 2px solid #28a745;
+            outline-offset: 2px;
+        }
+
+        .date-cancel-btn {
+            background: #6c757d;
+            color: white;
+        }
+
+        .date-cancel-btn:hover {
+            background: #5a6268;
+        }
+
+        .date-cancel-btn:focus {
+            outline: 2px solid #6c757d;
+            outline-offset: 2px;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .date-section {
+                width: 100%;
+            }
+
+            .date-edit-controls {
+                max-width: 100%;
+            }
+
+            .date-input {
+                font-size: 16px; /* Prevents zoom on iOS */
+                min-height: 44px; /* Better touch target */
+            }
+
+            .date-edit-btn, .date-save-btn, .date-cancel-btn {
+                min-height: 44px; /* Better touch targets */
+                font-size: 14px;
+            }
+
+            .date-edit-buttons {
+                flex-direction: column;
+            }
+
+            .date-save-btn, .date-cancel-btn {
+                flex: none;
+                width: 100%;
+            }
+        }
+
+        /* Screenshot utility class */
+        .hide-for-screenshot {
+            display: none !important;
+        }
+
         h1 {
             text-align: center;
             flex-grow: 1;
@@ -816,7 +960,17 @@
     <div id="pdf-1" class="container">
         <div id="invoice">
             <div class="header">
-                <p id="invoice-date">Date: <!-- Dynamic Date --></p>
+                <div class="date-section">
+                    <span id="invoice-date-display" class="date-display">Date: <!-- Dynamic Date --></span>
+                    <button id="edit-date-btn" class="date-edit-btn" onclick="editDate()">Edit</button>
+                    <div id="date-edit-section" class="date-edit-controls" style="display: none;">
+                        <input type="date" id="date-input" class="date-input">
+                        <div class="date-edit-buttons">
+                            <button onclick="saveDateEdit()" class="date-save-btn">Save</button>
+                            <button onclick="cancelDateEdit()" class="date-cancel-btn">Cancel</button>
+                        </div>
+                    </div>
+                </div>
                 <h1>INVOICE</h1>
                 <div class="logo">
                     <img src="./Assets/logo2.png" alt="Company Logo">
@@ -982,6 +1136,9 @@
         // Reference Number Management Functions
         let currentReferenceNumber = '';
 
+        // Date Management Functions
+        let currentDate = new Date().toISOString().slice(0, 10); // YYYY-MM-DD format
+
         function initializeReferenceNumber(referenceNumber) {
             currentReferenceNumber = referenceNumber;
             updateReferenceNumberDisplay();
@@ -1060,6 +1217,48 @@
 
         function getCurrentReferenceNumber() {
             return currentReferenceNumber;
+        }
+
+        // Date editing functions
+        function editDate() {
+            const editBtn = document.getElementById('edit-date-btn');
+            const editSection = document.getElementById('date-edit-section');
+            const dateInput = document.getElementById('date-input');
+
+            editBtn.style.display = 'none';
+            editSection.style.display = 'block';
+            dateInput.value = currentDate;
+            dateInput.focus();
+        }
+
+        function saveDateEdit() {
+            const dateInput = document.getElementById('date-input');
+            const newDate = dateInput.value;
+
+            if (newDate) {
+                currentDate = newDate;
+                updateDateDisplay();
+            }
+
+            cancelDateEdit();
+        }
+
+        function cancelDateEdit() {
+            const editBtn = document.getElementById('edit-date-btn');
+            const editSection = document.getElementById('date-edit-section');
+
+            editBtn.style.display = 'inline-block';
+            editSection.style.display = 'none';
+        }
+
+        function updateDateDisplay() {
+            const displayElement = document.getElementById('invoice-date-display');
+            const dateObj = new Date(currentDate + 'T00:00:00'); // Add time to avoid timezone issues
+            displayElement.textContent = 'Date: ' + formatDate(dateObj);
+        }
+
+        function getCurrentDate() {
+            return currentDate;
         }
 
         /**
@@ -1238,9 +1437,8 @@
             document.getElementById('taxAmount').textContent = formatCurrency(taxAmount.toFixed(0));
             document.getElementById('totalAmount').textContent = formatCurrency(totalAmount.toFixed(0));
 
-            // Date
-            const dateElement = document.getElementById('invoice-date');
-            dateElement.textContent = 'Date: ' + formatDate(new Date());
+            // Date - initialize and display
+            updateDateDisplay();
         }
 
         // Confirm and send the invoice
@@ -1288,7 +1486,7 @@
 
                 // Build data for the backend, applying the same net=85% / tax=15% logic
                 const invoiceData = {
-                    date: new Date().toISOString().slice(0,10),
+                    date: getCurrentDate(),
                     referenceNumber: finalReferenceNumber,
                     company: {
                         name: selectedCompany.name,
@@ -1421,6 +1619,14 @@
             loadingSpinner.style.display = 'inline-block';
             const element = document.getElementById('pdf-1');
 
+            // Hide all edit buttons before screenshot
+            const editButtons = element.querySelectorAll('.date-edit-btn, .date-edit-controls, .ref-edit-btn, #reference-number-edit');
+            const originalDisplayStates = [];
+            editButtons.forEach((btn, index) => {
+                originalDisplayStates[index] = btn.style.display;
+                btn.style.display = 'none';
+            });
+
             // Get client name and reference number for the filename
             const customerInfoCookie = getCookie('customerInfo');
             let clientName = 'client';
@@ -1445,12 +1651,24 @@
                     link.href = imgData;
                     link.download = filename;
                     link.click();
+
+                    // Restore edit buttons visibility
+                    editButtons.forEach((btn, index) => {
+                        btn.style.display = originalDisplayStates[index];
+                    });
+
                     loadingSpinner.style.display = 'none';
                     showToastMessage(`Image saved as ${filename}`, 'success');
                 })
                 .catch(err => {
                     console.error('Error capturing image:', err);
                     showToastMessage('Failed to capture image.', 'error');
+
+                    // Restore edit buttons visibility even on error
+                    editButtons.forEach((btn, index) => {
+                        btn.style.display = originalDisplayStates[index];
+                    });
+
                     loadingSpinner.style.display = 'none';
                 });
         });
