@@ -265,6 +265,45 @@
             font-weight: 500;
         }
 
+        .item-date-container {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .edit-date-btn {
+            background: none;
+            border: none;
+            color: #4a90e2;
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            opacity: 0.7;
+            transition: all 0.2s ease;
+        }
+
+        .edit-date-btn:hover {
+            opacity: 1;
+            background: rgba(74, 144, 226, 0.1);
+        }
+
+        .date-input {
+            font-size: 0.85rem;
+            padding: 4px 8px;
+            border: 1px solid #4a90e2;
+            border-radius: 4px;
+            background: white;
+            color: #333;
+            min-width: 120px;
+        }
+
+        .date-input:focus {
+            outline: none;
+            border-color: #2c5aa0;
+            box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+        }
+
         /* Desktop list-style header */
         @media (min-width: 768px) {
             .item-header {
@@ -1943,7 +1982,13 @@
                 <div class="item-card">
                     <div class="item-header">
                         <div class="item-reference">${item.reference_number}</div>
-                        <div class="item-date">${formatDate(item.date)}</div>
+                        <div class="item-date-container">
+                            <span class="item-date" id="date-display-${type}-${itemId}">${formatDate(item.date)}</span>
+                            <button class="edit-date-btn" onclick="editDate('${type}', ${itemId}, '${item.date}')" title="Edit Date">
+                                ✏️
+                            </button>
+                            <input type="date" class="date-input" id="date-input-${type}-${itemId}" value="${item.date}" style="display: none;" onblur="saveDateEdit('${type}', ${itemId})" onkeypress="handleDateKeypress(event, '${type}', ${itemId})">
+                        </div>
                     </div>
                     
                     <div class="item-details">
@@ -2151,64 +2196,14 @@
             });
         }
 
-        // Prompt user for custom date with better UX
-        async function promptForDate() {
-            return new Promise((resolve) => {
-                const today = new Date().toISOString().slice(0, 10);
-                const formattedToday = new Date().toLocaleDateString();
-
-                // Create a more user-friendly prompt
-                const message = `Please enter the date for the receipt:\n\n` +
-                              `Format: YYYY-MM-DD (e.g., ${today})\n` +
-                              `Today's date: ${formattedToday}\n\n` +
-                              `Leave empty to use today's date.`;
-
-                const customDate = prompt(message, today);
-
-                if (customDate === null) {
-                    // User cancelled
-                    resolve(null);
-                    return;
-                }
-
-                if (customDate === '' || customDate.trim() === '') {
-                    // User entered empty string, use today's date
-                    resolve(today);
-                    return;
-                }
-
-                const trimmedDate = customDate.trim();
-
-                // Validate date format
-                const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-                if (!dateRegex.test(trimmedDate)) {
-                    alert('❌ Invalid date format!\n\nPlease use YYYY-MM-DD format (e.g., 2024-03-15)');
-                    resolve(promptForDate()); // Recursive call for retry
-                    return;
-                }
-
-                // Validate that it's a valid date
-                const dateObj = new Date(trimmedDate + 'T00:00:00');
-                if (isNaN(dateObj.getTime())) {
-                    alert('❌ Invalid date!\n\nPlease enter a valid date (e.g., 2024-03-15)');
-                    resolve(promptForDate()); // Recursive call for retry
-                    return;
-                }
-
-                // Check if date is too far in the future (optional validation)
-                const oneYearFromNow = new Date();
-                oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
-
-                if (dateObj > oneYearFromNow) {
-                    const confirmFuture = confirm(`⚠️ The date you entered (${trimmedDate}) is more than a year in the future.\n\nAre you sure you want to use this date?`);
-                    if (!confirmFuture) {
-                        resolve(promptForDate()); // Recursive call for retry
-                        return;
-                    }
-                }
-
-                resolve(trimmedDate);
-            });
+        // Get the custom date for an item (from the date input if edited, otherwise use original date)
+        function getCustomDateForItem(type, id) {
+            const dateInput = document.getElementById(`date-input-${type}-${id}`);
+            if (dateInput && dateInput.value) {
+                return dateInput.value;
+            }
+            // Fallback to today's date
+            return new Date().toISOString().slice(0, 10);
         }
 
         // Convert to receipt
@@ -2228,12 +2223,8 @@
                 return;
             }
 
-            // Prompt user for custom date
-            const customDate = await promptForDate();
-            if (customDate === null) {
-                // User cancelled
-                return;
-            }
+            // Get custom date for this item (from date input or use today's date)
+            const customDate = getCustomDateForItem(type, id);
 
             // Set loading state for this button
             button.disabled = true;
@@ -2281,6 +2272,60 @@
                 // Re-enable all convert buttons
                 enableAllConvertButtons();
             }
+        }
+
+        // Edit date functionality
+        function editDate(type, id, originalDate) {
+            const dateDisplay = document.getElementById(`date-display-${type}-${id}`);
+            const dateInput = document.getElementById(`date-input-${type}-${id}`);
+
+            if (dateDisplay && dateInput) {
+                dateDisplay.style.display = 'none';
+                dateInput.style.display = 'inline-block';
+                dateInput.focus();
+                dateInput.select();
+            }
+        }
+
+        function saveDateEdit(type, id) {
+            const dateDisplay = document.getElementById(`date-display-${type}-${id}`);
+            const dateInput = document.getElementById(`date-input-${type}-${id}`);
+
+            if (dateDisplay && dateInput) {
+                // Validate the date
+                const newDate = dateInput.value;
+                if (newDate && isValidDate(newDate)) {
+                    // Update the display with the new date
+                    dateDisplay.textContent = formatDate(newDate);
+                    dateDisplay.style.display = 'inline-block';
+                    dateInput.style.display = 'none';
+                } else {
+                    // Invalid date, revert to original
+                    showToastMessage('Invalid date format. Please use a valid date.', 'error');
+                    dateDisplay.style.display = 'inline-block';
+                    dateInput.style.display = 'none';
+                }
+            }
+        }
+
+        function handleDateKeypress(event, type, id) {
+            if (event.key === 'Enter') {
+                saveDateEdit(type, id);
+            } else if (event.key === 'Escape') {
+                // Cancel editing
+                const dateDisplay = document.getElementById(`date-display-${type}-${id}`);
+                const dateInput = document.getElementById(`date-input-${type}-${id}`);
+
+                if (dateDisplay && dateInput) {
+                    dateDisplay.style.display = 'inline-block';
+                    dateInput.style.display = 'none';
+                }
+            }
+        }
+
+        function isValidDate(dateString) {
+            const date = new Date(dateString);
+            return date instanceof Date && !isNaN(date) && dateString.match(/^\d{4}-\d{2}-\d{2}$/);
         }
 
         // Delete item

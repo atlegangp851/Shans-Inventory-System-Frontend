@@ -1564,7 +1564,8 @@
                 quantity: product.quantity,
                 unitPriceExcludingTax: netPrice,
                 taxPerUnit: taxPerUnit,
-                totalPrice: lineTotal
+                totalPrice: lineTotal,
+                room_id: product.room_id
               };
             } else {
               const lineTotal = Math.round(parseFloat(product.price * product.quantity));
@@ -1574,7 +1575,8 @@
                 quantity: product.quantity,
                 unitPriceExcludingTax: Math.round(parseFloat(product.price)),
                 taxPerUnit: 0,
-                totalPrice: lineTotal
+                totalPrice: lineTotal,
+                room_id: product.room_id
               };
             }
           }),
