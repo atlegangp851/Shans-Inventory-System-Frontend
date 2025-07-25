@@ -718,6 +718,15 @@
                 const data = await response.json();
                 console.log('Raw data from API:', data);
 
+                // Debug: Check unit costs in the raw data
+                data.forEach(sale => {
+                    sale.items.forEach(item => {
+                        if (item.unit_cost > 0) {
+                            console.log(`Item ${item.item_name} has unit cost: ${item.unit_cost}`);
+                        }
+                    });
+                });
+
                 // Fetch all products to get room information
                 const productsResponse = await fetch(`${getApiBaseUrl()}/products`);
                 if (!productsResponse.ok) {
@@ -742,14 +751,18 @@
                         // Add room information
                         item.room_name = productRoomMap[item.item_code] || 'N/A';
 
-                        // Get cost information from product data if available
-                        if (productCostMap[item.item_code]) {
-                            // Store the unit cost from the product data for profit calculations
-                            item.unit_cost = productCostMap[item.item_code].unit_cost;
-                        } else {
-                            // If product not found, ensure unit_cost is set to 0 to avoid NaN in calculations
-                            item.unit_cost = 0;
+                        // Handle unit cost from sale data vs product data
+                        let saleUnitCost = parseFloat(item.unit_cost) || 0;
+
+                        // If the sale has no unit cost (old sales before unit cost feature)
+                        // and we have product data, use the product's unit cost as fallback
+                        if (saleUnitCost === 0 && productCostMap[item.item_code]) {
+                            saleUnitCost = productCostMap[item.item_code].unit_cost;
+                            console.log(`[FALLBACK] Using product unit cost for ${item.item_name}: R ${saleUnitCost}`);
                         }
+
+                        // Set the final unit cost
+                        item.unit_cost = saleUnitCost;
                     });
                 });
 
@@ -1005,6 +1018,7 @@
                         const taxPerProduct = parseFloat(item.tax_per_product) || 0;
                         const totalPrice = parseFloat(item.total_price) || 0;
                         const unitCost = parseFloat(item.unit_cost) || 0;
+                        const isUnitCostMissing = unitCost === 0;
 
                         // Use the actual unit price from the sale (negotiated/discounted price)
                         const unitPrice = parseFloat(item.unit_price_excluding_tax) || (quantity > 0 ? totalPrice / quantity : 0);
@@ -1028,7 +1042,7 @@
                             <td>${sanitizeHTML(item.item_name)}</td>
                             <td>${sanitizeHTML(item.room_name || 'N/A')}</td>
                             <td>${quantity.toLocaleString()}</td>
-                            <td>R ${unitCost.toFixed(2)}</td>
+                            <td>R ${unitCost.toFixed(2)}${isUnitCostMissing ? ' <em style="color: #888; font-size: 0.8em;">(est.)</em>' : ''}</td>
                             <td>R ${unitPrice.toFixed(2)}</td>
                             <td style="color: #28a745; font-weight: bold;">R ${profitPerUnit.toFixed(2)}</td>
                             <td>R ${taxPerProduct.toFixed(2)}</td>
@@ -1181,8 +1195,9 @@
                         const card = document.createElement('div');
                         card.className = 'card';
 
-                        // Get the unit cost from the product data
+                        // Get the unit cost from the sale data
                         const unitCost = parseFloat(item.unit_cost) || 0;
+                        const isUnitCostMissing = unitCost === 0;
 
                         // Calculate profit entirely on the frontend
                         const profitPerUnit = unitPrice - unitCost;
@@ -1200,11 +1215,11 @@
                             <p><strong>Room:</strong> <span>${sanitizeHTML(item.room_name || 'N/A')}</span></p>
                             <p><strong>Quantity:</strong> <span>${quantity.toLocaleString()}</span></p>
                             <p><strong>Unit Price:</strong> <span>R ${unitPrice.toFixed(2)}</span></p>
-                            <p><strong>Unit Cost:</strong> <span>R ${unitCost.toFixed(2)}</span></p>
+                            <p><strong>Unit Cost:</strong> <span>R ${unitCost.toFixed(2)}${isUnitCostMissing ? ' <em style="color: #888;">(estimated)</em>' : ''}</span></p>
                             <p><strong>Profit per Unit:</strong> <span style="color: #28a745;">R ${profitPerUnit.toFixed(2)}</span></p>
                             <p><strong>Tax per Unit:</strong> <span>R ${taxPerProduct.toFixed(2)}</span></p>
                             <p><strong>Total Value:</strong> <span>R ${(unitPrice * quantity).toFixed(2)}</span></p>
-                            <p><strong>Total Cost:</strong> <span>R ${(unitCost * quantity).toFixed(2)}</span></p>
+                            <p><strong>Total Cost:</strong> <span>R ${(unitCost * quantity).toFixed(2)}${isUnitCostMissing ? ' <em style="color: #888;">(estimated)</em>' : ''}</span></p>
                             <p><strong>Total Profit:</strong> <span style="color: #28a745;">R ${totalProfit.toFixed(2)}</span></p>
                             <p><strong>Total Tax:</strong> <span>R ${(taxPerProduct * quantity).toFixed(2)}</span></p>
                             <p><strong>Payment Method:</strong> <span>${sanitizeHTML(sale.payment_method)}</span></p>

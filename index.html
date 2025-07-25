@@ -787,8 +787,11 @@
         <input type="number" id="quantity" value="1" min="1">
       </div>
 
-      <label for="price">Price (R):</label>
-      <input type="number" id="price" value="0" min="0" step="1">
+      <label for="unitCost">Unit Cost (R):</label>
+      <input type="number" id="unitCost" value="0" min="0" step="0.01" placeholder="Enter unit cost">
+
+      <label for="price">Selling Price (R):</label>
+      <input type="number" id="price" value="0" min="0" step="0.01" placeholder="Enter selling price">
 
       <label for="room" class="hidden" id="roomLabel">Room:</label>
       <input type="text" id="room" class="hidden" placeholder="Select a product to see the room" readonly>
@@ -822,6 +825,7 @@
       <p>Product Amount (Subtotal): R<span id="subtotalAmount">0.00</span></p>
       <p>Tax (15%): R<span id="taxAmount">0.00</span></p>
       <p>Total Amount: R<span id="totalAmount">0.00</span></p>
+      <p>Total Profit: R<span id="totalProfitAmount">0.00</span></p>
 
       <!-- Comments Section -->
       <div class="section" style="border:none; padding:0;">
@@ -877,12 +881,14 @@
       taxAmountSpan: document.getElementById('taxAmount'),
       subtotalAmountSpan: document.getElementById('subtotalAmount'),
       totalAmountSpan: document.getElementById('totalAmount'),
+      totalProfitAmountSpan: document.getElementById('totalProfitAmount'),
       tableHeader: document.getElementById('table-header'),
       selectedProductsBody: document.getElementById('selectedProductsBody'),
       companySelect: document.getElementById('companySelect'),
       commentsTextarea: document.getElementById('comments'),
       loadingScreen: document.getElementById('loadingScreen'),
       priceInput: document.getElementById('price'),
+      unitCostInput: document.getElementById('unitCost'),
       quantityInput: document.getElementById('quantity'),
       customerNameInput: document.getElementById('customerName'),
       customerEmailInput: document.getElementById('customerEmail'),
@@ -1123,41 +1129,47 @@
       qtyCell.style.textAlign = 'center';
       row.appendChild(qtyCell);
 
+      // Price cell
+      const priceCell = document.createElement('div');
+      priceCell.className = 'div-table-cell price-column';
       if (DOM.taxCheckbox.checked) {
-        // Price cell (net price when tax is included)
-        const priceCell = document.createElement('div');
-        priceCell.className = 'div-table-cell price-column';
         const netPrice = product.price * (1 - TAX_RATE);
         priceCell.textContent = `R ${Math.round(netPrice)}`;
-        row.appendChild(priceCell);
+      } else {
+        priceCell.textContent = `R ${Math.round(product.price)}`;
+      }
+      row.appendChild(priceCell);
 
+      // Unit Cost cell
+      const costCell = document.createElement('div');
+      costCell.className = 'div-table-cell price-column';
+      costCell.textContent = `R ${(product.unit_cost || 0).toFixed(2)}`;
+      row.appendChild(costCell);
+
+      // Profit cell (selling price - unit cost)
+      const profitCell = document.createElement('div');
+      profitCell.className = 'div-table-cell price-column';
+      const profitPerUnit = product.price - (product.unit_cost || 0); // price is the selling price
+      const totalProfit = profitPerUnit * product.quantity;
+      profitCell.textContent = `R ${profitPerUnit.toFixed(2)} (R ${totalProfit.toFixed(2)})`;
+      profitCell.style.color = profitPerUnit >= 0 ? '#28a745' : '#dc3545'; // Green for profit, red for loss
+      row.appendChild(profitCell);
+
+      if (DOM.taxCheckbox.checked) {
         // Tax cell
         const taxCell = document.createElement('div');
         taxCell.className = 'div-table-cell price-column tax-column';
         const taxPerUnit = product.price * TAX_RATE;
         taxCell.textContent = `R ${Math.round(taxPerUnit)}`;
         row.appendChild(taxCell);
-
-        // Total cell
-        const totalCell = document.createElement('div');
-        totalCell.className = 'div-table-cell price-column';
-        const lineTotal = product.price * product.quantity;
-        totalCell.textContent = `R ${Math.round(lineTotal)}`;
-        row.appendChild(totalCell);
-      } else {
-        // Price cell (full price when no tax)
-        const priceCell = document.createElement('div');
-        priceCell.className = 'div-table-cell price-column';
-        priceCell.textContent = `R ${Math.round(product.price)}`;
-        row.appendChild(priceCell);
-
-        // Total cell
-        const totalCell = document.createElement('div');
-        totalCell.className = 'div-table-cell price-column';
-        const lineTotal = product.price * product.quantity;
-        totalCell.textContent = `R ${Math.round(lineTotal)}`;
-        row.appendChild(totalCell);
       }
+
+      // Total cell
+      const totalCell = document.createElement('div');
+      totalCell.className = 'div-table-cell price-column';
+      const lineTotal = product.price * product.quantity;
+      totalCell.textContent = `R ${Math.round(lineTotal)}`;
+      row.appendChild(totalCell);
 
       // Action cell (remove button)
       const actionCell = document.createElement('div');
@@ -1361,9 +1373,13 @@
       DOM.productSearchInput.dataset.itemCode = product.item_code; // Store the item_code in the dataset
       DOM.productSearchInput.dataset.roomId = product.room_id; // Store the room_id in the dataset
       DOM.productList.innerHTML = '';
-      // Set the default price from the database, but this can be modified by the user
-      // for negotiated prices or discounts before adding to the order
-      DOM.priceInput.value = Math.round(parseFloat(product.unit_retail_price));
+
+      // Set the unit cost from the database
+      DOM.unitCostInput.value = parseFloat(product.unit_cost || 0).toFixed(2);
+
+      // Set the selling price from the database (unit_retail_price)
+      // This can be modified by the user for negotiated prices or discounts
+      DOM.priceInput.value = parseFloat(product.unit_retail_price || 0).toFixed(2);
 
       // Get the quantity input element
       const quantityInput = document.getElementById('quantity');
@@ -1384,9 +1400,12 @@
     function addSelectedProduct() {
       const productName = DOM.productSearchInput.value.trim();
       const quantity = parseInt(DOM.quantityInput.value);
-      // Get the price from the input field - this may be the original retail price
+      // Get the selling price from the input field - this may be the original retail price
       // or a negotiated/discounted price entered by the user
-      const price = Math.round(parseFloat(DOM.priceInput.value));
+      const sellingPrice = parseFloat(DOM.priceInput.value) || 0;
+
+      // Get unit cost from the input field
+      const unitCost = parseFloat(DOM.unitCostInput.value) || 0;
 
       // Get the item_code and room_id from the dataset if available
       const itemCode = DOM.productSearchInput.dataset.itemCode;
@@ -1402,7 +1421,7 @@
         product = allProducts.find(p => p.item_name.toLowerCase() === productName.toLowerCase());
       }
 
-      if (productName === '' || isNaN(quantity) || isNaN(price)) {
+      if (productName === '' || isNaN(quantity) || isNaN(sellingPrice)) {
         showToastMessage('Please enter valid product details.', 'error');
         return;
       }
@@ -1410,8 +1429,12 @@
         showToastMessage('Quantity must be at least 1.', 'error');
         return;
       }
-      if (price < 0) {
-        showToastMessage('Price cannot be negative.', 'error');
+      if (sellingPrice < 0) {
+        showToastMessage('Selling price cannot be negative.', 'error');
+        return;
+      }
+      if (unitCost < 0) {
+        showToastMessage('Unit cost cannot be negative.', 'error');
         return;
       }
       if (product && quantity > product.available_stock) {
@@ -1419,11 +1442,11 @@
         return;
       }
 
-      // We'll store the typed-in price in product.price
+      // We'll store the selling price in product.price
       // Then let the table logic figure out net vs. tax if needed
       let taxPerProduct = 0;
       if (DOM.taxCheckbox.checked) {
-        taxPerProduct = Math.round(price * TAX_RATE);
+        taxPerProduct = Math.round(sellingPrice * TAX_RATE);
       }
 
       if (product) {
@@ -1433,7 +1456,8 @@
           name: productName,
           room_name: product.room_name, // Store room name for reference
           quantity: quantity,
-          price: parseFloat(price),
+          price: parseFloat(sellingPrice), // price is the selling price
+          unit_cost: unitCost,
           tax_per_product: taxPerProduct,
           is_new: false
         });
@@ -1446,7 +1470,8 @@
           name: productName,
           room_name: 'N/A', // No room for new products
           quantity: quantity,
-          price: parseFloat(price),
+          price: parseFloat(sellingPrice), // price is the selling price
+          unit_cost: unitCost,
           tax_per_product: taxPerProduct,
           is_new: true
         });
@@ -1465,8 +1490,9 @@
       quantityInput.value = '1';
       quantityInput.setAttribute('min', '1');
 
-      // Reset price and room fields
+      // Reset price, unit cost and room fields
       DOM.priceInput.value = '0';
+      DOM.unitCostInput.value = '0';
       DOM.roomInput.value = '';
       DOM.roomInput.classList.add('hidden');
       DOM.roomLabel.classList.add('hidden');
@@ -1487,8 +1513,15 @@
       let subtotal = 0;
       let tax = 0;
       let total = 0;
+      let totalProfit = 0;
 
       selectedProducts.forEach(product => {
+        // Calculate profit for each product (price is the selling price)
+        const sellingPrice = product.price;
+        const unitCost = product.unit_cost || 0;
+        const profitPerUnit = sellingPrice - unitCost;
+        totalProfit += profitPerUnit * product.quantity;
+
         if (DOM.taxCheckbox.checked) {
           subtotal += (product.price * (1 - TAX_RATE)) * product.quantity;
           tax += (product.price * TAX_RATE) * product.quantity;
@@ -1506,6 +1539,8 @@
       DOM.subtotalAmountSpan.textContent = subtotal.toFixed(0);
       DOM.taxAmountSpan.textContent = tax.toFixed(0);
       DOM.totalAmountSpan.textContent = total.toFixed(0);
+      DOM.totalProfitAmountSpan.textContent = totalProfit.toFixed(2);
+      DOM.totalProfitAmountSpan.style.color = totalProfit >= 0 ? '#28a745' : '#dc3545';
     }
 
     function updateTableHeader() {
@@ -1534,6 +1569,20 @@
       priceHeader.textContent = 'PRICE';
       priceHeader.style.fontSize = '13px';
       header.appendChild(priceHeader);
+
+      // Unit Cost column
+      const costHeader = document.createElement('div');
+      costHeader.className = 'div-table-cell div-table-heading price-column';
+      costHeader.textContent = 'COST';
+      costHeader.style.fontSize = '13px';
+      header.appendChild(costHeader);
+
+      // Profit column
+      const profitHeader = document.createElement('div');
+      profitHeader.className = 'div-table-cell div-table-heading price-column';
+      profitHeader.textContent = 'PROFIT';
+      profitHeader.style.fontSize = '13px';
+      header.appendChild(profitHeader);
 
       if (DOM.taxCheckbox.checked) {
         // Tax column (only if tax is checked, simplified name)

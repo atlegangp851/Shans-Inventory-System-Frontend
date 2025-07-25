@@ -1818,8 +1818,11 @@
                     <input type="number" id="editQuantity" value="1" min="1">
                 </div>
 
-                <label for="editPrice">Price (R):</label>
-                <input type="number" id="editPrice" value="0" min="0" step="1">
+                <label for="editUnitCost">Unit Cost (R):</label>
+                <input type="number" id="editUnitCost" value="0" min="0" step="0.01" placeholder="Enter unit cost">
+
+                <label for="editPrice">Selling Price (R):</label>
+                <input type="number" id="editPrice" value="0" min="0" step="0.01" placeholder="Enter selling price">
 
                 <label for="editRoom" class="hidden" id="editRoomLabel">Room:</label>
                 <input type="text" id="editRoom" class="hidden" placeholder="Select a product to see the room" readonly>
@@ -2452,7 +2455,8 @@
                         editSelectedProducts.push({
                             name: product.item_name,
                             quantity: product.quantity,
-                            price: originalPrice,
+                            price: originalPrice, // price is the selling price
+                            unit_cost: product.unit_cost || 0,
                             item_code: product.item_code || `temp_${index}`,
                             room_id: product.room_id || null,
                             room_name: product.room_name || 'N/A',
@@ -2488,6 +2492,7 @@
             editDOM.selectedProductsBody = document.getElementById('editSelectedProductsBody');
             editDOM.tableHeader = document.getElementById('editTableHeader');
             editDOM.priceInput = document.getElementById('editPrice');
+            editDOM.unitCostInput = document.getElementById('editUnitCost');
             editDOM.quantityInput = document.getElementById('editQuantity');
             editDOM.subtotalAmountSpan = document.getElementById('editSubtotalAmount');
             editDOM.taxAmountSpan = document.getElementById('editTaxAmount');
@@ -2603,7 +2608,12 @@
             editDOM.productSearchInput.dataset.itemCode = product.item_code;
             editDOM.productSearchInput.dataset.roomId = product.room_id;
             editDOM.productList.innerHTML = '';
-            editDOM.priceInput.value = Math.round(parseFloat(product.unit_retail_price));
+
+            // Set the unit cost from the database
+            editDOM.unitCostInput.value = parseFloat(product.unit_cost || 0).toFixed(2);
+
+            // Set the selling price from the database (unit_retail_price)
+            editDOM.priceInput.value = parseFloat(product.unit_retail_price || 0).toFixed(2);
 
             // Show room info if available
             if (product.room_name && product.room_name !== 'N/A') {
@@ -2624,12 +2634,13 @@
         function addEditSelectedProduct() {
             const productName = editDOM.productSearchInput.value.trim();
             const quantity = parseInt(editDOM.quantityInput.value);
-            const price = Math.round(parseFloat(editDOM.priceInput.value));
+            const sellingPrice = parseFloat(editDOM.priceInput.value) || 0; // price is the selling price
+            const unitCost = parseFloat(editDOM.unitCostInput.value) || 0;
 
             const itemCode = editDOM.productSearchInput.dataset.itemCode;
             const roomId = editDOM.productSearchInput.dataset.roomId;
 
-            if (!productName || quantity <= 0 || price < 0) {
+            if (!productName || quantity <= 0 || sellingPrice < 0 || unitCost < 0) {
                 showToastMessage('Please fill in all product details correctly', 'error');
                 return;
             }
@@ -2652,7 +2663,8 @@
                 editSelectedProducts.push({
                     name: productName,
                     quantity: quantity,
-                    price: price,
+                    price: sellingPrice, // price is the selling price
+                    unit_cost: unitCost,
                     item_code: itemCode || `temp_${Date.now()}`,
                     room_id: roomId || null,
                     room_name: product ? product.room_name : 'N/A',
@@ -2669,6 +2681,7 @@
             delete editDOM.productSearchInput.dataset.roomId;
             editDOM.quantityInput.value = '1';
             editDOM.priceInput.value = '0';
+            editDOM.unitCostInput.value = '0';
             editDOM.roomLabel.classList.add('hidden');
             editDOM.roomInput.classList.add('hidden');
         }
@@ -2937,6 +2950,7 @@
                             item_name: product.name,
                             quantity: product.quantity,
                             unitPriceExcludingTax: netPrice,
+                            unit_cost: product.unit_cost || 0,
                             taxPerUnit: taxPerUnit,
                             totalPrice: totalPrice
                         };
@@ -2948,6 +2962,7 @@
                             item_name: product.name,
                             quantity: product.quantity,
                             unitPriceExcludingTax: product.price,
+                            unit_cost: product.unit_cost || 0,
                             taxPerUnit: 0,
                             totalPrice: product.quantity * product.price
                         };

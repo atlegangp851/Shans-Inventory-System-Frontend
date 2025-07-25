@@ -1634,6 +1634,12 @@
         const totalAmount = parseFloat(JSON.parse(totalAmountCookie));
         const selectedCompany = JSON.parse(selectedCompanyCookie);
 
+        // Debug: Check what's in selectedProducts from cookies
+        console.log('[COOKIE DEBUG] selectedProducts from cookies:', selectedProducts);
+        selectedProducts.forEach(product => {
+          console.log(`[COOKIE DEBUG] Product ${product.name} - unit_cost: ${product.unit_cost}, price: ${product.price}`);
+        });
+
         // Use the current reference number (which may have been edited by the user)
         const finalReferenceNumber = getCurrentReferenceNumber();
 
@@ -1657,8 +1663,12 @@
           comments: customerInfo.comments || "",
           salespersonName: customerInfo.salespersonName || "",
           products: selectedProducts.map(product => {
-            // Get unit cost from product if available
+            // Get unit cost from product, price is the selling price
             const unitCost = product.unit_cost || 0;
+            const sellingPrice = product.price;
+
+            // Debug: Log unit cost being sent to backend
+            console.log(`[RECEIPT DEBUG] Product ${product.name} - unit_cost: ${unitCost}, selling_price: ${sellingPrice}`);
 
             if (isTaxAdded) {
               // net = price * 0.85, tax = price * 0.15, total = price * quantity
@@ -1666,9 +1676,8 @@
               const netPrice = parseFloat((product.price * 0.85).toFixed(2));
               const taxPerUnit = parseFloat((product.price * 0.15).toFixed(2));
               const lineTotal = parseFloat((product.price * product.quantity).toFixed(2));
-              // Calculate profit as the difference between the unit price and unit cost
-              // For tax-inclusive prices, we use the full price (not the net price) for profit calculation
-              const profitPerUnit = product.price - unitCost;
+              // Calculate profit as the difference between the selling price and unit cost
+              const profitPerUnit = sellingPrice - unitCost;
               const totalProfit = profitPerUnit * product.quantity;
 
               return {
@@ -1689,8 +1698,8 @@
               // Use the negotiated price from the frontend (product.price)
               const unitPrice = parseFloat(product.price.toFixed(2));
               const lineTotal = parseFloat((product.price * product.quantity).toFixed(2));
-              // Calculate profit as the difference between the unit price and unit cost
-              const profitPerUnit = unitPrice - unitCost;
+              // Calculate profit as the difference between the selling price and unit cost
+              const profitPerUnit = sellingPrice - unitCost;
               const totalProfit = profitPerUnit * product.quantity;
 
               return {
