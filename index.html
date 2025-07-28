@@ -244,7 +244,7 @@
       background-color: #81b0e6;
     }
     .button-group {
-      display: flex;aC
+      display: flex;
       flex-wrap: wrap;
       gap: 10px;
     }
@@ -427,13 +427,22 @@
       font-weight: bold;
     }
 
+    /* Action column styling */
+    .action-column {
+      flex: 0 0 30px; /* Fixed small width for action column */
+      min-width: 30px;
+      max-width: 30px;
+      justify-content: center;
+      text-align: center;
+    }
+
     /* Remove X styling */
     .remove-x {
       color: #ff3b30;
       font-weight: bold;
       font-size: 16px;
       cursor: pointer;
-      padding: 5px 10px;
+      padding: 2px 4px; /* Reduced padding */
       transition: transform 0.2s ease, color 0.2s ease;
       display: inline-block;
     }
@@ -441,6 +450,32 @@
     .remove-x:hover {
       transform: scale(1.2);
       color: #cc0000;
+    }
+
+    /* Unit Cost Edit Functionality */
+    .unit-cost-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .unit-cost-disabled {
+      background-color: #f5f5f5;
+      color: #999;
+      cursor: not-allowed;
+    }
+
+    .edit-icon {
+      margin-left: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      padding: 4px;
+      border-radius: 3px;
+      transition: background-color 0.2s ease;
+    }
+
+    .edit-icon:hover {
+      background-color: #e0e0e0;
     }
 
     /* Responsive Design */
@@ -551,21 +586,29 @@
       }
 
       .product-column {
-        min-width: 0; /* Remove min-width to allow full flexibility */
-        flex: 2;
+        flex: 0 1 auto; /* Dynamic sizing based on content */
+        min-width: fit-content;
+        max-width: 55%; /* Prevent taking too much space */
       }
 
       .qty-column {
-        min-width: 0; /* Remove min-width to allow full flexibility */
-        max-width: none;
-        flex: 0.25;
+        flex: 0 0 auto; /* Fixed size based on content */
+        min-width: fit-content;
         font-size: 11px;
+        text-align: center;
       }
 
       .price-column {
-        min-width: 0; /* Remove min-width to allow full flexibility */
-        flex: 0.5;
+        flex: 0 1 auto; /* Dynamic sizing based on content */
+        min-width: fit-content;
         font-size: 11px;
+        text-align: right;
+      }
+
+      .action-column {
+        flex: 0 0 25px; /* Even smaller on medium mobile */
+        min-width: 25px;
+        max-width: 25px;
       }
     }
 
@@ -602,19 +645,41 @@
         font-size: 11px !important; /* Override inline styles */
       }
 
-      /* Adjust column proportions for mobile */
+      /* Dynamic column sizing for mobile */
+      .div-table-row {
+        display: flex;
+        width: 100%;
+      }
+
       .product-column {
-        flex: 1.5;
+        flex: 0 1 auto; /* Allow dynamic sizing based on content */
+        min-width: fit-content;
+        max-width: 60%; /* Prevent taking too much space */
       }
 
       .qty-column {
-        flex: 0.2;
+        flex: 0 0 auto; /* Fixed size based on content */
+        min-width: fit-content;
         font-size: 10px;
+        text-align: center;
       }
 
       .price-column {
-        flex: 0.4;
+        flex: 0 1 auto; /* Allow dynamic sizing based on content */
+        min-width: fit-content;
         font-size: 10px;
+        text-align: right;
+      }
+
+      .action-column {
+        flex: 0 0 20px; /* Smallest on very small screens */
+        min-width: 20px;
+        max-width: 20px;
+      }
+
+      .remove-x {
+        font-size: 14px; /* Slightly smaller X on mobile */
+        padding: 1px 2px;
       }
     }
     .hidden {
@@ -788,7 +853,10 @@
       </div>
 
       <label for="unitCost">Unit Cost (R):</label>
-      <input type="number" id="unitCost" value="0" min="0" step="0.01" placeholder="Enter unit cost">
+      <div class="unit-cost-container">
+        <input type="number" id="unitCost" value="0" min="0" step="0.01" placeholder="Enter unit cost" readonly class="unit-cost-disabled">
+        <span class="edit-icon" id="unitCostEditIcon" onclick="toggleUnitCostEdit()" title="Click to edit unit cost">✏️</span>
+      </div>
 
       <label for="price">Selling Price (R):</label>
       <input type="number" id="price" value="0" min="0" step="0.01" placeholder="Enter selling price">
@@ -1093,6 +1161,11 @@
 
         DOM.selectedProductsBody.appendChild(fragment);
         calculateAndDisplayTotal();
+
+        // Adjust column widths for mobile after table update
+        setTimeout(() => {
+          adjustColumnWidthsForMobile();
+        }, 50); // Small delay to ensure DOM is fully rendered
       });
     }
 
@@ -1110,7 +1183,8 @@
 
       // Add room information if available and not 'N/A'
       if (product.room_name && product.room_name !== 'N/A') {
-        nameContent += ` <span style="color: #0066cc; font-weight: bold; margin-left: 8px;">(${product.room_name})</span>`;
+        const abbreviatedRoom = abbreviateRoomName(product.room_name);
+        nameContent += ` <span style="color: #0066cc; font-weight: bold; margin-left: 8px;">(${abbreviatedRoom})</span>`;
       }
 
       // Add NEW label if it's a new product
@@ -1143,7 +1217,7 @@
       // Unit Cost cell
       const costCell = document.createElement('div');
       costCell.className = 'div-table-cell price-column';
-      costCell.textContent = `R ${(product.unit_cost || 0).toFixed(2)}`;
+      costCell.textContent = `R ${Math.round(product.unit_cost || 0)}`;
       row.appendChild(costCell);
 
       // Profit cell (selling price - unit cost)
@@ -1151,7 +1225,7 @@
       profitCell.className = 'div-table-cell price-column';
       const profitPerUnit = product.price - (product.unit_cost || 0); // price is the selling price
       const totalProfit = profitPerUnit * product.quantity;
-      profitCell.textContent = `R ${profitPerUnit.toFixed(2)} (R ${totalProfit.toFixed(2)})`;
+      profitCell.textContent = `R ${Math.round(profitPerUnit)} (R ${Math.round(totalProfit)})`;
       profitCell.style.color = profitPerUnit >= 0 ? '#28a745' : '#dc3545'; // Green for profit, red for loss
       row.appendChild(profitCell);
 
@@ -1173,9 +1247,7 @@
 
       // Action cell (remove button)
       const actionCell = document.createElement('div');
-      actionCell.className = 'div-table-cell';
-      actionCell.style.textAlign = 'center';
-      actionCell.style.width = '40px';
+      actionCell.className = 'div-table-cell action-column';
       actionCell.innerHTML = `<span class="remove-x" onclick="removeProduct(${index})">✕</span>`;
       row.appendChild(actionCell);
 
@@ -1195,6 +1267,15 @@
 
     // Add cleanup on page unload
     window.addEventListener('unload', cleanup);
+
+    // Add resize event listener for dynamic column adjustment
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        adjustColumnWidthsForMobile();
+      }, 250); // Debounce resize events
+    });
 
     // Add retry functionality
     function retryInitialization() {
@@ -1366,6 +1447,110 @@
         console.warn('Cookie not available, using storage');
         return storage.get(name) || "";
       }
+    }
+
+    // Toggle unit cost edit functionality
+    function toggleUnitCostEdit() {
+      const unitCostInput = DOM.unitCostInput;
+      const editIcon = document.getElementById('unitCostEditIcon');
+
+      if (unitCostInput.readOnly) {
+        // Enable editing
+        unitCostInput.readOnly = false;
+        unitCostInput.classList.remove('unit-cost-disabled');
+        unitCostInput.style.backgroundColor = '';
+        unitCostInput.style.color = '';
+        unitCostInput.style.cursor = '';
+        editIcon.textContent = '💾'; // Save icon
+        editIcon.title = 'Click to save unit cost';
+        unitCostInput.focus();
+      } else {
+        // Disable editing
+        unitCostInput.readOnly = true;
+        unitCostInput.classList.add('unit-cost-disabled');
+        editIcon.textContent = '✏️'; // Edit icon
+        editIcon.title = 'Click to edit unit cost';
+      }
+    }
+
+    // Function to abbreviate room names (first letter + last character/number)
+    function abbreviateRoomName(roomName) {
+      if (!roomName || roomName === 'N/A' || roomName.length <= 2) {
+        return roomName;
+      }
+
+      const firstChar = roomName.charAt(0);
+      const lastChar = roomName.charAt(roomName.length - 1);
+
+      return `${firstChar}${lastChar}`;
+    }
+
+    // Function to dynamically adjust column widths on mobile
+    function adjustColumnWidthsForMobile() {
+      // Only apply on mobile screens
+      if (window.innerWidth > 650) {
+        return;
+      }
+
+      const tableRows = document.querySelectorAll('.div-table-row');
+      if (tableRows.length === 0) return;
+
+      let maxProductWidth = 0;
+      let maxQtyWidth = 0;
+      let maxPriceWidth = 0;
+
+      // Calculate maximum content width for each column type
+      tableRows.forEach(row => {
+        const productCell = row.querySelector('.product-column');
+        const qtyCell = row.querySelector('.qty-column');
+        const priceCells = row.querySelectorAll('.price-column');
+
+        if (productCell) {
+          const textLength = productCell.textContent.length;
+          maxProductWidth = Math.max(maxProductWidth, textLength);
+        }
+
+        if (qtyCell) {
+          const textLength = qtyCell.textContent.length;
+          maxQtyWidth = Math.max(maxQtyWidth, textLength);
+        }
+
+        priceCells.forEach(priceCell => {
+          const textLength = priceCell.textContent.length;
+          maxPriceWidth = Math.max(maxPriceWidth, textLength);
+        });
+      });
+
+      // Apply dynamic widths based on content
+      const style = document.createElement('style');
+      style.id = 'dynamic-mobile-columns';
+
+      // Remove existing dynamic styles
+      const existingStyle = document.getElementById('dynamic-mobile-columns');
+      if (existingStyle) {
+        existingStyle.remove();
+      }
+
+      // Calculate flex values based on content length
+      const productFlex = Math.max(2, Math.min(6, maxProductWidth * 0.1));
+      const qtyFlex = Math.max(0.5, Math.min(1.5, maxQtyWidth * 0.2));
+      const priceFlex = Math.max(1, Math.min(3, maxPriceWidth * 0.1));
+
+      style.textContent = `
+        @media (max-width: 650px) {
+          .product-column {
+            flex: ${productFlex} 1 auto !important;
+          }
+          .qty-column {
+            flex: ${qtyFlex} 0 auto !important;
+          }
+          .price-column {
+            flex: ${priceFlex} 1 auto !important;
+          }
+        }
+      `;
+
+      document.head.appendChild(style);
     }
 
     function selectProduct(product) {
