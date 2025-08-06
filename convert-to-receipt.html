@@ -1980,17 +1980,20 @@
         // Create item card HTML
         function createItemCard(item, type) {
             const itemId = type === 'quotation' ? item.quotation_id : item.invoice_id;
-            
+
+            // Debug: Log the item ID being used
+            console.log(`Creating card for ${type} with itemId: ${itemId}, reference: ${item.reference_number}`);
+
             return `
                 <div class="item-card">
                     <div class="item-header">
                         <div class="item-reference">${item.reference_number}</div>
                         <div class="item-date-container">
                             <span class="item-date" id="date-display-${type}-${itemId}">${formatDate(item.date)}</span>
-                            <button class="edit-date-btn" onclick="editDate('${type}', ${itemId}, '${item.date}')" title="Edit Date">
+                            <button class="edit-date-btn" onclick="editDate('${type}', '${itemId}', '${item.date}')" title="Edit Date">
                                 ✏️
                             </button>
-                            <input type="date" class="date-input" id="date-input-${type}-${itemId}" value="${item.date}" style="display: none;" onblur="saveDateEdit('${type}', ${itemId})" onkeypress="handleDateKeypress(event, '${type}', ${itemId})">
+                            <input type="date" class="date-input" id="date-input-${type}-${itemId}" value="${item.date}" style="display: none;" onblur="saveDateEdit('${type}', '${itemId}')" onkeypress="handleDateKeypress(event, '${type}', '${itemId}')">
                         </div>
                     </div>
                     
@@ -2049,13 +2052,13 @@
                     </div>
 
                     <div class="action-buttons">
-                        <button class="convert-btn" id="convert-${type}-${itemId}" onclick="convertToReceipt('${type}', ${itemId})">
+                        <button class="convert-btn" id="convert-${type}-${itemId}" onclick="convertToReceipt('${type}', '${itemId}')">
                             Convert to Receipt
                         </button>
-                        <button class="edit-btn" onclick="editItem('${type}', ${itemId})">
+                        <button class="edit-btn" onclick="editItem('${type}', '${itemId}')">
                             ✏️ Edit
                         </button>
-                        <button class="delete-btn" onclick="deleteItem('${type}', ${itemId})">
+                        <button class="delete-btn" onclick="deleteItem('${type}', '${itemId}')">
                             🗑️ Delete
                         </button>
                     </div>
@@ -2097,6 +2100,11 @@
                 loading.style.display = 'none';
 
                 console.log(`Loaded ${quotations.length} quotations:`, quotations);
+
+                // Debug: Log quotation IDs
+                quotations.forEach(q => {
+                    console.log(`Quotation ID: ${q.quotation_id}, Reference: ${q.reference_number}`);
+                });
 
                 if (quotations.length === 0) {
                     empty.style.display = 'block';
@@ -2336,6 +2344,9 @@
             const button = event.target;
             const originalText = button.textContent;
 
+            // Add debugging
+            console.log(`Delete function called with type: ${type}, id: ${id}, typeof id: ${typeof id}`);
+
             // Show confirmation toast instead of browser confirm
             showConfirmationToast(
                 `Are you sure you want to delete this ${type}? This action cannot be undone.`,
@@ -2348,6 +2359,8 @@
                         const endpoint = type === 'quotation'
                             ? `${getApiBaseUrl()}/quotations/${id}`
                             : `${getApiBaseUrl()}/invoices/${id}`;
+
+                        console.log(`Attempting to delete ${type} with endpoint: ${endpoint}`);
 
                         const response = await fetch(endpoint, {
                             method: 'DELETE'

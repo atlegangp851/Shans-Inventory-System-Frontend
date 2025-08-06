@@ -94,20 +94,24 @@
     }
 
     .date-edit-btn {
-      padding: 6px 12px;
-      font-size: 12px;
-      background: #007bff;
-      color: white;
+      background: none;
       border: none;
-      border-radius: 4px;
       cursor: pointer;
+      font-size: 16px;
+      padding: 4px;
+      border-radius: 3px;
       transition: background-color 0.2s ease;
-      min-height: 32px;
-      min-width: 50px;
+      color: #666;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 24px;
+      min-height: 24px;
     }
 
     .date-edit-btn:hover {
-      background: #0056b3;
+      background-color: #f8f9fa;
+      color: #333;
     }
 
     .date-edit-btn:focus {
@@ -1056,8 +1060,10 @@
       <div id="receipt">
         <div class="header">
           <div class="date-section">
-            <span id="receipt-date-display" class="date-display">Date: <!-- Dynamic Date --></span>
-            <button id="edit-date-btn" class="date-edit-btn" onclick="editDate()">Edit</button>
+            <span id="receipt-date-display" class="date-display">
+              Date: <!-- Dynamic Date -->
+              <button id="edit-date-btn" class="date-edit-btn" onclick="editDate()" title="Edit Date">✏️</button>
+            </span>
             <div id="date-edit-section" class="date-edit-controls" style="display: none;">
               <input type="date" id="date-input" class="date-input">
               <div class="date-edit-buttons">
@@ -1408,7 +1414,12 @@
     function updateDateDisplay() {
       const displayElement = document.getElementById('receipt-date-display');
       const dateObj = new Date(currentDate + 'T00:00:00'); // Add time to avoid timezone issues
-      displayElement.textContent = 'Date: ' + formatDate(dateObj);
+      const formattedDate = formatDate(dateObj);
+      
+      // Update only the text content while preserving the button
+      const button = displayElement.querySelector('#edit-date-btn');
+      displayElement.innerHTML = `Date: ${formattedDate} `;
+      displayElement.appendChild(button);
     }
 
     function getCurrentDate() {

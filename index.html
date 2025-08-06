@@ -547,11 +547,21 @@
         box-sizing: border-box;
       }
 
-      button {
+      /* Only apply full width to main navigation and form buttons, not all buttons */
+      .admin-nav-button,
+      .button-group button {
         width: 100%;
         padding: 12px 0;
         font-size: 16px;
         margin-right: 0;
+      }
+      
+      /* Keep normal button behavior for other buttons like Add Product */
+      button:not(.admin-nav-button):not(.button-group button) {
+        width: auto;
+        padding: 10px 15px;
+        font-size: 16px;
+        margin-right: 10px;
       }
 
       .loader {
@@ -581,34 +591,71 @@
       }
 
       .div-table-cell {
-        padding: 5px 6px;
+        padding: 3px 4px; /* Reduced padding to save space */
         font-size: 12px;
+        white-space: normal; /* Allow text wrapping */
+        word-wrap: break-word; /* Break long words */
       }
 
+      /* Make all table headers smaller on mobile */
+      .div-table-heading {
+        font-size: 9px !important; /* Smaller header font size */
+      }
+
+      /* Fixed column widths for mobile - optimized to fit all columns */
+      /* Base widths for 7 columns (without tax) */
       .product-column {
-        flex: 0 1 auto; /* Dynamic sizing based on content */
-        min-width: fit-content;
-        max-width: 55%; /* Prevent taking too much space */
+        flex: 0 0 22%; /* Further reduced to 22% */
+        width: 22%;
+        max-width: 22%;
+        min-width: 22%;
+        justify-content: flex-start;
+        text-align: left;
+      }
+      
+      /* Adjust product column when tax is enabled (8 columns total) */
+      .div-table:has(.tax-column) .product-column {
+        flex: 0 0 18%; /* Even smaller when tax column is present */
+        width: 18%;
+        max-width: 18%;
+        min-width: 18%;
       }
 
       .qty-column {
-        flex: 0 0 auto; /* Fixed size based on content */
-        min-width: fit-content;
-        font-size: 11px;
+        flex: 0 0 7%; /* Reduced QTY column to 7% */
+        width: 7%;
+        max-width: 7%;
+        min-width: 7%;
+        font-size: 10px;
         text-align: center;
+        justify-content: center;
       }
 
       .price-column {
-        flex: 0 1 auto; /* Dynamic sizing based on content */
-        min-width: fit-content;
-        font-size: 11px;
+        flex: 0 0 11%; /* Reduced to 11% to save space */
+        width: 11%;
+        max-width: 11%;
+        min-width: 11%;
+        font-size: 9px;
         text-align: right;
+        justify-content: flex-end;
+      }
+
+      /* Special handling for tax column when present */
+      .price-column.tax-column {
+        flex: 0 0 9%; /* Reduced tax column width */
+        width: 9%;
+        max-width: 9%;
+        min-width: 9%;
       }
 
       .action-column {
-        flex: 0 0 25px; /* Even smaller on medium mobile */
-        min-width: 25px;
-        max-width: 25px;
+        flex: 0 0 7%; /* Increased to 7% for better visibility */
+        width: 7%;
+        max-width: 7%;
+        min-width: 7%;
+        text-align: center;
+        justify-content: center;
       }
     }
 
@@ -628,9 +675,17 @@
         padding: 10px 0 !important;
       }
 
-      button {
+      /* Only apply full width to main navigation and form buttons */
+      .admin-nav-button,
+      .button-group button {
         font-size: 14px;
         padding: 10px 0;
+      }
+      
+      /* Keep normal button behavior for other buttons */
+      button:not(.admin-nav-button):not(.button-group button) {
+        font-size: 14px;
+        padding: 8px 12px;
       }
 
       /* Mobile-optimized table */
@@ -638,43 +693,74 @@
         padding: 4px 5px;
         font-size: 11px;
         white-space: normal; /* Allow text wrapping on mobile */
+        word-wrap: break-word; /* Break long words */
       }
 
       /* Make all table headers consistent size on mobile */
       .div-table-heading {
-        font-size: 11px !important; /* Override inline styles */
+        font-size: 8px !important; /* Reduced header font size to save space */
       }
 
-      /* Dynamic column sizing for mobile */
+      /* Fixed column sizing for very small mobile - consistent widths */
       .div-table-row {
         display: flex;
         width: 100%;
       }
 
+      /* Maintain the same fixed widths as 650px breakpoint */
+      /* Base widths for 7 columns (without tax) */
       .product-column {
-        flex: 0 1 auto; /* Allow dynamic sizing based on content */
-        min-width: fit-content;
-        max-width: 60%; /* Prevent taking too much space */
+        flex: 0 0 22%; /* Further reduced to 22% */
+        width: 22%;
+        max-width: 22%;
+        min-width: 22%;
+        justify-content: flex-start;
+        text-align: left;
+      }
+      
+      /* Adjust product column when tax is enabled (8 columns total) */
+      .div-table:has(.tax-column) .product-column {
+        flex: 0 0 18%; /* Even smaller when tax column is present */
+        width: 18%;
+        max-width: 18%;
+        min-width: 18%;
       }
 
       .qty-column {
-        flex: 0 0 auto; /* Fixed size based on content */
-        min-width: fit-content;
-        font-size: 10px;
+        flex: 0 0 7%; /* Reduced QTY column to 7% */
+        width: 7%;
+        max-width: 7%;
+        min-width: 7%;
+        font-size: 9px;
         text-align: center;
+        justify-content: center;
       }
 
       .price-column {
-        flex: 0 1 auto; /* Allow dynamic sizing based on content */
-        min-width: fit-content;
-        font-size: 10px;
+        flex: 0 0 11%; /* Reduced to 11% to save space */
+        width: 11%;
+        max-width: 11%;
+        min-width: 11%;
+        font-size: 9px;
         text-align: right;
+        justify-content: flex-end;
+      }
+
+      /* Special handling for tax column when present */
+      .price-column.tax-column {
+        flex: 0 0 9%; /* Reduced tax column width */
+        width: 9%;
+        max-width: 9%;
+        min-width: 9%;
       }
 
       .action-column {
-        flex: 0 0 20px; /* Smallest on very small screens */
-        min-width: 20px;
-        max-width: 20px;
+        flex: 0 0 7%; /* Increased to 7% for better visibility */
+        width: 7%;
+        max-width: 7%;
+        min-width: 7%;
+        text-align: center;
+        justify-content: center;
       }
 
       .remove-x {
@@ -1137,11 +1223,16 @@
 
     // Optimized table updates using requestAnimationFrame
     function updateSelectedProductsTable() {
+      console.log('updateSelectedProductsTable function called');
+      console.log('selectedProducts.length:', selectedProducts.length);
       requestAnimationFrame(() => {
+        console.log('Inside requestAnimationFrame');
+        console.log('DOM.selectedProductsBody element:', DOM.selectedProductsBody);
         DOM.selectedProductsBody.innerHTML = '';
         updateTableHeader();
 
         if (selectedProducts.length === 0) {
+          console.log('No products in array - showing empty message');
           const emptyRow = document.createElement('div');
           emptyRow.className = 'div-table-row';
           emptyRow.style.justifyContent = 'center';
@@ -1152,6 +1243,8 @@
           calculateAndDisplayTotal();
           return;
         }
+        
+        console.log('Products found - creating table rows');
 
         const fragment = document.createDocumentFragment();
         selectedProducts.forEach((product, index) => {
@@ -1162,7 +1255,7 @@
         DOM.selectedProductsBody.appendChild(fragment);
         calculateAndDisplayTotal();
 
-        // Adjust column widths for mobile after table update
+        // Adjust column widths for desktop only (mobile uses fixed widths)
         setTimeout(() => {
           adjustColumnWidthsForMobile();
         }, 50); // Small delay to ensure DOM is fully rendered
@@ -1178,18 +1271,18 @@
       const nameCell = document.createElement('div');
       nameCell.className = 'div-table-cell product-column';
 
-      // Create the product name with room information
+      // Create the product name with room information underneath
       let nameContent = product.name;
-
-      // Add room information if available and not 'N/A'
-      if (product.room_name && product.room_name !== 'N/A') {
-        const abbreviatedRoom = abbreviateRoomName(product.room_name);
-        nameContent += ` <span style="color: #0066cc; font-weight: bold; margin-left: 8px;">(${abbreviatedRoom})</span>`;
-      }
 
       // Add NEW label if it's a new product
       if (product.is_new) {
         nameContent += '<span class="new-product-label">(NEW)</span>';
+      }
+
+      // Add room information underneath if available and not 'N/A'
+      if (product.room_name && product.room_name !== 'N/A') {
+        const abbreviatedRoom = abbreviateRoomName(product.room_name);
+        nameContent += `<br><span style="color: #0066cc; font-weight: bold; font-size: 0.85em;">${abbreviatedRoom}</span>`;
       }
 
       nameCell.innerHTML = nameContent;
@@ -1225,7 +1318,7 @@
       profitCell.className = 'div-table-cell price-column';
       const profitPerUnit = product.price - (product.unit_cost || 0); // price is the selling price
       const totalProfit = profitPerUnit * product.quantity;
-      profitCell.textContent = `R ${Math.round(profitPerUnit)} (R ${Math.round(totalProfit)})`;
+      profitCell.textContent = `R ${Math.round(totalProfit)}`; // Show only total profit for the line
       profitCell.style.color = profitPerUnit >= 0 ? '#28a745' : '#dc3545'; // Green for profit, red for loss
       row.appendChild(profitCell);
 
@@ -1485,72 +1578,19 @@
       return `${firstChar}${lastChar}`;
     }
 
-    // Function to dynamically adjust column widths on mobile
+    // Function to adjust column widths (disabled for mobile to maintain fixed widths)
     function adjustColumnWidthsForMobile() {
-      // Only apply on mobile screens
-      if (window.innerWidth > 650) {
+      // Skip adjustment on mobile screens to maintain fixed column widths
+      if (window.innerWidth <= 650) {
         return;
       }
 
+      // Only apply dynamic adjustments on larger screens if needed
       const tableRows = document.querySelectorAll('.div-table-row');
       if (tableRows.length === 0) return;
 
-      let maxProductWidth = 0;
-      let maxQtyWidth = 0;
-      let maxPriceWidth = 0;
-
-      // Calculate maximum content width for each column type
-      tableRows.forEach(row => {
-        const productCell = row.querySelector('.product-column');
-        const qtyCell = row.querySelector('.qty-column');
-        const priceCells = row.querySelectorAll('.price-column');
-
-        if (productCell) {
-          const textLength = productCell.textContent.length;
-          maxProductWidth = Math.max(maxProductWidth, textLength);
-        }
-
-        if (qtyCell) {
-          const textLength = qtyCell.textContent.length;
-          maxQtyWidth = Math.max(maxQtyWidth, textLength);
-        }
-
-        priceCells.forEach(priceCell => {
-          const textLength = priceCell.textContent.length;
-          maxPriceWidth = Math.max(maxPriceWidth, textLength);
-        });
-      });
-
-      // Apply dynamic widths based on content
-      const style = document.createElement('style');
-      style.id = 'dynamic-mobile-columns';
-
-      // Remove existing dynamic styles
-      const existingStyle = document.getElementById('dynamic-mobile-columns');
-      if (existingStyle) {
-        existingStyle.remove();
-      }
-
-      // Calculate flex values based on content length
-      const productFlex = Math.max(2, Math.min(6, maxProductWidth * 0.1));
-      const qtyFlex = Math.max(0.5, Math.min(1.5, maxQtyWidth * 0.2));
-      const priceFlex = Math.max(1, Math.min(3, maxPriceWidth * 0.1));
-
-      style.textContent = `
-        @media (max-width: 650px) {
-          .product-column {
-            flex: ${productFlex} 1 auto !important;
-          }
-          .qty-column {
-            flex: ${qtyFlex} 0 auto !important;
-          }
-          .price-column {
-            flex: ${priceFlex} 1 auto !important;
-          }
-        }
-      `;
-
-      document.head.appendChild(style);
+      // For screens larger than 650px, we can keep some dynamic behavior if needed
+      // but for mobile (650px and below), we want fixed widths
     }
 
     function selectProduct(product) {
@@ -1583,6 +1623,14 @@
 
 
     function addSelectedProduct() {
+      console.log('addSelectedProduct function called');
+      console.log('DOM elements:', {
+        productSearchInput: DOM.productSearchInput,
+        quantityInput: DOM.quantityInput,
+        priceInput: DOM.priceInput,
+        unitCostInput: DOM.unitCostInput
+      });
+      
       const productName = DOM.productSearchInput.value.trim();
       const quantity = parseInt(DOM.quantityInput.value);
       // Get the selling price from the input field - this may be the original retail price
@@ -1591,6 +1639,8 @@
 
       // Get unit cost from the input field
       const unitCost = parseFloat(DOM.unitCostInput.value) || 0;
+
+      console.log('Input values:', { productName, quantity, sellingPrice, unitCost });
 
       // Get the item_code and room_id from the dataset if available
       const itemCode = DOM.productSearchInput.dataset.itemCode;
@@ -1607,25 +1657,33 @@
       }
 
       if (productName === '' || isNaN(quantity) || isNaN(sellingPrice)) {
+        console.log('Validation failed:', { productName: productName === '', quantityIsNaN: isNaN(quantity), sellingPriceIsNaN: isNaN(sellingPrice) });
         showToastMessage('Please enter valid product details.', 'error');
         return;
       }
+      console.log('Validation passed - proceeding to add product');
       if (quantity <= 0) {
+        console.log('Failed: Quantity <= 0');
         showToastMessage('Quantity must be at least 1.', 'error');
         return;
       }
       if (sellingPrice < 0) {
+        console.log('Failed: Selling price < 0');
         showToastMessage('Selling price cannot be negative.', 'error');
         return;
       }
       if (unitCost < 0) {
+        console.log('Failed: Unit cost < 0');
         showToastMessage('Unit cost cannot be negative.', 'error');
         return;
       }
       if (product && quantity > product.available_stock) {
+        console.log('Failed: Insufficient stock');
         showToastMessage(`Cannot add ${quantity} units. Only ${product.available_stock} available in stock.`, 'error');
         return;
       }
+      
+      console.log('All validation checks passed - proceeding to tax calculation');
 
       // We'll store the selling price in product.price
       // Then let the table logic figure out net vs. tax if needed
@@ -1633,8 +1691,15 @@
       if (DOM.taxCheckbox.checked) {
         taxPerProduct = Math.round(sellingPrice * TAX_RATE);
       }
-
+      
+      console.log('Tax calculation completed. taxPerProduct:', taxPerProduct);
+      console.log('Looking up product with itemCode:', itemCode);
+      console.log('allProducts array length:', allProducts.length);
+      console.log('Product lookup result:', product);
+      console.log('selectedProducts array before:', selectedProducts.length);
+      
       if (product) {
+        console.log('Adding existing product');
         selectedProducts.push({
           item_code: product.item_code,
           room_id: product.room_id, // Store room_id for stock updates
@@ -1648,6 +1713,7 @@
         });
         product.available_stock -= quantity; // update stock
       } else {
+        console.log('Adding new product');
         const item_code = `NEW-${newProductCounter++}`;
         selectedProducts.push({
           item_code: item_code,
@@ -1661,8 +1727,14 @@
           is_new: true
         });
       }
+      
+      console.log('selectedProducts array after:', selectedProducts.length);
+      console.log('Last added product:', selectedProducts[selectedProducts.length - 1]);
 
+      console.log('About to call updateSelectedProductsTable');
+      console.log('DOM.selectedProductsBody:', DOM.selectedProductsBody);
       updateSelectedProductsTable();
+      console.log('updateSelectedProductsTable called');
       DOM.productSearchInput.value = '';
       DOM.productList.innerHTML = ''; // Clear the dropdown
 
